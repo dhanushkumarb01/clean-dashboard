@@ -1,0 +1,10 @@
+{
+  "channels": [],
+  "lastUpdated": null,
+  "maxChannels": 500,
+  "settings": {
+    "cacheTimeout": 300,
+    "batchSize": 50,
+    "rateLimitPerMinute": 60
+  }
+} 
