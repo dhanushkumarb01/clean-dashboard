@@ -12,6 +12,8 @@ const connectDB = require('./config/db');
 connectDB();
 
 // Import routes
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 const youtubeRoutes = require('./routes/youtube');
 app.use('/api/youtube', youtubeRoutes);
 

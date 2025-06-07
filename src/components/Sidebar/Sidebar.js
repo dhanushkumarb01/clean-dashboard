@@ -17,7 +17,7 @@ const reportItems = [
   "Sentimental Analysis",
 ];
 
-const Sidebar = () => (
+const Sidebar = ({ onLogout }) => (
   <aside className="w-64 bg-white border-r min-h-screen flex flex-col">
     <div className="p-6 text-lg font-bold text-gray-700">Admin</div>
     <nav className="flex-1">
@@ -39,6 +39,14 @@ const Sidebar = () => (
         ))}
       </ul>
     </nav>
+    <div className="p-6 border-t border-gray-200">
+      <button
+        onClick={onLogout}
+        className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+      >
+        Logout
+      </button>
+    </div>
   </aside>
 );
 

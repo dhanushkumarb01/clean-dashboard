@@ -13,10 +13,9 @@ exports.oauth2callback = async (req, res) => {
   try {
     const code = req.query.code;
     if (!code) return res.status(400).json({ error: 'No code provided' });
-    const { tokens, userId } = await getTokensAndUserData(code);
-    await fetchAndStoreYouTubeData(tokens, userId);
-    // Redirect to frontend dashboard or send success
-    res.redirect('/'); // Change to your frontend dashboard route
+    const { tokens } = await getTokensAndUserData(code);
+    await fetchAndStoreYouTubeData(tokens, req.user.email);
+    res.redirect('/');
   } catch (err) {
     res.status(500).json({ error: 'OAuth callback failed', details: err.message });
   }
@@ -24,7 +23,7 @@ exports.oauth2callback = async (req, res) => {
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    const stats = await getDashboardStatsFromDB();
+    const stats = await getDashboardStatsFromDB(req.user.email);
     res.json(stats);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });
@@ -33,7 +32,7 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.getMostActiveUsers = async (req, res) => {
   try {
-    const users = await getMostActiveUsersFromDB();
+    const users = await getMostActiveUsersFromDB(req.user.email);
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -43,7 +42,7 @@ exports.getMostActiveUsers = async (req, res) => {
 exports.getUserDetails = async (req, res) => {
   try {
     const userId = req.params.id;
-    const details = await getUserDetailsFromDB(userId);
+    const details = await getUserDetailsFromDB(userId, req.user.email);
     res.json(details);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch user details' });

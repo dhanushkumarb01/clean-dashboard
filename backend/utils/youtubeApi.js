@@ -44,7 +44,7 @@ async function fetchAllPages(apiFn, params, itemsKey) {
   return results;
 }
 
-exports.fetchAndStoreYouTubeData = async (tokens, userId) => {
+exports.fetchAndStoreYouTubeData = async (tokens, userEmail) => {
   oauth2Client.setCredentials(tokens);
   const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
@@ -58,7 +58,7 @@ exports.fetchAndStoreYouTubeData = async (tokens, userId) => {
   for (const channel of channels) {
     // Upsert channel
     await Channel.findOneAndUpdate(
-      { channelId: channel.id },
+      { channelId: channel.id, owner: userEmail },
       {
         channelId: channel.id,
         title: channel.snippet.title,
@@ -66,7 +66,7 @@ exports.fetchAndStoreYouTubeData = async (tokens, userId) => {
         publishedAt: channel.snippet.publishedAt,
         thumbnails: channel.snippet.thumbnails,
         stats: channel.statistics,
-        owner: userId,
+        owner: userEmail,
       },
       { upsert: true, new: true }
     );
@@ -96,6 +96,7 @@ exports.fetchAndStoreYouTubeData = async (tokens, userId) => {
           publishedAt: videoDetails.snippet.publishedAt,
           thumbnails: videoDetails.snippet.thumbnails,
           stats: videoDetails.statistics,
+          owner: userEmail,
         },
         { upsert: true, new: true }
       );
@@ -117,6 +118,7 @@ exports.fetchAndStoreYouTubeData = async (tokens, userId) => {
             displayName: c.authorDisplayName,
             profileImage: c.authorProfileImageUrl,
             channelUrl: c.authorChannelUrl,
+            owner: userEmail,
           },
           { upsert: true, new: true }
         );
@@ -130,6 +132,7 @@ exports.fetchAndStoreYouTubeData = async (tokens, userId) => {
             text: c.textDisplay,
             publishedAt: c.publishedAt,
             likeCount: c.likeCount,
+            owner: userEmail,
           },
           { upsert: true, new: true }
         );
@@ -139,10 +142,10 @@ exports.fetchAndStoreYouTubeData = async (tokens, userId) => {
 };
 
 // Dashboard stats aggregation
-exports.getDashboardStatsFromDB = async () => {
-  const totalChannels = await Channel.countDocuments();
-  const totalComments = await Comment.countDocuments();
-  const uniqueAuthors = await Author.countDocuments();
+exports.getDashboardStatsFromDB = async (userEmail) => {
+  const totalChannels = await Channel.countDocuments({ owner: userEmail });
+  const totalComments = await Comment.countDocuments({ owner: userEmail });
+  const uniqueAuthors = await Author.countDocuments({ owner: userEmail });
   const avgCommentsPerDayAgg = await Comment.aggregate([
     {
       $group: {

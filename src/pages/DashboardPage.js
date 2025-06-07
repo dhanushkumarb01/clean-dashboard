@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import FilterDropdown from "../components/FilterDropdown/FilterDropdown";
 import StatCard from "../components/StatCard/StatCard";
@@ -63,6 +64,12 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("youtube");
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   const loadData = async () => {
     try {
@@ -94,7 +101,7 @@ const DashboardPage = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar onLogout={handleLogout} />
       <div className="flex-1 flex flex-col">
         <div className="p-6 h-full">
           {/* Tab Switcher */}

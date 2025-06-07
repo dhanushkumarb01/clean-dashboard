@@ -1,11 +1,9 @@
 const mongoose = require('mongoose');
 
-const userTokenSchema = new mongoose.Schema({
-  // You can use a session ID, user ID, or email as the identifier
-  identifier: { type: String, required: true, unique: true },
-  accessToken: { type: String, required: true },
-  refreshToken: { type: String, required: true },
-  tokenExpiry: { type: Date, required: true }
+const UserSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('UserToken', userTokenSchema);
+module.exports = mongoose.model('User', UserSchema);

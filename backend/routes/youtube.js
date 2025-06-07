@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const youtubeController = require('../controllers/youtubeController');
+const auth = require('../middleware/auth');
+
+// All routes require auth
+router.use(auth);
 
 // Start OAuth2 login
 router.get('/login', youtubeController.login);
