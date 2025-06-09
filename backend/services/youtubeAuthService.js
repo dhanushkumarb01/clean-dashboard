@@ -92,21 +92,21 @@ class YouTubeAuthService {
 
       const youtube = google.youtube({ version: 'v3', auth: this.oauth2Client });
       
-      try {
-        const response = await youtube.channels.list({
+      try {        const response = await youtube.channels.list({
           part: 'statistics,snippet',
-          id: user.youtube.channel_id
+          id: user.youtube.channel_id,
+          fields: 'items(statistics(viewCount,subscriberCount,videoCount,commentCount),snippet(title,thumbnails))'
         });
 
         if (!response.data.items?.length) {
           throw new Error('No channel data found');
         }
 
-        const channel = response.data.items[0];
-        const stats = {
+        const channel = response.data.items[0];        const stats = {
           viewCount: parseInt(channel.statistics.viewCount),
           subscriberCount: parseInt(channel.statistics.subscriberCount),
           videoCount: parseInt(channel.statistics.videoCount),
+          commentCount: parseInt(channel.statistics.commentCount || 0),
           lastUpdated: new Date()
         };
 

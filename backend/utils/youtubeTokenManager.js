@@ -38,9 +38,9 @@ class YouTubeTokenManager {
       const youtube = google.youtube({ version: 'v3', auth: this.oauth2Client });
       
       try {
-        const response = await youtube.channels.list({
-          part: 'statistics,snippet',
-          id: user.youtube.channel_id
+        const response = await youtube.channels.list({          part: 'statistics,snippet',
+          id: user.youtube.channel_id,
+          fields: 'items(statistics(viewCount,subscriberCount,videoCount,commentCount),snippet(title,thumbnails))'
         });
 
         if (!response.data.items?.length) {
@@ -49,11 +49,11 @@ class YouTubeTokenManager {
 
         const channel = response.data.items[0];
         
-        // Update user's YouTube stats
-        user.youtube.stats = {
+        // Update user's YouTube stats        user.youtube.stats = {
           viewCount: parseInt(channel.statistics.viewCount),
           subscriberCount: parseInt(channel.statistics.subscriberCount),
           videoCount: parseInt(channel.statistics.videoCount),
+          commentCount: parseInt(channel.statistics.commentCount || 0),
           lastUpdated: new Date()
         };
 

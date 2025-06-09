@@ -2,31 +2,42 @@ import React from "react";
 import PropTypes from "prop-types";
 import "../styles/ActivitySummaryCard.css";
 
-// Card for activity summary: total likes, average likes, max likes
-const ActivitySummaryCard = ({ totalLikes, avgLikes, maxLikes }) => (
+// Card for YouTube channel activity summary: total views, subscribers, videos, comments
+const ActivitySummaryCard = ({ views, subscribers, videos, comments, lastUpdated }) => (
   <div className="card activity-summary-card">
-    <div className="card-title">Activity Summary</div>
+    <div className="card-title">Channel Activity Summary</div>
     <div className="card-content">
       <div>
-        <span className="label">Total Likes:</span>
-        <span className="value">{totalLikes}</span>
+        <span className="label">Total Views:</span>
+        <span className="value">{views?.toLocaleString() ?? 'N/A'}</span>
       </div>
       <div>
-        <span className="label">Average Likes:</span>
-        <span className="value">{avgLikes}</span>
+        <span className="label">Subscribers:</span>
+        <span className="value">{subscribers?.toLocaleString() ?? 'N/A'}</span>
       </div>
       <div>
-        <span className="label">Max Likes:</span>
-        <span className="value">{maxLikes}</span>
+        <span className="label">Total Videos:</span>
+        <span className="value">{videos?.toLocaleString() ?? 'N/A'}</span>
+      </div>
+      <div>
+        <span className="label">Total Comments:</span>
+        <span className="value">{comments?.toLocaleString() ?? 'N/A'}</span>
+      </div>
+      <div className="last-updated">
+        <span className="text-sm text-gray-500">
+          Last updated: {lastUpdated ? new Date(lastUpdated).toLocaleString() : 'N/A'}
+        </span>
       </div>
     </div>
   </div>
 );
 
 ActivitySummaryCard.propTypes = {
-  totalLikes: PropTypes.number.isRequired,
-  avgLikes: PropTypes.number.isRequired,
-  maxLikes: PropTypes.number.isRequired
+  views: PropTypes.number,
+  subscribers: PropTypes.number,
+  videos: PropTypes.number,
+  comments: PropTypes.number,
+  lastUpdated: PropTypes.string
 };
 
 export default ActivitySummaryCard;

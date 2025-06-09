@@ -102,13 +102,27 @@ const DashboardPage = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      setError(null);      const [data, quotaData] = await Promise.all([
-        youtube.fetchOverview(),
+      setError(null);
+      
+      // Add timestamp to force fresh data
+      const [data, quotaData] = await Promise.all([
+        youtube.fetchOverview({ fresh: true }),
         youtube.getQuotaUsage()
       ]);
+      
+      // Add console log to verify new data
+      console.log('Fetched overview data:', data);
+      console.log('YouTube Statistics:', {
+        viewCount: data.stats?.viewCount,
+        subscriberCount: data.stats?.subscriberCount,
+        videoCount: data.stats?.videoCount,
+        commentCount: data.stats?.commentCount
+      });
+      
       setOverview(data);
       setQuota(quotaData.quotaUsage);
     } catch (err) {
+      console.error('Error loading data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -120,10 +134,9 @@ const DashboardPage = () => {
   }, []);  if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} onRetry={loadData} />;
   if (!overview) return null;
-
   const stats = [
     { label: "Total Channels", value: overview.totalChannels },
-    { label: "Total Comments", value: overview.totalComments },
+    { label: "Total Comments", value: overview.stats?.commentCount?.toLocaleString() || overview.totalComments || 0 },
     { label: "Unique Authors", value: overview.uniqueCommentAuthors },
     { label: "Avg. Comments/Day", value: overview.avgCommentsPerDay },
   ];
@@ -145,6 +158,15 @@ const DashboardPage = () => {
                 )}
               </div>
             </div>
+            <button
+              onClick={() => loadData()}
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh Stats
+            </button>
           </div>
 
           <div className="mb-6">

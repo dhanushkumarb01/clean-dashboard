@@ -124,6 +124,7 @@ const UserDashboardPage = () => {
               views={youtubeStats.viewCount}
               subscribers={youtubeStats.subscriberCount}
               videos={youtubeStats.videoCount}
+              comments={youtubeStats.commentCount}
               lastUpdated={youtubeStats.lastUpdated}
             />
           )}

@@ -54,14 +54,14 @@ exports.handleOAuthCallback = async (req, res) => {
           channel_id: channel.id,
           connected_at: new Date(),
           channel_title: channel.snippet.title,
-          profile_picture: channel.snippet.thumbnails.default.url,
-          stats: {
-            viewCount: parseInt(channel.statistics.viewCount),
-            subscriberCount: parseInt(channel.statistics.subscriberCount),
-            videoCount: parseInt(channel.statistics.videoCount),
-            lastUpdated: new Date()
-          },
-          quota_used: 1 // Initial channels.list call
+          profile_picture: channel.snippet.thumbnails.default.url,        stats: {
+          viewCount: parseInt(channel.statistics.viewCount),
+          subscriberCount: parseInt(channel.statistics.subscriberCount),
+          videoCount: parseInt(channel.statistics.videoCount),
+          commentCount: parseInt(channel.statistics.commentCount || 0),
+          lastUpdated: new Date()
+        },
+        quota_used: 1 // Initial channels.list call
         }
       });
       console.log('New user created:', user._id);
@@ -125,7 +125,11 @@ exports.getChannelStats = async (req, res) => {
       return res.status(404).json({ error: 'No YouTube connection found' });
     }
 
-    const stats = await youtubeApi.getChannelStats(user.youtube.access_token);
+    // Check for fresh parameter
+    const fresh = req.query.fresh === 'true';
+    console.log('Channel stats request:', { fresh, userId: req.user.id });
+
+    const stats = await youtubeApi.getChannelStats(user.youtube.access_token, { fresh });
     res.json(stats);
   } catch (err) {
     console.error('Stats error:', err);
@@ -237,20 +241,40 @@ exports.getOverview = async (req, res) => {
       return res.status(404).json({ error: 'No YouTube connection found' });
     }
 
-    // Get channel stats first
-    const stats = await youtubeApi.getChannelStats(user.youtube.access_token);
+    // Check for fresh parameter to force new data fetch
+    const fresh = req.query.fresh === 'true';
+    console.log('Overview request:', { fresh, userId: req.user.id });
+
+    // Get channel stats using the YouTubeAPI helper with fresh parameter
+    const stats = await youtubeApi.getChannelStats(user.youtube.access_token, { fresh });
     
     // Calculate daily averages
     const daysSinceConnection = Math.max(1, 
       Math.ceil((new Date() - new Date(user.youtube.connected_at)) / (1000 * 60 * 60 * 24))
     );
 
+    if (!stats) {
+      throw new Error('Failed to fetch channel statistics');
+    }
+    
+    console.log('Fetched fresh stats:', {
+      viewCount: stats.viewCount,
+      subscriberCount: stats.subscriberCount,
+      videoCount: stats.videoCount,
+      commentCount: stats.commentCount,
+      uniqueAuthors: stats.uniqueAuthors,
+      fresh
+    });
+    
     const overview = {
       totalChannels: 1, // One channel per user for now
       totalComments: stats.commentCount || 0,
-      uniqueCommentAuthors: stats.commentCount || 0, // Will be updated when comment tracking is implemented
+      uniqueCommentAuthors: stats.uniqueAuthors || 0, // Use actual unique authors count
       avgCommentsPerDay: Math.round((stats.commentCount || 0) / daysSinceConnection),
-      ...stats
+      stats: {
+        ...stats,
+        lastUpdated: new Date()
+      }
     };
 
     res.json(overview);

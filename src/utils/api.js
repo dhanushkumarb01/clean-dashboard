@@ -149,9 +149,13 @@ export const youtube = {
   },
 
   // Get overview data for dashboard
-  fetchOverview: async () => {
+  fetchOverview: async (options = {}) => {
     try {
-      const response = await api.get('/youtube/overview');
+      const response = await api.get('/youtube/overview', {
+        params: {
+          fresh: options.fresh ? 'true' : undefined
+        }
+      });
       if (!response?.data) {
         throw new Error('No data received from YouTube overview endpoint');
       }

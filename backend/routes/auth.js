@@ -9,6 +9,7 @@ router.get('/google', (req, res) => {
   const client_id = process.env.GOOGLE_CLIENT_ID;
   const scope = encodeURIComponent([
     'https://www.googleapis.com/auth/youtube.readonly',
+    'https://www.googleapis.com/auth/youtube.force-ssl',
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
     'openid'
