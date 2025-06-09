@@ -208,6 +208,77 @@ export const youtube = {
   },
 };
 
+// Telegram endpoints
+export const telegram = {
+  // Get Telegram statistics
+  getStats: async () => {
+    try {
+      const response = await api.get('/telegram/stats');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching Telegram stats:', error);
+      throw error;
+    }
+  },
+
+  // Get most active users
+  getMostActiveUsers: async () => {
+    try {
+      const response = await api.get('/telegram/most-active-users');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching most active users:', error);
+      throw error;
+    }
+  },
+
+  // Get most active groups
+  getMostActiveGroups: async () => {
+    try {
+      const response = await api.get('/telegram/most-active-groups');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching most active groups:', error);
+      throw error;
+    }
+  },
+
+  // Get top users by groups joined
+  getTopUsersByGroups: async () => {
+    try {
+      const response = await api.get('/telegram/top-users-by-groups');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching top users by groups:', error);
+      throw error;
+    }
+  },
+
+  // Get statistics history for charts
+  getStatsHistory: async (limit = 30) => {
+    try {
+      const response = await api.get('/telegram/stats-history', {
+        params: { limit }
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching stats history:', error);
+      throw error;
+    }
+  },
+
+  // Store new statistics (for Python script)
+  storeStats: async (statsData) => {
+    try {
+      const response = await api.post('/telegram/store-stats', statsData);
+      return response.data;
+    } catch (error) {
+      console.error('Error storing Telegram stats:', error);
+      throw error;
+    }
+  }
+};
+
 // Auth endpoints
 export const auth = {
   // Get current user

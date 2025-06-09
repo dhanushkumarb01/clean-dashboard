@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from "react-router-dom";
-import DashboardPage from "./pages/DashboardPage";
+import DashboardContainer from "./pages/DashboardContainer";
 import UserDashboardPage from "./pages/UserDashboardPage";
 import LoginPage from "./pages/LoginPage";
 import AuthError from "./pages/AuthError";
@@ -9,6 +9,7 @@ import api from "./utils/api";
 import "./App.css";
 import AuthCallback from './pages/AuthCallback';
 import YouTubeReportPage from './pages/YouTubeReportPage';
+import TelegramDashboard from './pages/TelegramDashboard/TelegramDashboard';
 import NotFound from './pages/NotFound';
 
 // Auth callback handler component
@@ -56,7 +57,7 @@ const App = () => {
         {/* Protected routes */}
         <Route path="/" element={
           <ProtectedRoute>
-            <DashboardPage />
+            <DashboardContainer />
           </ProtectedRoute>
         } />
         <Route path="/user/:id" element={
@@ -67,6 +68,10 @@ const App = () => {
         <Route 
           path="/youtube-report/:authorChannelId" 
           element={<ProtectedRoute><YouTubeReportPage /></ProtectedRoute>}
+        />
+        <Route 
+          path="/telegram" 
+          element={<ProtectedRoute><TelegramDashboard /></ProtectedRoute>}
         />
         <Route path="*" element={<NotFound />} />
       </Routes>

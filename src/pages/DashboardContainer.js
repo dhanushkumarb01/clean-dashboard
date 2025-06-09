@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import FilterDropdown from "../components/FilterDropdown/FilterDropdown";
 import StatCard from "../components/StatCard/StatCard";
@@ -9,6 +9,8 @@ import { youtube } from "../utils/api";
 import YouTubeConnect from '../components/YouTubeConnect';
 import MostActiveUsersList from '../components/MostActiveUsersList';
 import MostActiveChannelsList from '../components/MostActiveChannelsList';
+import YouTubeDashboardContent from "./YouTubeDashboardPage/YouTubeDashboardContent";
+import TelegramDashboard from "./TelegramDashboard/TelegramDashboard";
 
 const LoadingState = () => (
   <div className="flex min-h-screen">
@@ -86,8 +88,12 @@ const ErrorState = ({ error, onRetry }) => {
   );
 };
 
-const DashboardPage = () => {
+const YouTubeDashboardPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(
+    location.pathname.includes("/telegram") ? "telegram" : "youtube"
+  );
   const [filter, setFilter] = useState("all");
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -97,10 +103,17 @@ const DashboardPage = () => {
   const [mostActiveChannels, setMostActiveChannels] = useState([]);
 
   const handleLogout = () => {
-    // Clear the authentication token
     localStorage.removeItem("token");
-    // Redirect to login page
     navigate("/login");
+  };
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    if (tab === "youtube") {
+      navigate("/"); 
+    } else if (tab === "telegram") {
+      navigate("/telegram");
+    }
   };
 
   const loadData = async () => {
@@ -155,60 +168,38 @@ const DashboardPage = () => {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar onLogout={handleLogout} />
       <div className="flex-1 flex flex-col">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">YouTube Analytics Dashboard</h1>
-              <div className="flex items-center mt-1">
-                <p className="text-sm text-gray-500">API Quota Used: {quota} units</p>
-                {quota > 8000 && (
-                  <span className="ml-2 px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                    Quota Warning
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => loadData()}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh Stats
-              </button>
-            </div>
-          </div>
+        {/* Tab Navigation */}
+        <div className="bg-white border-b border-gray-200 p-4 flex justify-start space-x-4">
+          <button
+            className={`py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 ${
+              activeTab === "youtube"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => handleTabClick("youtube")}
+          >
+            YouTube
+          </button>
+          <button
+            className={`py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 ${
+              activeTab === "telegram"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => handleTabClick("telegram")}
+          >
+            Telegram
+          </button>
+        </div>
 
-          <div className="mb-6">
-            <FilterDropdown value={filter} onChange={setFilter} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat) => (
-              <StatCard key={stat.label} {...stat} />
-            ))}
-          </div>
-          
-          {overview.mostActiveUsers && overview.mostActiveChannels && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <UserList users={overview.mostActiveUsers} />
-              <ChannelList channels={overview.mostActiveChannels} />
-            </div>
-          )}
-
-          <YouTubeConnect />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <MostActiveUsersList users={mostActiveUsers} />
-            <MostActiveChannelsList channels={mostActiveChannels} />
-          </div>
-
+        {/* Dashboard Content */}
+        <div className="flex-1 overflow-y-auto">
+          {activeTab === "youtube" && <YouTubeDashboardContent />}
+          {activeTab === "telegram" && <TelegramDashboard />}
         </div>
       </div>
     </div>
   );
 };
 
-export default DashboardPage;
+export default YouTubeDashboardPage;

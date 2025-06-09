@@ -24,6 +24,7 @@ const cookieParser = require('cookie-parser');
 // Import routes
 const authRoutes = require('./routes/auth');
 const youtubeRoutes = require('./routes/youtube');
+const telegramRoutes = require('./routes/telegram');
 
 const app = express();
 
@@ -54,9 +55,10 @@ app.use((err, req, res, next) => {
 // Handle the OAuth callback route before applying any auth middleware
 app.get('/api/youtube/oauth2callback', require('./controllers/authController').googleCallback);
 
-// Mount other routes
+// Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/youtube', youtubeRoutes);
+app.use('/api/telegram', telegramRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
