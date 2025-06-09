@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import FilterDropdown from "../components/FilterDropdown/FilterDropdown";
 import StatCard from "../components/StatCard/StatCard";
@@ -9,7 +10,10 @@ import YouTubeConnect from '../components/YouTubeConnect';
 
 const LoadingState = () => (
   <div className="flex min-h-screen">
-    <Sidebar />
+    <Sidebar onLogout={() => {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }} />
     <div className="flex-1 p-8">
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
@@ -39,9 +43,12 @@ const ErrorState = ({ error, onRetry }) => {
   const isQuotaError = error && (error.toLowerCase().includes('quota') || error.toLowerCase().includes('429'));
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar onLogout={() => {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }} />
       <div className="flex-1 p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-2xl mx-auto mt-8">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-2xl mx-auto mt-8">
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 flex items-center justify-center bg-red-100 rounded-full">
               <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,11 +85,19 @@ const ErrorState = ({ error, onRetry }) => {
 };
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quota, setQuota] = useState(0);
+
+  const handleLogout = () => {
+    // Clear the authentication token
+    localStorage.removeItem("token");
+    // Redirect to login page
+    navigate("/login");
+  };
 
   const loadData = async () => {
     try {
@@ -102,9 +117,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
-
-  if (loading) return <LoadingState />;
+  }, []);  if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} onRetry={loadData} />;
   if (!overview) return null;
 
@@ -117,7 +130,7 @@ const DashboardPage = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar onLogout={handleLogout} />
       <div className="flex-1 flex flex-col">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -132,6 +145,9 @@ const DashboardPage = () => {
                 )}
               </div>
             </div>
+          </div>
+
+          <div className="mb-6">
             <FilterDropdown value={filter} onChange={setFilter} />
           </div>
 
@@ -139,7 +155,9 @@ const DashboardPage = () => {
             {stats.map((stat) => (
               <StatCard key={stat.label} {...stat} />
             ))}
-          </div>          {overview.mostActiveUsers && overview.mostActiveChannels && (
+          </div>
+          
+          {overview.mostActiveUsers && overview.mostActiveChannels && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <UserList users={overview.mostActiveUsers} />
               <ChannelList channels={overview.mostActiveChannels} />
