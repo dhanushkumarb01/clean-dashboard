@@ -21,6 +21,8 @@ router.get('/stats', youtubeController.getChannelStats);
 router.get('/channel', youtubeController.getUserChannel);
 router.get('/quota', youtubeController.getQuotaUsage);
 router.get('/overview', youtubeController.getOverview);
+router.get('/most-active-users', youtubeController.getMostActiveUsers);
+router.get('/most-active-channels', youtubeController.getMostActiveChannels);
 router.post('/disconnect', youtubeController.disconnectYouTube);
 
 // Log route access in development

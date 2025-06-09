@@ -140,7 +140,7 @@ export const youtube = {
   // Disconnect YouTube account
   disconnect: async () => {
     try {
-      const response = await api.post('/auth/youtube/disconnect');
+      const response = await api.post('/youtube/disconnect');
       return response.data;
     } catch (error) {
       console.error('Error disconnecting YouTube account:', error);
@@ -156,17 +156,10 @@ export const youtube = {
           fresh: options.fresh ? 'true' : undefined
         }
       });
-      if (!response?.data) {
-        throw new Error('No data received from YouTube overview endpoint');
-      }
       return response.data;
     } catch (error) {
       console.error('Error fetching YouTube overview:', error);
-      if (error.response?.status === 401) {
-        // Handle unauthorized access
-        localStorage.removeItem('token');
-      }
-      throw new Error(error.response?.data?.error || error.message || 'Failed to fetch YouTube overview');
+      throw error;
     }
   },
 
@@ -179,7 +172,29 @@ export const youtube = {
       console.error('Error fetching quota usage:', error);
       throw error;
     }
-  }
+  },
+
+  // Get most active users
+  getMostActiveUsers: async () => {
+    try {
+      const response = await api.get('/youtube/most-active-users');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching most active users:', error);
+      throw error;
+    }
+  },
+
+  // Get most active channels
+  getMostActiveChannels: async () => {
+    try {
+      const response = await api.get('/youtube/most-active-channels');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching most active channels:', error);
+      throw error;
+    }
+  },
 };
 
 // Auth endpoints

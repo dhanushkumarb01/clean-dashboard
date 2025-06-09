@@ -129,7 +129,7 @@ exports.getChannelStats = async (req, res) => {
     const fresh = req.query.fresh === 'true';
     console.log('Channel stats request:', { fresh, userId: req.user.id });
 
-    const stats = await youtubeApi.getChannelStats(user.youtube.access_token, { fresh });
+    const stats = await youtubeApi.getChannelStats(user.youtube.access_token, { fresh, userId: user._id });
     res.json(stats);
   } catch (err) {
     console.error('Stats error:', err);
@@ -246,7 +246,7 @@ exports.getOverview = async (req, res) => {
     console.log('Overview request:', { fresh, userId: req.user.id });
 
     // Get channel stats using the YouTubeAPI helper with fresh parameter
-    const stats = await youtubeApi.getChannelStats(user.youtube.access_token, { fresh });
+    const stats = await youtubeApi.getChannelStats(user.youtube.access_token, { fresh, userId: user._id });
     
     // Calculate daily averages
     const daysSinceConnection = Math.max(1, 
@@ -281,5 +281,35 @@ exports.getOverview = async (req, res) => {
   } catch (err) {
     console.error('Overview error:', err);
     res.status(500).json({ error: 'Failed to fetch overview data' });
+  }
+};
+
+exports.getMostActiveUsers = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user?.youtube?.access_token) {
+      return res.status(404).json({ error: 'No YouTube connection found' });
+    }
+
+    const users = await youtubeApi.getMostActiveUsers(user._id);
+    res.json(users);
+  } catch (err) {
+    console.error('Most active users error:', err);
+    res.status(500).json({ error: 'Failed to fetch most active users' });
+  }
+};
+
+exports.getMostActiveChannels = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user?.youtube?.access_token) {
+      return res.status(404).json({ error: 'No YouTube connection found' });
+    }
+
+    const channels = await youtubeApi.getMostActiveChannels(user._id);
+    res.json(channels);
+  } catch (err) {
+    console.error('Most active channels error:', err);
+    res.status(500).json({ error: 'Failed to fetch most active channels' });
   }
 };

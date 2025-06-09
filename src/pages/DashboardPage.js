@@ -7,6 +7,8 @@ import UserList from "../components/UserList/UserList";
 import ChannelList from "../components/ChannelList/ChannelList";
 import { youtube } from "../utils/api";
 import YouTubeConnect from '../components/YouTubeConnect';
+import MostActiveUsersList from '../components/MostActiveUsersList';
+import MostActiveChannelsList from '../components/MostActiveChannelsList';
 
 const LoadingState = () => (
   <div className="flex min-h-screen">
@@ -91,6 +93,8 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quota, setQuota] = useState(0);
+  const [mostActiveUsers, setMostActiveUsers] = useState([]);
+  const [mostActiveChannels, setMostActiveChannels] = useState([]);
 
   const handleLogout = () => {
     // Clear the authentication token
@@ -105,9 +109,11 @@ const DashboardPage = () => {
       setError(null);
       
       // Add timestamp to force fresh data
-      const [data, quotaData] = await Promise.all([
+      const [data, quotaData, usersData, channelsData] = await Promise.all([
         youtube.fetchOverview({ fresh: true }),
-        youtube.getQuotaUsage()
+        youtube.getQuotaUsage(),
+        youtube.getMostActiveUsers(),
+        youtube.getMostActiveChannels()
       ]);
       
       // Add console log to verify new data
@@ -121,6 +127,8 @@ const DashboardPage = () => {
       
       setOverview(data);
       setQuota(quotaData.quotaUsage);
+      setMostActiveUsers(usersData);
+      setMostActiveChannels(channelsData);
     } catch (err) {
       console.error('Error loading data:', err);
       setError(err.message);
@@ -131,7 +139,9 @@ const DashboardPage = () => {
 
   useEffect(() => {
     loadData();
-  }, []);  if (loading) return <LoadingState />;
+  }, []);
+
+  if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} onRetry={loadData} />;
   if (!overview) return null;
   const stats = [
@@ -158,15 +168,17 @@ const DashboardPage = () => {
                 )}
               </div>
             </div>
-            <button
-              onClick={() => loadData()}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh Stats
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => loadData()}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh Stats
+              </button>
+            </div>
           </div>
 
           <div className="mb-6">
@@ -187,6 +199,12 @@ const DashboardPage = () => {
           )}
 
           <YouTubeConnect />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <MostActiveUsersList users={mostActiveUsers} />
+            <MostActiveChannelsList channels={mostActiveChannels} />
+          </div>
+
         </div>
       </div>
     </div>
