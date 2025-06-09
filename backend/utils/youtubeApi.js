@@ -542,6 +542,59 @@ const getMostActiveChannels = async (userId, limit = 5) => {
   }
 };
 
+const getAuthorReport = async (userId, authorChannelId) => {
+  try {
+    console.log(`Fetching author report for userId: ${userId}, authorChannelId: ${authorChannelId}`);
+
+    // Get author details and total comments
+    const authorStats = await Comment.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId), authorChannelId: authorChannelId } },
+      { $group: {
+          _id: "$authorChannelId",
+          authorDisplayName: { $first: "$authorDisplayName" },
+          totalComments: { $sum: 1 }
+      }}
+    ]);
+
+    if (authorStats.length === 0) {
+      console.log(`No comments found for authorChannelId: ${authorChannelId}`);
+      return null;
+    }
+
+    const { authorDisplayName, totalComments } = authorStats[0];
+
+    // Get comment activity over time (e.g., daily)
+    const commentActivity = await Comment.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId), authorChannelId: authorChannelId } },
+      { $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$publishedAt" } }, // Group by date
+          commentCount: { $sum: 1 }
+      }},
+      { $sort: { _id: 1 } } // Sort by date
+    ]);
+
+    // Format for charts if needed (e.g., fill in missing dates, etc.)
+    const formattedActivity = commentActivity.map(item => ({
+      date: item._id,
+      comments: item.commentCount
+    }));
+
+    return {
+      authorDisplayName,
+      totalComments,
+      commentActivity: formattedActivity,
+      // Placeholder for likes as we don't store them in comments
+      totalLikes: 0,
+      averageLikes: 0,
+      maxLikes: 0
+    };
+
+  } catch (error) {
+    console.error('Error fetching author report:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   oauth2Client,
   youtube: youtubeClient,
@@ -554,5 +607,6 @@ module.exports = {
   getVideoCommentCounts,
   getChannelCommentStats,
   getMostActiveUsers,
-  getMostActiveChannels
+  getMostActiveChannels,
+  getAuthorReport
 };

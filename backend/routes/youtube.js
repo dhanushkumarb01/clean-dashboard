@@ -23,6 +23,7 @@ router.get('/quota', youtubeController.getQuotaUsage);
 router.get('/overview', youtubeController.getOverview);
 router.get('/most-active-users', youtubeController.getMostActiveUsers);
 router.get('/most-active-channels', youtubeController.getMostActiveChannels);
+router.get('/report/:authorChannelId', youtubeController.getAuthorReport);
 router.post('/disconnect', youtubeController.disconnectYouTube);
 
 // Log route access in development

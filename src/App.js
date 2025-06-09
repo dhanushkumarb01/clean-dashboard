@@ -8,6 +8,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import api from "./utils/api";
 import "./App.css";
 import AuthCallback from './pages/AuthCallback';
+import YouTubeReportPage from './pages/YouTubeReportPage';
+import NotFound from './pages/NotFound';
 
 // Auth callback handler component
 const AuthCallbackHandler = () => {
@@ -62,6 +64,11 @@ const App = () => {
             <UserDashboardPage />
           </ProtectedRoute>
         } />
+        <Route 
+          path="/youtube-report/:authorChannelId" 
+          element={<ProtectedRoute><YouTubeReportPage /></ProtectedRoute>}
+        />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

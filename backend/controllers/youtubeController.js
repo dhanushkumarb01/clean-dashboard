@@ -313,3 +313,20 @@ exports.getMostActiveChannels = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch most active channels' });
   }
 };
+
+exports.getAuthorReport = async (req, res) => {
+  try {
+    const { authorChannelId } = req.params;
+    const user = await User.findById(req.user.id);
+
+    if (!user?.youtube?.access_token) {
+      return res.status(404).json({ error: 'No YouTube connection found' });
+    }
+
+    const reportData = await youtubeApi.getAuthorReport(user._id, authorChannelId);
+    res.json(reportData);
+  } catch (err) {
+    console.error('Author report error:', err);
+    res.status(500).json({ error: 'Failed to fetch author report' });
+  }
+};

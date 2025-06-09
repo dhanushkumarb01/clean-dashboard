@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const MostActiveUsersList = ({ users }) => {
+  const navigate = useNavigate();
+
   if (!users || users.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-center justify-center h-full">
@@ -16,7 +19,11 @@ const MostActiveUsersList = ({ users }) => {
       </h2>
       <ul className="space-y-3">
         {users.map((user, index) => (
-          <li key={user._id || index} className="flex items-center justify-between py-2 border-b last:border-b-0 border-gray-100">
+          <li 
+            key={user._id || index} 
+            className="flex items-center justify-between py-2 border-b last:border-b-0 border-gray-100 cursor-pointer hover:bg-gray-50"
+            onClick={() => navigate(`/youtube-report/${user._id}`)}
+          >
             <span className="text-gray-800 font-medium">{user.authorDisplayName || 'Unknown Author'}</span>
             <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
               {user.totalComments} Comments
