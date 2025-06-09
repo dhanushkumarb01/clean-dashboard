@@ -1,82 +1,195 @@
 import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api/youtube";
-
-// Create axios instance with defaults
-const api = axios.create({
-  baseURL: API_BASE,
-  timeout: 30000, // 30 second timeout
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Add JWT token to all requests if present
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Error handler helper
+// Error handler utility
 const handleApiError = (error) => {
   if (error.response) {
     // Server responded with error
     const message = error.response.data?.message || error.response.data?.error || error.message;
     
-    if (error.response.status === 429) {
-      throw new Error('YouTube API quota exceeded. Please try again tomorrow.');
+    // Log the error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response.status,
+        message: message,
+        data: error.response.data
+      });
     }
     
-    if (error.response.status === 404) {
-      throw new Error('No data found. Try adjusting your search criteria.');
+    // Handle specific status codes
+    switch (error.response.status) {
+      case 401:
+        // Only redirect to login if not already on auth-related pages
+        if (!window.location.pathname.includes('/auth/') && !window.location.pathname.includes('/login')) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
+        throw new Error('Authentication required. Please login.');
+      
+      case 403:
+        throw new Error('You do not have permission to access this resource.');
+      
+      case 404:
+        throw new Error('Resource not found.');
+      
+      case 429:
+        throw new Error('API rate limit exceeded. Please try again later.');
+      
+      default:
+        throw new Error(message);
     }
-    
-    throw new Error(message);
-  } else if (error.code === 'ECONNABORTED') {
-    throw new Error('Request timed out. Please try again.');
-  } else if (!error.response) {
+  } else if (error.request) {
+    // Request was made but no response received
+    console.error('Network error:', error.request);
     throw new Error('Network error. Please check your connection.');
+  } else {
+    // Something else happened
+    console.error('Error:', error.message);
+    throw error;
   }
-  
-  throw error;
 };
 
-// Fetch dashboard data (total channels, comments, unique authors, etc.)
-export async function fetchDashboard() {
-  try {
-    const res = await api.get('/dashboard');
-    return res.data;
-  } catch (err) {
-    console.error('Error fetching dashboard:', err);
-    throw handleApiError(err);
-  }
-}
+// Create axios instance with defaults
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  withCredentials: true // Enable sending cookies
+});
 
-// Fetch detailed user data by userId
-export async function fetchUser(userId) {
-  if (!userId) {
-    throw new Error('User ID is required');
+// Add token to requests
+api.interceptors.request.use((config) => {
+  // Don't add token for auth routes
+  if (config.url.includes('/auth/google') || config.url.includes('/auth/google/callback')) {
+    return config;
   }
 
-  try {
-    const res = await api.get(`/user/${encodeURIComponent(userId)}`);
-    return res.data;
-  } catch (err) {
-    console.error('Error fetching user data:', err);
-    throw handleApiError(err);
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-}
+  return config;
+}, (error) => {
+  console.error('Request error:', error);
+  return Promise.reject(error);
+});
 
-// Fetch most active users
-export async function fetchMostActiveUsers() {
-  try {
-    const res = await api.get('/users');
-    return res.data;
-  } catch (err) {
-    console.error('Error fetching most active users:', err);
-    throw handleApiError(err);
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => handleApiError(error)
+);
+
+// User endpoints
+export const user = {
+  // Get user profile by ID
+  fetchUser: (userId) => 
+    api.get(`/users/${userId}`).catch(handleApiError),
+  
+  // Get current authenticated user
+  getCurrentUser: () => 
+    api.get('/auth/me').catch(handleApiError),
+  
+  // Update user profile
+  updateUser: (data) => 
+    api.put('/auth/me', data).catch(handleApiError)
+};
+
+// YouTube endpoints
+export const youtube = {
+  // Get Google OAuth URL
+  getAuthUrl: (state = '') => 
+    api.get(`/auth/google${state ? `?state=${encodeURIComponent(state)}` : ''}`),
+  
+  // Get channel statistics
+  getStats: async () => {
+    try {
+      const response = await api.get('/auth/youtube/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching YouTube stats:', error);
+      throw error;
+    }
+  },
+  
+  // Get channel information
+  getChannel: async () => {
+    try {
+      const response = await api.get('/auth/youtube/channel');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching YouTube channel:', error);
+      throw error;
+    }
+  },
+  
+  // Refresh YouTube stats
+  refreshStats: async () => {
+    try {
+      const response = await api.post('/auth/youtube/refresh');
+      return response.data;
+    } catch (error) {
+      console.error('Error refreshing YouTube stats:', error);
+      throw error;
+    }
+  },
+  
+  // Disconnect YouTube account
+  disconnect: async () => {
+    try {
+      const response = await api.post('/auth/youtube/disconnect');
+      return response.data;
+    } catch (error) {
+      console.error('Error disconnecting YouTube account:', error);
+      throw error;
+    }
+  },
+
+  // Get overview data for dashboard
+  fetchOverview: async () => {
+    try {
+      const response = await api.get('/youtube/overview');
+      if (!response?.data) {
+        throw new Error('No data received from YouTube overview endpoint');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching YouTube overview:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized access
+        localStorage.removeItem('token');
+      }
+      throw new Error(error.response?.data?.error || error.message || 'Failed to fetch YouTube overview');
+    }
+  },
+
+  // Get current quota usage
+  getQuotaUsage: async () => {
+    try {
+      const response = await api.get('/youtube/quota');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching quota usage:', error);
+      throw error;
+    }
   }
-}
+};
+
+// Auth endpoints
+export const auth = {
+  // Get current user
+  getCurrentUser: async () => {
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      throw error;
+    }
+  }
+};
+
+export default api;

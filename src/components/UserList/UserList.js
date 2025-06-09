@@ -7,9 +7,8 @@ const UserList = ({ users, title = "Most Active Users" }) => {
     <div className="bg-white rounded-xl shadow p-6 flex-1 min-w-[260px]">
       <div className="text-lg font-semibold text-blue-700 mb-4 flex items-center">
         <span className="mr-2">👤</span> {title}
-      </div>
-      <ul className="space-y-3">
-        {users.map((user) => (
+      </div>      <ul className="space-y-3">
+        {users?.map((user) => (
           <li
             key={user.id || user.username}
             className="cursor-pointer hover:bg-blue-50 rounded px-2 py-1 transition"

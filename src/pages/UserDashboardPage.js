@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import AuthorDetailsCard from "../components/AuthorDetailsCard";
 import ActivitySummaryCard from "../components/ActivitySummaryCard";
 import CommentStatistics from "../components/CommentStatistics";
-import { fetchUser } from "../utils/api";
+import { user, youtube } from "../utils/api";
 
 const LoadingState = () => (
   <div className="min-h-screen bg-gray-100">
@@ -65,58 +65,76 @@ const ErrorState = ({ error, onRetry }) => (
 
 const UserDashboardPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
+  const [youtubeStats, setYoutubeStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchUser(id);
-      setUserData(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    if (!id) {
-      navigate('/');
-      return;
-    }
-    loadData();
-  }, [id, navigate]);
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch user data and YouTube stats in parallel
+        const [userResponse, statsResponse] = await Promise.all([
+          user.fetchUser(id),
+          youtube.getStats()
+        ]);
+
+        setUserData(userResponse.data);
+        setYoutubeStats(statsResponse.data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [id]);
+
+  const handleRetry = () => {
+    window.location.reload();
+  };
 
   if (loading) return <LoadingState />;
-  if (error) return <ErrorState error={error} onRetry={loadData} />;
-  if (!userData) return null;
+  if (error) return <ErrorState error={error} onRetry={handleRetry} />;
+  if (!userData) return <ErrorState error="User not found" />;
 
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row gap-6">
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* User Profile Section */}
           <AuthorDetailsCard
-            username={userData.username}
-            totalComments={userData.totalComments}
+            name={userData.youtube?.channel_title || 'No YouTube Channel'}
+            avatar={userData.youtube?.profile_picture}
+            email={userData.email}
+            joinDate={userData.createdAt}
+            channelId={userData.youtube?.channel_id}
           />
-          <ActivitySummaryCard
-            totalLikes={userData.activitySummary.totalLikes}
-            avgLikes={userData.activitySummary.avgLikes}
-            maxLikes={userData.activitySummary.maxLikes}
-          />
+
+          {/* Activity Summary */}
+          {youtubeStats && (
+            <ActivitySummaryCard
+              views={youtubeStats.viewCount}
+              subscribers={youtubeStats.subscriberCount}
+              videos={youtubeStats.videoCount}
+              lastUpdated={youtubeStats.lastUpdated}
+            />
+          )}
         </div>
 
-        <div className="mt-8">
-          <CommentStatistics
-            timeline={userData.commentsTimeline}
-            distribution={userData.channelDistribution}
-          />
-        </div>
+        {/* Statistics Section */}
+        {userData.youtube && (
+          <div className="mt-8">
+            <CommentStatistics channelId={userData.youtube.channel_id} />
+          </div>
+        )}
       </div>
     </div>
   );
