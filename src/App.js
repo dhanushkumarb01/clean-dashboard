@@ -10,6 +10,7 @@ import "./App.css";
 import AuthCallback from './pages/AuthCallback';
 import YouTubeReportPage from './pages/YouTubeReportPage';
 import TelegramDashboard from './pages/TelegramDashboard/TelegramDashboard';
+import WhatsAppDashboard from './pages/WhatsAppDashboard/WhatsAppDashboard';
 import NotFound from './pages/NotFound';
 
 // Auth callback handler component
@@ -72,6 +73,10 @@ const App = () => {
         <Route 
           path="/telegram" 
           element={<ProtectedRoute><TelegramDashboard /></ProtectedRoute>}
+        />
+        <Route 
+          path="/whatsapp" 
+          element={<ProtectedRoute><WhatsAppDashboard /></ProtectedRoute>}
         />
         <Route path="*" element={<NotFound />} />
       </Routes>

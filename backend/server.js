@@ -25,6 +25,7 @@ const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/auth');
 const youtubeRoutes = require('./routes/youtube');
 const telegramRoutes = require('./routes/telegram');
+const whatsappRoutes = require('./routes/whatsapp');
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.get('/api/youtube/oauth2callback', require('./controllers/authController').g
 app.use('/api/auth', authRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/api/telegram', telegramRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {

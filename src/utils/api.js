@@ -279,6 +279,61 @@ export const telegram = {
   }
 };
 
+// WhatsApp endpoints
+export const whatsapp = {
+  // Get WhatsApp dashboard statistics
+  getStats: async () => {
+    try {
+      const response = await api.get('/whatsapp/stats');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching WhatsApp stats:', error);
+      throw error;
+    }
+  },
+
+  // Send WhatsApp message
+  sendMessage: async (phoneNumber, message, messageType = 'text') => {
+    try {
+      const response = await api.post('/whatsapp/send-message', {
+        to: phoneNumber,
+        message,
+        messageType
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error sending WhatsApp message:', error);
+      throw error;
+    }
+  },
+
+  // Get recent messages
+  getRecentMessages: async (limit = 50, offset = 0) => {
+    try {
+      const response = await api.get('/whatsapp/messages', {
+        params: { limit, offset }
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching recent messages:', error);
+      throw error;
+    }
+  },
+
+  // Get conversation with specific contact
+  getConversation: async (phoneNumber, limit = 50, offset = 0) => {
+    try {
+      const response = await api.get(`/whatsapp/conversation/${encodeURIComponent(phoneNumber)}`, {
+        params: { limit, offset }
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      throw error;
+    }
+  }
+};
+
 // Auth endpoints
 export const auth = {
   // Get current user
