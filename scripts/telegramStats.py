@@ -2,12 +2,14 @@
 """
 Telegram Statistics Collector
 Fetches Telegram statistics using Telethon and stores them in MongoDB via Express API
+Now includes message content collection for monitoring and analysis
 """
 
 import asyncio
 import json
 import os
 import sys
+import re
 from datetime import datetime, timedelta
 from collections import defaultdict, Counter
 import requests
@@ -16,6 +18,7 @@ from telethon.tl.types import User, Chat, Channel, MessageMediaPhoto, MessageMed
 from telethon.errors import FloodWaitError, SessionPasswordNeededError
 import logging
 from dotenv import load_dotenv
+import uuid
 
 # Load environment variables from config directory
 load_dotenv('../config/scripts.env')
@@ -38,9 +41,19 @@ PHONE_NUMBER = os.getenv('TELEGRAM_PHONE_NUMBER')
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:5000')
 SESSION_NAME = 'telegram_stats_session'
 
+# Suspicious keywords for content analysis
+SUSPICIOUS_KEYWORDS = [
+    'scam', 'fraud', 'fake', 'phishing', 'hack', 'steal', 'bitcoin', 'crypto',
+    'investment', 'profit', 'money back', 'guaranteed', 'risk-free', 'get rich',
+    'click here', 'urgent', 'limited time', 'act now', 'free money', 'loan',
+    'credit repair', 'debt relief', 'casino', 'gambling', 'lottery', 'winner'
+]
+
 class TelegramStatsCollector:
     def __init__(self):
         self.client = None
+        self.collection_batch_id = str(uuid.uuid4())
+        self.collected_messages = []
         self.stats = {
             'totalGroups': 0,
             'activeUsers': 0,
@@ -82,6 +95,247 @@ class TelegramStatsCollector:
             logger.error(f"Failed to initialize Telegram client: {e}")
             return False
     
+    def analyze_message_content(self, message_text):
+        """Analyze message content for suspicious keywords and other flags"""
+        if not message_text:
+            return {
+                'word_count': 0,
+                'contains_urls': False,
+                'contains_hashtags': False,
+                'contains_mentions': False,
+                'suspicious_keywords': [],
+                'risk_score': 0
+            }
+        
+        # Convert to lowercase for analysis
+        text_lower = message_text.lower()
+        
+        # Check for URLs
+        url_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+        contains_urls = bool(re.search(url_pattern, message_text))
+        
+        # Check for hashtags
+        contains_hashtags = bool(re.search(r'#\w+', message_text))
+        
+        # Check for mentions
+        contains_mentions = bool(re.search(r'@\w+', message_text))
+        
+        # Check for suspicious keywords
+        suspicious_keywords = []
+        for keyword in SUSPICIOUS_KEYWORDS:
+            if keyword in text_lower:
+                suspicious_keywords.append(keyword)
+        
+        # Calculate risk score (0-10)
+        risk_score = 0
+        risk_score += len(suspicious_keywords) * 2  # 2 points per suspicious keyword
+        risk_score += 1 if contains_urls else 0  # 1 point for URLs
+        risk_score = min(risk_score, 10)  # Cap at 10
+        
+        return {
+            'word_count': len(message_text.split()),
+            'contains_urls': contains_urls,
+            'contains_hashtags': contains_hashtags,
+            'contains_mentions': contains_mentions,
+            'suspicious_keywords': suspicious_keywords,
+            'risk_score': risk_score
+        }
+    
+    def get_message_type(self, message):
+        """Determine the type of message based on media content"""
+        if not message.media:
+            return 'text', None, False
+        
+        if hasattr(message.media, 'photo'):
+            return 'photo', 'photo', True
+        elif hasattr(message.media, 'document'):
+            if message.media.document.mime_type:
+                if 'video' in message.media.document.mime_type:
+                    return 'video', 'video', True
+                elif 'audio' in message.media.document.mime_type:
+                    return 'audio', 'audio', True
+                else:
+                    return 'document', 'document', True
+            return 'document', 'document', True
+        else:
+            return 'other', 'other', True
+    
+    async def collect_messages_from_chat(self, dialog, limit=200):
+        """Collect recent messages from a specific chat/group"""
+        try:
+            chat_type = 'private'
+            if dialog.is_group:
+                chat_type = 'group'
+            elif dialog.is_channel:
+                chat_type = 'channel'
+            
+            logger.info(f"Collecting messages from {chat_type}: {dialog.title} (limit: {limit})")
+            
+            messages_collected = 0
+            since_date = datetime.now() - timedelta(days=7)  # Last 7 days
+            
+            async for message in self.client.iter_messages(dialog.entity, limit=limit, offset_date=since_date):
+                try:
+                    # Skip service messages and empty messages
+                    if not message.text and not message.media:
+                        continue
+                    
+                    # Get sender information
+                    sender_info = {
+                        'sender_id': str(message.sender_id) if message.sender_id else 'unknown',
+                        'sender_username': None,
+                        'sender_first_name': None,
+                        'sender_last_name': None,
+                        'sender_is_bot': False
+                    }
+                    
+                    if message.sender:
+                        sender_info.update({
+                            'sender_username': getattr(message.sender, 'username', None),
+                            'sender_first_name': getattr(message.sender, 'first_name', None),
+                            'sender_last_name': getattr(message.sender, 'last_name', None),
+                            'sender_is_bot': getattr(message.sender, 'bot', False)
+                        })
+                    
+                    # Analyze message content
+                    content_analysis = self.analyze_message_content(message.text)
+                    
+                    # Get message type and media info
+                    message_type, media_type, has_media = self.get_message_type(message)
+                    
+                    # Create message data structure
+                    message_data = {
+                        'messageId': str(message.id),
+                        'chatId': str(dialog.id),
+                        'chatName': dialog.title or 'Unknown Chat',
+                        'chatType': chat_type,
+                        'senderId': sender_info['sender_id'],
+                        'senderUsername': sender_info['sender_username'],
+                        'senderFirstName': sender_info['sender_first_name'],
+                        'senderLastName': sender_info['sender_last_name'],
+                        'senderIsBot': sender_info['sender_is_bot'],
+                        'messageText': message.text or '',
+                        'messageType': message_type,
+                        'hasMedia': has_media,
+                        'mediaType': media_type,
+                        'timestamp': message.date.isoformat(),
+                        'editedTimestamp': message.edit_date.isoformat() if message.edit_date else None,
+                        'views': getattr(message, 'views', 0) or 0,
+                        'forwards': getattr(message, 'forwards', 0) or 0,
+                        'replies': 0,  # Replies count not easily available in Telethon
+                        'wordCount': content_analysis['word_count'],
+                        'containsUrls': content_analysis['contains_urls'],
+                        'containsHashtags': content_analysis['contains_hashtags'],
+                        'containsMentions': content_analysis['contains_mentions'],
+                        'suspiciousKeywords': content_analysis['suspicious_keywords'],
+                        'riskScore': content_analysis['risk_score'],
+                        'collectionBatch': self.collection_batch_id,
+                        'isFlagged': content_analysis['risk_score'] >= 5  # Auto-flag high risk messages
+                    }
+                    
+                    self.collected_messages.append(message_data)
+                    messages_collected += 1
+                    
+                    # Add small delay to avoid flood wait
+                    if messages_collected % 50 == 0:
+                        await asyncio.sleep(1)
+                        
+                except Exception as e:
+                    logger.warning(f"Error processing message {message.id}: {e}")
+                    continue
+            
+            logger.info(f"Collected {messages_collected} messages from {dialog.title}")
+            return messages_collected
+            
+        except FloodWaitError as e:
+            logger.warning(f"Flood wait for {dialog.title}: {e.seconds} seconds")
+            await asyncio.sleep(e.seconds)
+            return 0
+        except Exception as e:
+            logger.error(f"Error collecting messages from {dialog.title}: {e}")
+            return 0
+    
+    async def collect_all_messages(self):
+        """Collect messages from all groups and 1-on-1 chats"""
+        try:
+            logger.info("Starting message content collection...")
+            
+            total_messages_collected = 0
+            dialogs_processed = 0
+            
+            async for dialog in self.client.iter_dialogs():
+                # Process groups, channels, and private chats
+                if dialog.is_group or dialog.is_channel or dialog.is_user:
+                    # Skip bots in private chats
+                    if dialog.is_user and dialog.entity.bot:
+                        continue
+                    
+                    # Determine message limit based on chat type
+                    if dialog.is_user:
+                        limit = 100  # Fewer messages from private chats
+                    else:
+                        limit = 200  # More from groups/channels
+                    
+                    messages_count = await self.collect_messages_from_chat(dialog, limit)
+                    total_messages_collected += messages_count
+                    dialogs_processed += 1
+                    
+                    # Add delay between chats to respect rate limits
+                    await asyncio.sleep(2)
+                    
+                    # Log progress every 5 chats
+                    if dialogs_processed % 5 == 0:
+                        logger.info(f"Processed {dialogs_processed} chats, collected {total_messages_collected} messages so far")
+            
+            logger.info(f"Message collection completed: {total_messages_collected} messages from {dialogs_processed} chats")
+            return total_messages_collected
+            
+        except Exception as e:
+            logger.error(f"Error in message collection: {e}")
+            return 0
+    
+    def store_messages_in_mongodb(self):
+        """Store collected messages in MongoDB via Express API"""
+        try:
+            if not self.collected_messages:
+                logger.info("No messages to store")
+                return True
+                
+            logger.info(f"Storing {len(self.collected_messages)} messages in MongoDB...")
+            
+            # Send messages in batches to avoid request size limits
+            batch_size = 100
+            success_count = 0
+            
+            for i in range(0, len(self.collected_messages), batch_size):
+                batch = self.collected_messages[i:i + batch_size]
+                
+                response = requests.post(
+                    f"{BACKEND_URL}/api/telegram/store-messages",
+                    json={'messages': batch},
+                    headers={'Content-Type': 'application/json'},
+                    timeout=60
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    batch_success = result.get('stored', 0)
+                    success_count += batch_success
+                    logger.info(f"Batch {i//batch_size + 1}: {batch_success} messages stored successfully")
+                else:
+                    logger.error(f"Failed to store message batch {i//batch_size + 1}: {response.status_code} - {response.text}")
+                
+                # Small delay between batches
+                import time
+                time.sleep(1)
+            
+            logger.info(f"Message storage completed: {success_count} out of {len(self.collected_messages)} messages stored")
+            return success_count > 0
+            
+        except Exception as e:
+            logger.error(f"Error storing messages: {e}")
+            return False
+    
     async def collect_basic_stats(self):
         """Collect basic statistics from all dialogs"""
         try:
@@ -109,11 +363,6 @@ class TelegramStatsCollector:
                         if isinstance(participant, User):
                             if not participant.bot:
                                 unique_users.add(participant.id)
-                                # logger.debug(f"Added user: {participant.id} - {getattr(participant, 'username', 'N/A')}")
-                            # else:
-                                # logger.debug(f"Skipping bot: {participant.id} - {getattr(participant, 'username', 'N/A')}")
-                        # else:
-                            # logger.debug(f"Skipping non-user participant: {type(participant)}")
                 except Exception as e:
                     logger.warning(f"Could not get participants for {dialog.title}: {e}")
             
@@ -127,31 +376,39 @@ class TelegramStatsCollector:
             user_message_counts = defaultdict(int)
             group_message_counts = defaultdict(int)
             
-            # Collect messages from last 7 days
-            since_date = datetime.now() - timedelta(days=7)
-            
-            for dialog in groups:
-                try:
-                    async for message in self.client.iter_messages(dialog.entity, limit=1000, offset_date=since_date):
-                        message_count += 1
-                        
-                        # Count media files
-                        if message.media:
-                            if isinstance(message.media, (MessageMediaPhoto, MessageMediaDocument)):
-                                media_count += 1
-                        
-                        # Count user messages
-                        if message.sender_id:
-                            user_message_counts[message.sender_id] += 1
-                        
-                        # Count group messages
-                        group_message_counts[dialog.id] += 1
-                        
-                except FloodWaitError as e:
-                    logger.warning(f"Flood wait for {dialog.title}: {e.seconds} seconds")
-                    await asyncio.sleep(e.seconds)
-                except Exception as e:
-                    logger.warning(f"Error collecting messages from {dialog.title}: {e}")
+            # Use collected messages for stats if available
+            if self.collected_messages:
+                message_count = len(self.collected_messages)
+                for msg in self.collected_messages:
+                    if msg['hasMedia']:
+                        media_count += 1
+                    user_message_counts[msg['senderId']] += 1
+                    group_message_counts[msg['chatId']] += 1
+            else:
+                # Fallback to old method
+                since_date = datetime.now() - timedelta(days=7)
+                for dialog in groups:
+                    try:
+                        async for message in self.client.iter_messages(dialog.entity, limit=1000, offset_date=since_date):
+                            message_count += 1
+                            
+                            # Count media files
+                            if message.media:
+                                if isinstance(message.media, (MessageMediaPhoto, MessageMediaDocument)):
+                                    media_count += 1
+                            
+                            # Count user messages
+                            if message.sender_id:
+                                user_message_counts[message.sender_id] += 1
+                            
+                            # Count group messages
+                            group_message_counts[dialog.id] += 1
+                            
+                    except FloodWaitError as e:
+                        logger.warning(f"Flood wait for {dialog.title}: {e.seconds} seconds")
+                        await asyncio.sleep(e.seconds)
+                    except Exception as e:
+                        logger.warning(f"Error collecting messages from {dialog.title}: {e}")
             
             self.stats['totalMessages'] = message_count
             self.stats['totalMediaFiles'] = media_count
@@ -182,27 +439,41 @@ class TelegramStatsCollector:
             user_message_counts = defaultdict(int)
             user_info = {}
             
-            # Collect user message counts and info
-            since_date = datetime.now() - timedelta(days=7)
-            
-            async for dialog in self.client.iter_dialogs():
-                if dialog.is_group or dialog.is_channel:
-                    try:
-                        async for message in self.client.iter_messages(dialog.entity, limit=1000, offset_date=since_date):
-                            if message.sender_id:
-                                user_message_counts[message.sender_id] += 1
-                                
-                                # Store user info
-                                if message.sender_id not in user_info and message.sender:
-                                    user_info[message.sender_id] = {
-                                        'userId': str(message.sender_id),
-                                        'username': getattr(message.sender, 'username', None),
-                                        'firstName': getattr(message.sender, 'first_name', None),
-                                        'lastName': getattr(message.sender, 'last_name', None),
-                                        'telegramId': str(message.sender_id)
-                                    }
-                    except Exception as e:
-                        logger.warning(f"Error collecting user data from {dialog.title}: {e}")
+            # Use collected messages if available
+            if self.collected_messages:
+                for msg in self.collected_messages:
+                    sender_id = msg['senderId']
+                    user_message_counts[sender_id] += 1
+                    if sender_id not in user_info:
+                        user_info[sender_id] = {
+                            'userId': sender_id,
+                            'username': msg['senderUsername'],
+                            'firstName': msg['senderFirstName'],
+                            'lastName': msg['senderLastName'],
+                            'telegramId': sender_id
+                        }
+            else:
+                # Fallback to old method
+                since_date = datetime.now() - timedelta(days=7)
+                
+                async for dialog in self.client.iter_dialogs():
+                    if dialog.is_group or dialog.is_channel:
+                        try:
+                            async for message in self.client.iter_messages(dialog.entity, limit=1000, offset_date=since_date):
+                                if message.sender_id:
+                                    user_message_counts[message.sender_id] += 1
+                                    
+                                    # Store user info
+                                    if message.sender_id not in user_info and message.sender:
+                                        user_info[message.sender_id] = {
+                                            'userId': str(message.sender_id),
+                                            'username': getattr(message.sender, 'username', None),
+                                            'firstName': getattr(message.sender, 'first_name', None),
+                                            'lastName': getattr(message.sender, 'last_name', None),
+                                            'telegramId': str(message.sender_id)
+                                        }
+                        except Exception as e:
+                            logger.warning(f"Error collecting user data from {dialog.title}: {e}")
             
             # Get top 10 most active users
             top_users = sorted(user_message_counts.items(), key=lambda x: x[1], reverse=True)[:10]
@@ -234,34 +505,62 @@ class TelegramStatsCollector:
             group_message_counts = defaultdict(int)
             group_info = {}
             
-            since_date = datetime.now() - timedelta(days=7)
-            
-            async for dialog in self.client.iter_dialogs():
-                if dialog.is_group or dialog.is_channel:
-                    try:
-                        message_count = 0
-                        async for message in self.client.iter_messages(dialog.entity, limit=1000, offset_date=since_date):
-                            message_count += 1
-                        
-                        group_message_counts[dialog.id] = message_count
-                        
-                        # Store group info
-                        group_info[dialog.id] = {
-                            'groupId': str(dialog.id),
-                            'title': dialog.title,
-                            'username': getattr(dialog.entity, 'username', None),
-                            'isChannel': dialog.is_channel
-                        }
-                        
-                        # Try to get member count
+            # Use collected messages if available
+            if self.collected_messages:
+                for msg in self.collected_messages:
+                    if msg['chatType'] in ['group', 'channel']:
+                        chat_id = msg['chatId']
+                        group_message_counts[chat_id] += 1
+                        if chat_id not in group_info:
+                            group_info[chat_id] = {
+                                'groupId': chat_id,
+                                'title': msg['chatName'],
+                                'username': None,
+                                'isChannel': msg['chatType'] == 'channel',
+                                'memberCount': 0
+                            }
+                
+                # Try to get member counts
+                async for dialog in self.client.iter_dialogs():
+                    if dialog.is_group or dialog.is_channel:
+                        chat_id = str(dialog.id)
+                        if chat_id in group_info:
+                            try:
+                                participants = await self.client.get_participants(dialog.entity, limit=1)
+                                group_info[chat_id]['memberCount'] = len(participants) if participants else 0
+                                group_info[chat_id]['username'] = getattr(dialog.entity, 'username', None)
+                            except:
+                                pass
+            else:
+                # Fallback to old method
+                since_date = datetime.now() - timedelta(days=7)
+                
+                async for dialog in self.client.iter_dialogs():
+                    if dialog.is_group or dialog.is_channel:
                         try:
-                            participants = await self.client.get_participants(dialog.entity, limit=1)
-                            group_info[dialog.id]['memberCount'] = len(participants) if participants else 0
-                        except:
-                            group_info[dialog.id]['memberCount'] = 0
+                            message_count = 0
+                            async for message in self.client.iter_messages(dialog.entity, limit=1000, offset_date=since_date):
+                                message_count += 1
                             
-                    except Exception as e:
-                        logger.warning(f"Error collecting group data from {dialog.title}: {e}")
+                            group_message_counts[dialog.id] = message_count
+                            
+                            # Store group info
+                            group_info[dialog.id] = {
+                                'groupId': str(dialog.id),
+                                'title': dialog.title,
+                                'username': getattr(dialog.entity, 'username', None),
+                                'isChannel': dialog.is_channel
+                            }
+                            
+                            # Try to get member count
+                            try:
+                                participants = await self.client.get_participants(dialog.entity, limit=1)
+                                group_info[dialog.id]['memberCount'] = len(participants) if participants else 0
+                            except:
+                                group_info[dialog.id]['memberCount'] = 0
+                                
+                        except Exception as e:
+                            logger.warning(f"Error collecting group data from {dialog.title}: {e}")
             
             # Get top 10 most active groups
             top_groups = sorted(group_message_counts.items(), key=lambda x: x[1], reverse=True)[:10]
@@ -359,11 +658,18 @@ class TelegramStatsCollector:
     async def run_collection(self):
         """Run the complete statistics collection process"""
         try:
-            logger.info("Starting Telegram statistics collection...")
+            logger.info("Starting Telegram statistics and message collection...")
             
             # Initialize client
             if not await self.initialize_client():
                 return False
+            
+            # Collect message content first (this will also be used for stats)
+            await self.collect_all_messages()
+            
+            # Store messages in MongoDB
+            if self.collected_messages:
+                self.store_messages_in_mongodb()
             
             # Collect all statistics
             await self.collect_basic_stats()
@@ -372,7 +678,7 @@ class TelegramStatsCollector:
             await self.collect_top_users_by_groups()
             await self.collect_private_chat_users()
             
-            # Store in MongoDB
+            # Store stats in MongoDB
             success = self.store_stats_in_mongodb()
             
             # Close client
@@ -392,10 +698,10 @@ async def main():
     success = await collector.run_collection()
     
     if success:
-        logger.info("Telegram statistics collection completed successfully")
+        logger.info("Telegram statistics and message collection completed successfully")
         sys.exit(0)
     else:
-        logger.error("Telegram statistics collection failed")
+        logger.error("Telegram statistics and message collection failed")
         sys.exit(1)
 
 if __name__ == "__main__":

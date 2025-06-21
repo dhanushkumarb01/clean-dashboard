@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 
 // Public routes (no auth required for data storage from Python script)
 router.post('/store-stats', telegramController.storeTelegramStats);
+router.post('/store-messages', telegramController.storeTelegramMessages);
 
 // Protected routes (auth required for frontend access)
 router.use(auth);
@@ -18,6 +19,13 @@ router.get('/stats-history', telegramController.getStatsHistory);
 router.get('/user/:userId', telegramController.getUserReport);
 router.get('/group/:groupId', telegramController.getGroupReport);
 router.get('/report', telegramController.generateReport);
+
+// ** NEW: Message Content Routes **
+router.get('/messages', telegramController.getMessages);
+router.get('/messages/flagged', telegramController.getFlaggedMessages);
+router.get('/messages/chat/:chatId', telegramController.getMessagesByChat);
+router.post('/messages/:messageId/flag', telegramController.flagMessage);
+router.post('/messages/:messageId/unflag', telegramController.unflagMessage);
 
 // ** NEW: Law Enforcement Analytics Routes **
 router.get('/suspicious-users', telegramController.getSuspiciousUsers);

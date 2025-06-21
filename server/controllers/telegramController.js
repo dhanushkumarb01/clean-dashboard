@@ -614,6 +614,291 @@ const getSuspiciousUserReport = async (req, res) => {
   }
 };
 
+// ** NEW: Message Content Management Functions **
+
+// Store Telegram messages (called by Python script)
+const storeTelegramMessages = async (req, res) => {
+  try {
+    console.log('Telegram Controller - Storing new messages');
+    console.log('Incoming message count:', req.body.messages?.length || 0);
+    
+    const { messages } = req.body;
+    
+    // Validate required fields
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid data format - messages array required'
+      });
+    }
+    
+    const TelegramMessage = require('../models/TelegramMessage');
+    let stored = 0;
+    let errors = 0;
+    
+    // Process messages in batch
+    for (const messageData of messages) {
+      try {
+        // Create new message document
+        const newMessage = new TelegramMessage({
+          ...messageData,
+          timestamp: new Date(messageData.timestamp),
+          editedTimestamp: messageData.editedTimestamp ? new Date(messageData.editedTimestamp) : null
+        });
+        
+        await newMessage.save();
+        stored++;
+        
+      } catch (error) {
+        // Handle duplicate key errors gracefully
+        if (error.code === 11000) {
+          console.log(`Duplicate message skipped: ${messageData.messageId}`);
+        } else {
+          console.error('Error storing individual message:', error);
+          errors++;
+        }
+      }
+    }
+    
+    console.log(`Telegram Controller - Messages stored: ${stored}, errors: ${errors}`);
+    
+    res.json({
+      success: true,
+      message: 'Telegram messages stored successfully',
+      stored: stored,
+      errors: errors,
+      total: messages.length
+    });
+  } catch (error) {
+    console.error('Telegram Controller - Error storing messages:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to store Telegram messages',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Get messages with pagination and filtering
+const getMessages = async (req, res) => {
+  try {
+    console.log('Telegram Controller - Fetching messages');
+    
+    const TelegramMessage = require('../models/TelegramMessage');
+    
+    // Query parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const chatId = req.query.chatId;
+    const flagged = req.query.flagged === 'true';
+    const riskScore = req.query.riskScore;
+    
+    // Build query
+    let query = {};
+    if (chatId) query.chatId = chatId;
+    if (flagged) query.isFlagged = true;
+    if (riskScore) query.riskScore = { $gte: parseInt(riskScore) };
+    
+    // Execute query with pagination
+    const messages = await TelegramMessage.find(query)
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .select('-__v');
+    
+    // Get total count for pagination
+    const totalMessages = await TelegramMessage.countDocuments(query);
+    
+    res.json({
+      success: true,
+      data: {
+        messages,
+        pagination: {
+          page,
+          limit,
+          total: totalMessages,
+          pages: Math.ceil(totalMessages / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Telegram Controller - Error fetching messages:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch messages',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Get flagged messages
+const getFlaggedMessages = async (req, res) => {
+  try {
+    console.log('Telegram Controller - Fetching flagged messages');
+    
+    const TelegramMessage = require('../models/TelegramMessage');
+    
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    
+    const messages = await TelegramMessage.find({ isFlagged: true })
+      .sort({ riskScore: -1, timestamp: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .select('-__v');
+    
+    const totalFlagged = await TelegramMessage.countDocuments({ isFlagged: true });
+    
+    res.json({
+      success: true,
+      data: {
+        messages,
+        pagination: {
+          page,
+          limit,
+          total: totalFlagged,
+          pages: Math.ceil(totalFlagged / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Telegram Controller - Error fetching flagged messages:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch flagged messages',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Get messages by chat ID
+const getMessagesByChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    console.log(`Telegram Controller - Fetching messages for chat: ${chatId}`);
+    
+    const TelegramMessage = require('../models/TelegramMessage');
+    
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 100;
+    
+    const messages = await TelegramMessage.find({ chatId })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .select('-__v');
+    
+    const totalMessages = await TelegramMessage.countDocuments({ chatId });
+    
+    // Get chat info from first message
+    const chatInfo = messages.length > 0 ? {
+      chatId: messages[0].chatId,
+      chatName: messages[0].chatName,
+      chatType: messages[0].chatType
+    } : null;
+    
+    res.json({
+      success: true,
+      data: {
+        messages,
+        chatInfo,
+        pagination: {
+          page,
+          limit,
+          total: totalMessages,
+          pages: Math.ceil(totalMessages / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error(`Telegram Controller - Error fetching messages for chat ${req.params.chatId}:`, error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch chat messages',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Flag a message
+const flagMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { reason } = req.body;
+    
+    console.log(`Telegram Controller - Flagging message: ${messageId}`);
+    
+    const TelegramMessage = require('../models/TelegramMessage');
+    
+    const message = await TelegramMessage.findById(messageId);
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: 'Message not found'
+      });
+    }
+    
+    message.isFlagged = true;
+    message.flagReason = reason || 'Manually flagged by user';
+    message.flaggedBy = req.user.id;
+    message.flaggedAt = new Date();
+    
+    await message.save();
+    
+    res.json({
+      success: true,
+      message: 'Message flagged successfully',
+      data: message
+    });
+  } catch (error) {
+    console.error(`Telegram Controller - Error flagging message ${req.params.messageId}:`, error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to flag message',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Unflag a message
+const unflagMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    
+    console.log(`Telegram Controller - Unflagging message: ${messageId}`);
+    
+    const TelegramMessage = require('../models/TelegramMessage');
+    
+    const message = await TelegramMessage.findById(messageId);
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: 'Message not found'
+      });
+    }
+    
+    message.isFlagged = false;
+    message.flagReason = null;
+    message.flaggedBy = null;
+    message.flaggedAt = null;
+    
+    await message.save();
+    
+    res.json({
+      success: true,
+      message: 'Message unflagged successfully',
+      data: message
+    });
+  } catch (error) {
+    console.error(`Telegram Controller - Error unflagging message ${req.params.messageId}:`, error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unflag message',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   getTelegramStats,
   getMostActiveUsers,
@@ -629,4 +914,11 @@ module.exports = {
   getEnhancedAnalytics,
   getLocationIntelligence,
   getSuspiciousUserReport,
+  // New message content endpoints
+  storeTelegramMessages,
+  getMessages,
+  getFlaggedMessages,
+  getMessagesByChat,
+  flagMessage,
+  unflagMessage,
 };

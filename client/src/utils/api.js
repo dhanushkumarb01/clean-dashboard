@@ -309,6 +309,88 @@ export const telegram = {
       console.error('Error storing Telegram stats:', error);
       throw error;
     }
+  },
+
+  // Get Telegram messages with filtering and pagination
+  getMessages: async (options = {}) => {
+    try {
+      const response = await api.get('/telegram/messages', {
+        params: {
+          page: options.page || 1,
+          limit: options.limit || 50,
+          flagged: options.flagged,
+          riskScore: options.riskScore,
+          chatId: options.chatId,
+          senderId: options.senderId
+        }
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching Telegram messages:', error);
+      throw error;
+    }
+  },
+
+  // Flag/unflag a message
+  flagMessage: async (messageId, flagged, reason = null) => {
+    try {
+      const response = await api.put(`/telegram/messages/${messageId}/flag`, {
+        flagged,
+        reason
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error flagging message:', error);
+      throw error;
+    }
+  },
+
+  // Batch flag messages
+  batchFlagMessages: async (messageIds, flagged, reason = null) => {
+    try {
+      const response = await api.put('/telegram/messages/batch-flag', {
+        messageIds,
+        flagged,
+        reason
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error batch flagging messages:', error);
+      throw error;
+    }
+  },
+
+  // Get message statistics
+  getMessageStats: async () => {
+    try {
+      const response = await api.get('/telegram/messages/stats');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching message stats:', error);
+      throw error;
+    }
+  },
+
+  // Get law enforcement analytics
+  getLawEnforcementStats: async () => {
+    try {
+      const response = await api.get('/telegram/law-enforcement-stats');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching law enforcement stats:', error);
+      throw error;
+    }
+  },
+
+  // Get suspicious activity summary
+  getSuspiciousActivity: async () => {
+    try {
+      const response = await api.get('/telegram/suspicious-activity');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching suspicious activity:', error);
+      throw error;
+    }
   }
 };
 

@@ -3,22 +3,14 @@ import { useNavigate } from "react-router-dom";
 import TelegramStatCard from "./TelegramStatCard";
 import MostActiveUsersList from "./MostActiveUsersList";
 import MostActiveGroupsList from "././MostActiveGroupsList";
+import TelegramMessagesList from "../../components/TelegramMessagesList";
+import LawEnforcementAnalytics from "../../components/LawEnforcementAnalytics";
 import { telegram } from "../../utils/api";
-// Law Enforcement Analytics Components - temporarily disabled while creating proper directory structure
-// import SuspiciousUsers from "../../components/SuspiciousUsers";
+// Enhanced Analytics and Location Intelligence Components - temporarily disabled while creating proper directory structure
 // import EnhancedAnalytics from "../../components/EnhancedAnalytics";
 // import LocationIntelligence from "../../components/LocationIntelligence";
 
 // Temporary placeholder components
-const SuspiciousUsers = () => (
-  <div className="bg-white rounded-lg shadow p-6">
-    <div className="text-center text-gray-500 py-8">
-      <div className="text-4xl mb-4">🚨</div>
-      <p className="text-lg font-medium">Suspicious Users Analytics</p>
-      <p className="text-sm mt-2">Loading law enforcement analytics components...</p>
-    </div>
-  </div>
-);
 
 const EnhancedAnalytics = () => (
   <div className="bg-white rounded-lg shadow p-6">
@@ -277,18 +269,20 @@ const TelegramDashboard = () => {
         ))}
       </div>
 
+      {/* Message Content Analysis Section - NEW */}
+      <div className="mb-8">
+        <TelegramMessagesList />
+      </div>
+
       {/* Enhanced Analytics Section */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">📊 Enhanced Analytics</h2>
         <EnhancedAnalytics />
       </div>
 
-      {/* Suspicious Users Section */}
+      {/* Law Enforcement Analytics Section */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-          🚨 Law Enforcement Analytics
-        </h2>
-        <SuspiciousUsers />
+        <LawEnforcementAnalytics />
       </div>
 
       {/* Location Intelligence Section */}
