@@ -15,13 +15,17 @@ from telethon import TelegramClient, events
 from telethon.tl.types import User, Chat, Channel, MessageMediaPhoto, MessageMediaDocument
 from telethon.errors import FloodWaitError, SessionPasswordNeededError
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from config directory
+load_dotenv('../config/scripts.env')
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('telegram_stats.log'),
+        logging.FileHandler('../data/telegram_stats.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -95,18 +99,27 @@ class TelegramStatsCollector:
             
             # Count total users across all groups
             unique_users = set()
-            active_users = set()
             
             for dialog in groups:
                 try:
-                    participants = await self.client.get_participants(dialog.entity, limit=1000)
+                    logger.info(f"Fetching participants for group/channel: {dialog.title} (ID: {dialog.id})")
+                    participants = await self.client.get_participants(dialog.entity, limit=None) # Fetch all participants
+                    logger.info(f"Found {len(participants)} participants in {dialog.title}")
                     for participant in participants:
-                        if isinstance(participant, User) and not participant.bot:
-                            unique_users.add(participant.id)
+                        if isinstance(participant, User):
+                            if not participant.bot:
+                                unique_users.add(participant.id)
+                                # logger.debug(f"Added user: {participant.id} - {getattr(participant, 'username', 'N/A')}")
+                            # else:
+                                # logger.debug(f"Skipping bot: {participant.id} - {getattr(participant, 'username', 'N/A')}")
+                        # else:
+                            # logger.debug(f"Skipping non-user participant: {type(participant)}")
                 except Exception as e:
                     logger.warning(f"Could not get participants for {dialog.title}: {e}")
             
             self.stats['totalUsers'] = len(unique_users)
+            
+            logger.info(f"Total unique users identified across all groups (excluding bots): {len(unique_users)}")
             
             # Count messages and media files
             message_count = 0
@@ -273,54 +286,44 @@ class TelegramStatsCollector:
             logger.error(f"Error collecting most active groups: {e}")
     
     async def collect_top_users_by_groups(self):
-        """Collect top users by number of groups joined"""
+        """Collect top users by groups joined data"""
         try:
-            logger.info("Collecting top users by groups joined...")
+            logger.info("Collecting top users by groups...")
             
-            user_groups = defaultdict(set)
-            user_info = {}
+            # This aggregation would require storing group membership history per user,
+            # which is not currently implemented in this simplified collector.
+            # For a more robust solution, you would need to store user-group relationships
+            # or fetch participant lists for all groups and then count.
             
-            async for dialog in self.client.iter_dialogs():
-                if dialog.is_group or dialog.is_channel:
-                    try:
-                        participants = await self.client.get_participants(dialog.entity, limit=1000)
-                        for participant in participants:
-                            if isinstance(participant, User) and not participant.bot:
-                                user_groups[participant.id].add(dialog.id)
-                                
-                                # Store user info
-                                if participant.id not in user_info:
-                                    user_info[participant.id] = {
-                                        'userId': str(participant.id),
-                                        'username': getattr(participant, 'username', None),
-                                        'firstName': getattr(participant, 'first_name', None),
-                                        'lastName': getattr(participant, 'last_name', None),
-                                        'telegramId': str(participant.id)
-                                    }
-                    except Exception as e:
-                        logger.warning(f"Error collecting user groups from {dialog.title}: {e}")
-            
-            # Get top 10 users by groups joined
-            top_users = sorted(user_groups.items(), key=lambda x: len(x[1]), reverse=True)[:10]
-            
-            self.stats['topUsersByGroups'] = [
-                {
-                    **user_info.get(user_id, {
-                        'userId': str(user_id),
-                        'username': None,
-                        'firstName': None,
-                        'lastName': None,
-                        'telegramId': str(user_id)
-                    }),
-                    'groupsJoined': len(groups)
-                }
-                for user_id, groups in top_users
-            ]
-            
-            logger.info(f"Top users by groups collected: {len(self.stats['topUsersByGroups'])} users")
+            # For now, return empty data or implement a simplified logic if possible
+            self.stats['topUsersByGroups'] = []
+            logger.info("Top users by groups collection skipped (feature not fully implemented)")
             
         except Exception as e:
             logger.error(f"Error collecting top users by groups: {e}")
+    
+    async def collect_private_chat_users(self):
+        """Fetches and prints details of 1-on-1 personal chats with real users."""
+        logger.info("Collecting 1-on-1 private chat user details...")
+        unique_private_users = set()
+
+        try:
+            async for dialog in self.client.iter_dialogs():
+                # Check if it's a 1-on-1 user chat and not a bot
+                if dialog.is_user and not dialog.entity.bot:
+                    user = dialog.entity
+                    unique_private_users.add(user.id)
+                    logger.info(
+                        f"User: "
+                        f"Username: {getattr(user, 'username', 'N/A')}, "
+                        f"First Name: {getattr(user, 'first_name', 'N/A')}, "
+                        f"Last Name: {getattr(user, 'last_name', 'N/A')}, "
+                        f"Telegram ID: {user.id}"
+                    )
+
+            logger.info(f"Total unique 1-on-1 private chat users: {len(unique_private_users)}")
+        except Exception as e:
+            logger.error(f"Error collecting private chat users: {e}", exc_info=True)
     
     def store_stats_in_mongodb(self):
         """Store collected statistics in MongoDB via Express API"""
@@ -367,6 +370,7 @@ class TelegramStatsCollector:
             await self.collect_most_active_users()
             await self.collect_most_active_groups()
             await self.collect_top_users_by_groups()
+            await self.collect_private_chat_users()
             
             # Store in MongoDB
             success = self.store_stats_in_mongodb()
@@ -395,4 +399,4 @@ async def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

@@ -1,0 +1,205 @@
+2025-06-11 19:49:31,853 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-11 19:49:31,854 - __main__ - ERROR - Failed to initialize Telegram client: Missing required environment variables: TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_PHONE_NUMBER
+2025-06-11 19:49:31,854 - __main__ - ERROR - Telegram statistics collection failed
+2025-06-17 13:41:32,746 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-17 13:41:32,746 - __main__ - ERROR - Failed to initialize Telegram client: Missing required environment variables: TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_PHONE_NUMBER
+2025-06-17 13:41:32,746 - __main__ - ERROR - Telegram statistics collection failed
+2025-06-17 13:43:49,817 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-17 13:43:49,818 - __main__ - ERROR - Failed to initialize Telegram client: Missing required environment variables: TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_PHONE_NUMBER
+2025-06-17 13:43:49,818 - __main__ - ERROR - Telegram statistics collection failed
+2025-06-17 13:44:21,747 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-17 13:44:21,747 - __main__ - ERROR - Failed to initialize Telegram client: Missing required environment variables: TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_PHONE_NUMBER
+2025-06-17 13:44:21,747 - __main__ - ERROR - Telegram statistics collection failed
+2025-06-17 13:48:32,507 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-17 13:48:32,702 - telethon.network.mtprotosender - INFO - Connecting to 149.154.167.51:443/TcpFull...
+2025-06-17 13:48:34,725 - telethon.network.mtprotosender - INFO - Connection to 149.154.167.51:443/TcpFull complete!
+2025-06-17 13:48:35,561 - telethon.client.users - INFO - Phone migrated to 5
+2025-06-17 13:48:35,744 - telethon.client.telegrambaseclient - INFO - Reconnecting to new data center 5
+2025-06-17 13:48:35,968 - telethon.network.mtprotosender - INFO - Disconnecting from 149.154.167.51:443/TcpFull...
+2025-06-17 13:48:35,969 - telethon.network.mtprotosender - INFO - Disconnection from 149.154.167.51:443/TcpFull complete!
+2025-06-17 13:48:35,970 - telethon.network.mtprotosender - INFO - Connecting to 91.108.56.156:443/TcpFull...
+2025-06-17 13:48:37,603 - telethon.network.mtprotosender - INFO - Connection to 91.108.56.156:443/TcpFull complete!
+2025-06-17 13:48:47,732 - __main__ - INFO - Telegram client initialized successfully
+2025-06-17 13:48:47,732 - __main__ - INFO - Collecting basic statistics...
+2025-06-17 13:48:48,121 - __main__ - WARNING - Could not get participants for The Dictator: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-17 13:48:48,430 - __main__ - WARNING - Could not get participants for War Updates: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-17 13:48:57,622 - __main__ - INFO - Basic stats collected: 2 groups, 1178 messages
+2025-06-17 13:48:57,623 - __main__ - INFO - Collecting most active users...
+2025-06-17 13:49:03,559 - __main__ - INFO - Most active users collected: 2 users
+2025-06-17 13:49:03,560 - __main__ - INFO - Collecting most active groups...
+2025-06-17 13:49:08,900 - __main__ - INFO - Most active groups collected: 2 groups
+2025-06-17 13:49:08,901 - __main__ - INFO - Collecting top users by groups joined...
+2025-06-17 13:49:09,186 - __main__ - WARNING - Error collecting user groups from The Dictator: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-17 13:49:09,280 - __main__ - WARNING - Error collecting user groups from War Updates: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-17 13:49:09,281 - __main__ - INFO - Top users by groups collected: 0 users
+2025-06-17 13:49:09,282 - __main__ - INFO - Storing statistics in MongoDB...
+2025-06-17 13:49:09,437 - __main__ - INFO - Statistics stored successfully: Telegram statistics stored successfully
+2025-06-17 13:49:09,437 - telethon.network.mtprotosender - INFO - Disconnecting from 91.108.56.156:443/TcpFull...
+2025-06-17 13:49:09,438 - telethon.network.mtprotosender - INFO - Disconnection from 91.108.56.156:443/TcpFull complete!
+2025-06-17 13:49:09,447 - __main__ - INFO - Telegram statistics collection completed successfully
+2025-06-17 14:20:59,872 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-17 14:20:59,976 - telethon.network.mtprotosender - INFO - Connecting to 91.108.56.156:443/TcpFull...
+2025-06-17 14:21:00,042 - telethon.network.mtprotosender - INFO - Connection to 91.108.56.156:443/TcpFull complete!
+2025-06-17 14:21:00,562 - __main__ - INFO - Telegram client initialized successfully
+2025-06-17 14:21:00,562 - __main__ - INFO - Collecting basic statistics...
+2025-06-17 14:21:00,724 - __main__ - INFO - Fetching participants for group/channel: Walmart Sparkathon Exam Answers Group (ID: -1001643937615)
+2025-06-17 14:21:07,398 - telethon.client.users - INFO - Sleeping for 25s (0:00:25) on GetParticipantsRequest flood wait
+2025-06-17 14:21:38,866 - __main__ - INFO - Found 10000 participants in Walmart Sparkathon Exam Answers Group
+2025-06-17 14:21:38,871 - __main__ - INFO - Fetching participants for group/channel: The Dictator (ID: -1002083389101)
+2025-06-17 14:21:39,079 - __main__ - WARNING - Could not get participants for The Dictator: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-17 14:21:39,080 - __main__ - INFO - Fetching participants for group/channel: Adobe India Hackathon Answers Group (ID: -1001709781365)
+2025-06-17 14:21:48,676 - telethon.client.users - INFO - Sleeping for 22s (0:00:22) on GetParticipantsRequest flood wait
+2025-06-17 14:22:17,507 - __main__ - INFO - Found 10000 participants in Adobe India Hackathon Answers Group
+2025-06-17 14:22:17,511 - __main__ - INFO - Fetching participants for group/channel: War Updates (ID: -1002249400757)
+2025-06-17 14:22:17,617 - __main__ - WARNING - Could not get participants for War Updates: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-17 14:22:17,618 - __main__ - INFO - Total unique users identified across all groups (excluding bots): 18488
+2025-06-17 14:22:31,476 - __main__ - INFO - Basic stats collected: 4 groups, 2523 messages
+2025-06-17 14:22:31,481 - __main__ - INFO - Collecting most active users...
+2025-06-17 14:22:39,885 - __main__ - INFO - Most active users collected: 10 users
+2025-06-17 14:22:39,886 - __main__ - INFO - Collecting most active groups...
+2025-06-17 14:22:41,787 - telethon.client.users - INFO - Sleeping for 7s (0:00:07) on GetHistoryRequest flood wait
+2025-06-17 14:22:49,689 - telethon.client.updates - INFO - Got difference for channel 1643937615 updates
+2025-06-17 14:23:06,004 - __main__ - INFO - Most active groups collected: 4 groups
+2025-06-17 14:23:06,005 - __main__ - INFO - Collecting top users by groups...
+2025-06-17 14:23:06,006 - __main__ - INFO - Top users by groups collection skipped (feature not fully implemented)
+2025-06-17 14:23:06,006 - __main__ - INFO - Collecting 1-on-1 private chat user details...
+2025-06-17 14:23:06,381 - __main__ - INFO - User: Username: None, First Name: Pawan, Last Name: Dhankhar, Telegram ID: 7609613426
+2025-06-17 14:23:06,382 - __main__ - INFO - User: Username: None, First Name: Telegram, Last Name: None, Telegram ID: 777000
+2025-06-17 14:23:06,382 - __main__ - INFO - User: Username: ayaan_62773, First Name: Ayaan, Last Name: None, Telegram ID: 6283420379
+2025-06-17 14:23:06,566 - __main__ - INFO - User: Username: None, First Name: Mukul, Last Name: Yadav, Telegram ID: 7497322575
+2025-06-17 14:23:06,567 - __main__ - INFO - User: Username: theunchainedG, First Name: @theunchained, Last Name: None, Telegram ID: 6778535649
+2025-06-17 14:23:06,567 - __main__ - INFO - User: Username: Dhanush019, First Name: Dhanush, Last Name: Kumar, Telegram ID: 5893019124
+2025-06-17 14:23:06,568 - __main__ - INFO - User: Username: None, First Name: aditya chawla, Last Name: None, Telegram ID: 5755993467
+2025-06-17 14:23:06,576 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7407836890
+2025-06-17 14:23:06,578 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7200808318
+2025-06-17 14:23:06,585 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 6183479237
+2025-06-17 14:23:06,586 - __main__ - INFO - Total unique 1-on-1 private chat users: 13
+2025-06-17 14:23:06,586 - __main__ - INFO - Storing statistics in MongoDB...
+2025-06-17 14:23:06,852 - __main__ - INFO - Statistics stored successfully: Telegram statistics stored successfully
+2025-06-17 14:23:06,853 - telethon.network.mtprotosender - INFO - Disconnecting from 91.108.56.156:443/TcpFull...
+2025-06-17 14:23:06,854 - telethon.network.mtprotosender - INFO - Disconnection from 91.108.56.156:443/TcpFull complete!
+2025-06-17 14:23:06,885 - __main__ - INFO - Telegram statistics collection completed successfully
+2025-06-20 16:47:47,281 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-20 16:47:47,375 - telethon.network.mtprotosender - INFO - Connecting to 91.108.56.156:443/TcpFull...
+2025-06-20 16:47:47,424 - telethon.network.mtprotosender - INFO - Connection to 91.108.56.156:443/TcpFull complete!
+2025-06-20 16:47:47,897 - __main__ - INFO - Telegram client initialized successfully
+2025-06-20 16:47:47,898 - __main__ - INFO - Collecting basic statistics...
+2025-06-20 16:47:48,119 - __main__ - INFO - Fetching participants for group/channel: Adobe India Hackathon Answers Group (ID: -1001709781365)
+2025-06-20 16:47:53,265 - telethon.client.users - INFO - Sleeping for 26s (0:00:26) on GetParticipantsRequest flood wait
+2025-06-20 16:48:22,865 - __main__ - INFO - Found 10000 participants in Adobe India Hackathon Answers Group
+2025-06-20 16:48:22,869 - __main__ - INFO - Fetching participants for group/channel: Walmart Sparkathon Exam Answers Group (ID: -1001643937615)
+2025-06-20 16:48:28,352 - telethon.client.users - INFO - Sleeping for 25s (0:00:25) on GetParticipantsRequest flood wait
+2025-06-20 16:48:57,819 - __main__ - INFO - Found 10000 participants in Walmart Sparkathon Exam Answers Group
+2025-06-20 16:48:57,823 - __main__ - INFO - Fetching participants for group/channel: The Dictator (ID: -1002083389101)
+2025-06-20 16:48:57,927 - __main__ - WARNING - Could not get participants for The Dictator: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-20 16:48:57,928 - __main__ - INFO - Fetching participants for group/channel: War Updates (ID: -1002249400757)
+2025-06-20 16:48:58,075 - __main__ - WARNING - Could not get participants for War Updates: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-20 16:48:58,075 - __main__ - INFO - Total unique users identified across all groups (excluding bots): 18501
+2025-06-20 16:49:09,664 - __main__ - INFO - Basic stats collected: 4 groups, 2543 messages
+2025-06-20 16:49:09,673 - __main__ - INFO - Collecting most active users...
+2025-06-20 16:49:16,812 - __main__ - INFO - Most active users collected: 10 users
+2025-06-20 16:49:16,813 - __main__ - INFO - Collecting most active groups...
+2025-06-20 16:49:18,001 - telethon.client.users - INFO - Sleeping for 11s (0:00:11) on GetHistoryRequest flood wait
+2025-06-20 16:49:36,039 - __main__ - INFO - Most active groups collected: 4 groups
+2025-06-20 16:49:36,040 - __main__ - INFO - Collecting top users by groups...
+2025-06-20 16:49:36,040 - __main__ - INFO - Top users by groups collection skipped (feature not fully implemented)
+2025-06-20 16:49:36,041 - __main__ - INFO - Collecting 1-on-1 private chat user details...
+2025-06-20 16:49:36,195 - __main__ - INFO - User: Username: None, First Name: Pawan, Last Name: Dhankhar, Telegram ID: 7609613426
+2025-06-20 16:49:36,195 - __main__ - INFO - User: Username: None, First Name: Telegram, Last Name: None, Telegram ID: 777000
+2025-06-20 16:49:36,195 - __main__ - INFO - User: Username: ayaan_62773, First Name: Ayaan, Last Name: None, Telegram ID: 6283420379
+2025-06-20 16:49:36,277 - __main__ - INFO - User: Username: None, First Name: Mukul, Last Name: Yadav, Telegram ID: 7497322575
+2025-06-20 16:49:36,277 - __main__ - INFO - User: Username: theunchainedG, First Name: @theunchained, Last Name: None, Telegram ID: 6778535649
+2025-06-20 16:49:36,277 - __main__ - INFO - User: Username: Dhanush019, First Name: Dhanush, Last Name: Kumar, Telegram ID: 5893019124
+2025-06-20 16:49:36,277 - __main__ - INFO - User: Username: None, First Name: aditya chawla, Last Name: None, Telegram ID: 5755993467
+2025-06-20 16:49:36,280 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7407836890
+2025-06-20 16:49:36,280 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7200808318
+2025-06-20 16:49:36,282 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 6183479237
+2025-06-20 16:49:36,282 - __main__ - INFO - Total unique 1-on-1 private chat users: 13
+2025-06-20 16:49:36,282 - __main__ - INFO - Storing statistics in MongoDB...
+2025-06-20 16:49:40,368 - __main__ - ERROR - Error storing statistics: HTTPConnectionPool(host='localhost', port=5000): Max retries exceeded with url: /api/telegram/store-stats (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001835E0C1580>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+2025-06-20 16:49:40,369 - telethon.network.mtprotosender - INFO - Disconnecting from 91.108.56.156:443/TcpFull...
+2025-06-20 16:49:40,369 - telethon.network.mtprotosender - INFO - Disconnection from 91.108.56.156:443/TcpFull complete!
+2025-06-20 16:49:40,382 - __main__ - ERROR - Telegram statistics collection failed
+2025-06-20 16:52:28,175 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-20 16:52:28,263 - telethon.network.mtprotosender - INFO - Connecting to 91.108.56.156:443/TcpFull...
+2025-06-20 16:52:28,317 - telethon.network.mtprotosender - INFO - Connection to 91.108.56.156:443/TcpFull complete!
+2025-06-20 16:52:28,706 - __main__ - INFO - Telegram client initialized successfully
+2025-06-20 16:52:28,707 - __main__ - INFO - Collecting basic statistics...
+2025-06-20 16:52:28,928 - __main__ - INFO - Fetching participants for group/channel: Walmart Sparkathon Exam Answers Group (ID: -1001643937615)
+2025-06-20 16:52:34,048 - telethon.client.users - INFO - Sleeping for 26s (0:00:26) on GetParticipantsRequest flood wait
+2025-06-20 16:53:03,696 - __main__ - INFO - Found 10000 participants in Walmart Sparkathon Exam Answers Group
+2025-06-20 16:53:03,701 - __main__ - INFO - Fetching participants for group/channel: Adobe India Hackathon Answers Group (ID: -1001709781365)
+2025-06-20 16:53:08,989 - telethon.client.users - INFO - Sleeping for 26s (0:00:26) on GetParticipantsRequest flood wait
+2025-06-20 16:53:39,246 - __main__ - INFO - Found 10000 participants in Adobe India Hackathon Answers Group
+2025-06-20 16:53:39,250 - __main__ - INFO - Fetching participants for group/channel: The Dictator (ID: -1002083389101)
+2025-06-20 16:53:39,347 - __main__ - WARNING - Could not get participants for The Dictator: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-20 16:53:39,347 - __main__ - INFO - Fetching participants for group/channel: War Updates (ID: -1002249400757)
+2025-06-20 16:53:39,445 - __main__ - WARNING - Could not get participants for War Updates: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-20 16:53:39,445 - __main__ - INFO - Total unique users identified across all groups (excluding bots): 18501
+2025-06-20 16:53:50,865 - __main__ - INFO - Basic stats collected: 4 groups, 2543 messages
+2025-06-20 16:53:50,873 - __main__ - INFO - Collecting most active users...
+2025-06-20 16:53:57,697 - __main__ - INFO - Most active users collected: 10 users
+2025-06-20 16:53:57,698 - __main__ - INFO - Collecting most active groups...
+2025-06-20 16:53:58,746 - telethon.client.users - INFO - Sleeping for 12s (0:00:12) on GetHistoryRequest flood wait
+2025-06-20 16:54:18,281 - __main__ - INFO - Most active groups collected: 4 groups
+2025-06-20 16:54:18,283 - __main__ - INFO - Collecting top users by groups...
+2025-06-20 16:54:18,284 - __main__ - INFO - Top users by groups collection skipped (feature not fully implemented)
+2025-06-20 16:54:18,284 - __main__ - INFO - Collecting 1-on-1 private chat user details...
+2025-06-20 16:54:18,456 - __main__ - INFO - User: Username: None, First Name: Pawan, Last Name: Dhankhar, Telegram ID: 7609613426
+2025-06-20 16:54:18,456 - __main__ - INFO - User: Username: None, First Name: Telegram, Last Name: None, Telegram ID: 777000
+2025-06-20 16:54:18,456 - __main__ - INFO - User: Username: ayaan_62773, First Name: Ayaan, Last Name: None, Telegram ID: 6283420379
+2025-06-20 16:54:18,462 - __main__ - INFO - User: Username: None, First Name: Mukul, Last Name: Yadav, Telegram ID: 7497322575
+2025-06-20 16:54:18,463 - __main__ - INFO - User: Username: theunchainedG, First Name: @theunchained, Last Name: None, Telegram ID: 6778535649
+2025-06-20 16:54:18,464 - __main__ - INFO - User: Username: Dhanush019, First Name: Dhanush, Last Name: Kumar, Telegram ID: 5893019124
+2025-06-20 16:54:18,464 - __main__ - INFO - User: Username: None, First Name: aditya chawla, Last Name: None, Telegram ID: 5755993467
+2025-06-20 16:54:18,468 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7407836890
+2025-06-20 16:54:18,468 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7200808318
+2025-06-20 16:54:18,472 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 6183479237
+2025-06-20 16:54:18,472 - __main__ - INFO - Total unique 1-on-1 private chat users: 13
+2025-06-20 16:54:18,473 - __main__ - INFO - Storing statistics in MongoDB...
+2025-06-20 16:54:18,562 - __main__ - INFO - Statistics stored successfully: Telegram statistics stored successfully
+2025-06-20 16:54:18,562 - telethon.network.mtprotosender - INFO - Disconnecting from 91.108.56.156:443/TcpFull...
+2025-06-20 16:54:18,563 - telethon.network.mtprotosender - INFO - Disconnection from 91.108.56.156:443/TcpFull complete!
+2025-06-20 16:54:18,574 - __main__ - INFO - Telegram statistics collection completed successfully
+2025-06-21 11:54:08,938 - __main__ - INFO - Starting Telegram statistics collection...
+2025-06-21 11:54:09,044 - telethon.network.mtprotosender - INFO - Connecting to 91.108.56.156:443/TcpFull...
+2025-06-21 11:54:09,133 - telethon.network.mtprotosender - INFO - Connection to 91.108.56.156:443/TcpFull complete!
+2025-06-21 11:54:09,674 - __main__ - INFO - Telegram client initialized successfully
+2025-06-21 11:54:09,675 - __main__ - INFO - Collecting basic statistics...
+2025-06-21 11:54:09,871 - __main__ - INFO - Fetching participants for group/channel: Adobe India Hackathon Answers Group (ID: -1001709781365)
+2025-06-21 11:54:15,462 - telethon.client.users - INFO - Sleeping for 25s (0:00:25) on GetParticipantsRequest flood wait
+2025-06-21 11:54:44,962 - __main__ - INFO - Found 10000 participants in Adobe India Hackathon Answers Group
+2025-06-21 11:54:44,964 - __main__ - INFO - Fetching participants for group/channel: Walmart Sparkathon Exam Answers Group (ID: -1001643937615)
+2025-06-21 11:54:50,866 - telethon.client.users - INFO - Sleeping for 25s (0:00:25) on GetParticipantsRequest flood wait
+2025-06-21 11:55:19,489 - __main__ - INFO - Found 10000 participants in Walmart Sparkathon Exam Answers Group
+2025-06-21 11:55:19,494 - __main__ - INFO - Fetching participants for group/channel: War Updates (ID: -1002249400757)
+2025-06-21 11:55:19,572 - __main__ - WARNING - Could not get participants for War Updates: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-21 11:55:19,572 - __main__ - INFO - Fetching participants for group/channel: The Dictator (ID: -1002083389101)
+2025-06-21 11:55:19,659 - __main__ - WARNING - Could not get participants for The Dictator: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-21 11:55:19,660 - __main__ - INFO - Total unique users identified across all groups (excluding bots): 18503
+2025-06-21 11:55:31,631 - __main__ - INFO - Basic stats collected: 4 groups, 2557 messages
+2025-06-21 11:55:31,637 - __main__ - INFO - Collecting most active users...
+2025-06-21 11:55:39,379 - __main__ - INFO - Most active users collected: 10 users
+2025-06-21 11:55:39,380 - __main__ - INFO - Collecting most active groups...
+2025-06-21 11:55:40,799 - telethon.client.users - INFO - Sleeping for 10s (0:00:10) on GetHistoryRequest flood wait
+2025-06-21 11:55:58,120 - __main__ - INFO - Most active groups collected: 4 groups
+2025-06-21 11:55:58,121 - __main__ - INFO - Collecting top users by groups...
+2025-06-21 11:55:58,121 - __main__ - INFO - Top users by groups collection skipped (feature not fully implemented)
+2025-06-21 11:55:58,122 - __main__ - INFO - Collecting 1-on-1 private chat user details...
+2025-06-21 11:55:58,309 - __main__ - INFO - User: Username: None, First Name: omg, Last Name: None, Telegram ID: 8127900036
+2025-06-21 11:55:58,310 - __main__ - INFO - User: Username: None, First Name: Pawan, Last Name: Dhankhar, Telegram ID: 7609613426
+2025-06-21 11:55:58,310 - __main__ - INFO - User: Username: None, First Name: Telegram, Last Name: None, Telegram ID: 777000
+2025-06-21 11:55:58,310 - __main__ - INFO - User: Username: ayaan_62773, First Name: Ayaan, Last Name: None, Telegram ID: 6283420379
+2025-06-21 11:55:58,436 - __main__ - INFO - User: Username: None, First Name: Mukul, Last Name: Yadav, Telegram ID: 7497322575
+2025-06-21 11:55:58,436 - __main__ - INFO - User: Username: theunchainedG, First Name: @theunchained, Last Name: None, Telegram ID: 6778535649
+2025-06-21 11:55:58,436 - __main__ - INFO - User: Username: Dhanush019, First Name: Dhanush, Last Name: Kumar, Telegram ID: 5893019124
+2025-06-21 11:55:58,437 - __main__ - INFO - User: Username: None, First Name: aditya chawla, Last Name: None, Telegram ID: 5755993467
+2025-06-21 11:55:58,440 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7407836890
+2025-06-21 11:55:58,440 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7200808318
+2025-06-21 11:55:58,445 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 6183479237
+2025-06-21 11:55:58,445 - __main__ - INFO - Total unique 1-on-1 private chat users: 14
+2025-06-21 11:55:58,446 - __main__ - INFO - Storing statistics in MongoDB...
+2025-06-21 11:55:58,648 - __main__ - INFO - Statistics stored successfully: Telegram statistics stored successfully
+2025-06-21 11:55:58,648 - telethon.network.mtprotosender - INFO - Disconnecting from 91.108.56.156:443/TcpFull...
+2025-06-21 11:55:58,649 - telethon.network.mtprotosender - INFO - Disconnection from 91.108.56.156:443/TcpFull complete!
+2025-06-21 11:55:58,660 - __main__ - INFO - Telegram statistics collection completed successfully
