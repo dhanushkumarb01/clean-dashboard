@@ -27,6 +27,7 @@ const youtubeRoutes = require('./routes/youtube');
 const telegramRoutes = require('./routes/telegram');
 const whatsappRoutes = require('./routes/whatsapp');
 const usersRoutes = require('./routes/users');
+const instagramRoutes = require('./routes/instagramRoutes');
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/instagram', instagramRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {

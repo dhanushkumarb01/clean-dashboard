@@ -5,6 +5,7 @@ const dashboardItems = [
   { label: "YouTube Analytics", icon: "🎥", path: "/" },
   { label: "Telegram Analytics", icon: "📱", path: "/telegram" },
   { label: "WhatsApp Business", icon: "💚", path: "/whatsapp" },
+  { label: "Instagram Analytics", icon: "📸", path: "/instagram" },
 ];
 
 const Sidebar = ({ onLogout }) => {

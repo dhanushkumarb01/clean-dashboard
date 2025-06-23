@@ -17,6 +17,7 @@ import YouTubeDashboardContent from './pages/YouTubeDashboardPage/YouTubeDashboa
 import TelegramUserReportPage from './pages/TelegramDashboard/TelegramUserReportPage';
 import TelegramGroupReportPage from './pages/TelegramDashboard/TelegramGroupReportPage';
 import SignupPage from './pages/SignupPage';
+import InstagramDashboard from './pages/InstagramDashboard';
 
 // Auth callback handler component
 const AuthCallbackHandler = () => {
@@ -118,6 +119,16 @@ const App = () => {
             <ProtectedRoute>
               <DashboardContainer>
                 <TelegramGroupReportPage />
+              </DashboardContainer>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/instagram" 
+          element={
+            <ProtectedRoute>
+              <DashboardContainer>
+                <InstagramDashboard />
               </DashboardContainer>
             </ProtectedRoute>
           }
