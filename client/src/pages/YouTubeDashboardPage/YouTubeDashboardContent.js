@@ -8,6 +8,8 @@ import { youtube } from "../../utils/api";
 import MostActiveUsersList from '../../components/MostActiveUsersList';
 import MostActiveChannelsList from '../../components/MostActiveChannelsList';
 import YouTubeUserStats from '../../components/YouTubeUserStats';
+import YouTubeMessagesList from '../../components/YouTubeMessagesList';
+import YouTubeLawEnforcementAnalytics from '../../components/YouTubeLawEnforcementAnalytics';
 
 const LoadingState = () => (
   <div className="flex flex-col items-center justify-center h-full p-8">
@@ -215,6 +217,16 @@ const YouTubeDashboardContent = () => {
         {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
+      </div>
+
+      {/* Message Content Analysis Section */}
+      <div className="mb-8">
+        <YouTubeMessagesList />
+      </div>
+
+      {/* Law Enforcement Analytics Section */}
+      <div className="mb-8">
+        <YouTubeLawEnforcementAnalytics />
       </div>
       
       {overview.mostActiveUsers && overview.mostActiveChannels && (

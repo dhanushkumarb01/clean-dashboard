@@ -34,6 +34,17 @@ const CommentSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  // --- Classification fields for fraud/threat/safety analysis ---
+  isFlagged: { type: Boolean, default: false },
+  flagReason: { type: String },
+  flaggedBy: { type: String }, // User ID who flagged
+  flaggedAt: { type: Date },
+  suspiciousKeywords: [{ type: String }], // Array of detected suspicious keywords
+  riskScore: { type: Number, default: 0, min: 0, max: 10 }, // Risk assessment score
+  label: { type: String, enum: ['safe', 'fraud', 'sensitive', 'spam', 'other'], default: 'safe' },
+  isSafe: { type: Boolean, default: true },
+  isFraud: { type: Boolean, default: false },
+  isSensitive: { type: Boolean, default: false },
 }, {
   timestamps: true // Adds createdAt and updatedAt timestamps
 });

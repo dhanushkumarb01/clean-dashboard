@@ -187,4 +187,7 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
+router.get('/messages/analysis', whatsappController.getWhatsAppMessageAnalysis);
+router.get('/threats/stats', whatsappController.getWhatsAppThreatStats);
+
 module.exports = router;

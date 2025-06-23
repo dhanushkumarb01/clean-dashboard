@@ -27,6 +27,8 @@ router.get('/channel/:channelId', youtubeController.getChannelStatistics);
 router.get('/report/:authorChannelId', youtubeController.getAuthorReport);
 router.get('/report', youtubeController.generateReport);
 router.post('/disconnect', youtubeController.disconnectYouTube);
+router.get('/messages/analysis', youtubeController.getYouTubeMessageAnalysis);
+router.get('/threats/stats', youtubeController.getYouTubeThreatStats);
 
 // Log route access in development
 if (process.env.NODE_ENV === 'development') {

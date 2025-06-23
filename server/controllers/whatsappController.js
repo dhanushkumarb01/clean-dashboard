@@ -3,6 +3,7 @@ const WhatsAppProfile = require('../models/WhatsAppProfile');
 const WhatsAppTokenManager = require('../utils/whatsappTokenManager');
 const axios = require('axios');
 const PDFDocument = require('pdfkit');
+const classifyMessagesByType = require('../utils/classifyMessagesByType');
 
 // WhatsApp Cloud API configuration
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v18.0';
@@ -335,7 +336,7 @@ const sendMessage = async (req, res) => {
     const messageId = response.data.messages?.[0]?.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Save message to database with enhanced debugging
-    console.log('\n💾 === SAVING MESSAGE TO DATABASE ===');
+    console.log('\n === SAVING MESSAGE TO DATABASE ===');
     const whatsappMessage = new WhatsAppMessage({
       messageId,
       from: PHONE_NUMBER_ID,
@@ -903,6 +904,56 @@ const generateReport = async (req, res) => {
   }
 };
 
+// GET /api/whatsapp/messages/analysis
+const getWhatsAppMessageAnalysis = async (req, res) => {
+  try {
+    const messages = await WhatsAppMessage.find({});
+    const classified = classifyMessagesByType(messages);
+    res.json({
+      categories: {
+        safe: classified.safe,
+        fraud: classified.fraud,
+        sensitive: classified.sensitive,
+        spam: classified.spam,
+        other: classified.other,
+        flagged: classified.flagged,
+        highRisk: classified.highRisk,
+        mediumRisk: classified.mediumRisk,
+        lowRisk: classified.lowRisk
+      },
+      stats: classified.stats
+    });
+  } catch (err) {
+    console.error('WhatsApp Message Analysis Error:', err);
+    res.status(500).json({ error: 'Failed to analyze WhatsApp messages' });
+  }
+};
+
+// GET /api/whatsapp/threats/stats
+const getWhatsAppThreatStats = async (req, res) => {
+  try {
+    const messages = await WhatsAppMessage.find({});
+    const classified = classifyMessagesByType(messages);
+    // Threat stats summary
+    const stats = classified.stats;
+    res.json({
+      flaggedMessages: stats.flagged,
+      highRiskMessages: stats.highRisk,
+      mediumRiskMessages: stats.mediumRisk,
+      lowRiskMessages: stats.lowRisk,
+      totalMessages: stats.total,
+      fraud: stats.fraud,
+      sensitive: stats.sensitive,
+      spam: stats.spam,
+      safe: stats.safe,
+      avgRiskScore: messages.length ? (messages.reduce((sum, m) => sum + (m.riskScore || 0), 0) / messages.length) : 0
+    });
+  } catch (err) {
+    console.error('WhatsApp Threat Stats Error:', err);
+    res.status(500).json({ error: 'Failed to get WhatsApp threat stats' });
+  }
+};
+
 module.exports = {
   getWhatsAppStats,
   sendMessage,
@@ -910,5 +961,7 @@ module.exports = {
   getRecentMessages,
   getConversation,
   updateWhatsAppProfileStats,
-  generateReport
+  generateReport,
+  getWhatsAppMessageAnalysis,
+  getWhatsAppThreatStats
 };

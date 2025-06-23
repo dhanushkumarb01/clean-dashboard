@@ -217,6 +217,26 @@ export const youtube = {
       throw error;
     }
   },
+
+  getMessageAnalysis: async () => {
+    try {
+      const response = await api.get('/youtube/messages/analysis');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching YouTube message analysis:', error);
+      throw error;
+    }
+  },
+
+  getThreatStats: async () => {
+    try {
+      const response = await api.get('/youtube/threats/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching YouTube threat stats:', error);
+      throw error;
+    }
+  },
 };
 
 // Telegram endpoints
@@ -446,7 +466,27 @@ export const whatsapp = {
       console.error('Error fetching conversation:', error);
       throw error;
     }
-  }
+  },
+
+  getMessageAnalysis: async () => {
+    try {
+      const response = await api.get('/whatsapp/messages/analysis');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching WhatsApp message analysis:', error);
+      throw error;
+    }
+  },
+
+  getThreatStats: async () => {
+    try {
+      const response = await api.get('/whatsapp/threats/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching WhatsApp threat stats:', error);
+      throw error;
+    }
+  },
 };
 
 // Auth endpoints

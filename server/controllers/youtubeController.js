@@ -3,6 +3,8 @@ const User = require('../models/User');
 const { getAuthUrl, getTokensAndProfile } = require('../utils/youtubeApi');
 const youtubeApi = require('../utils/youtubeApi');
 const PDFDocument = require('pdfkit');
+const Comment = require('../models/Comment');
+const classifyMessagesByType = require('../utils/classifyMessagesByType');
 
 // Log environment variables at startup
 console.log('YouTube Controller - Environment check:', {
@@ -361,7 +363,6 @@ exports.getOverview = async (req, res) => {
     console.log('📊 Fetching overview data from comments collection...');
 
     // Fetch real data directly from comments collection (regardless of user association)
-    const Comment = require('../models/Comment');
     const Video = require('../models/Video');
     const Channel = require('../models/Channel');
 
@@ -1052,5 +1053,56 @@ exports.generateReport = async (req, res) => {
         message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
       });
     }
+  }
+};
+
+// GET /api/youtube/messages/analysis
+exports.getYouTubeMessageAnalysis = async (req, res) => {
+  try {
+    // Optionally filter by channelId/userId if needed
+    const comments = await Comment.find({});
+    const classified = classifyMessagesByType(comments);
+    res.json({
+      categories: {
+        safe: classified.safe,
+        fraud: classified.fraud,
+        sensitive: classified.sensitive,
+        spam: classified.spam,
+        other: classified.other,
+        flagged: classified.flagged,
+        highRisk: classified.highRisk,
+        mediumRisk: classified.mediumRisk,
+        lowRisk: classified.lowRisk
+      },
+      stats: classified.stats
+    });
+  } catch (err) {
+    console.error('YouTube Message Analysis Error:', err);
+    res.status(500).json({ error: 'Failed to analyze YouTube comments' });
+  }
+};
+
+// GET /api/youtube/threats/stats
+exports.getYouTubeThreatStats = async (req, res) => {
+  try {
+    const comments = await Comment.find({});
+    const classified = classifyMessagesByType(comments);
+    // Threat stats summary
+    const stats = classified.stats;
+    res.json({
+      flaggedComments: stats.flagged,
+      highRiskComments: stats.highRisk,
+      mediumRiskComments: stats.mediumRisk,
+      lowRiskComments: stats.lowRisk,
+      totalComments: stats.total,
+      fraud: stats.fraud,
+      sensitive: stats.sensitive,
+      spam: stats.spam,
+      safe: stats.safe,
+      avgRiskScore: comments.length ? (comments.reduce((sum, c) => sum + (c.riskScore || 0), 0) / comments.length) : 0
+    });
+  } catch (err) {
+    console.error('YouTube Threat Stats Error:', err);
+    res.status(500).json({ error: 'Failed to get YouTube threat stats' });
   }
 };

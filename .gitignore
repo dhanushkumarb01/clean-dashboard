@@ -27,5 +27,8 @@ yarn-error.log*
 backend/.env
 backend/.env.example
 node_modules/
+node_modules_backup/
+server/node_modules_backup/
+**/node_modules_backup/
 
 
