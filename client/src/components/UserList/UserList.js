@@ -12,7 +12,7 @@ const UserList = ({ users, title = "Most Active Users" }) => {
           <li
             key={user.id || user.username}
             className="cursor-pointer hover:bg-blue-50 rounded px-2 py-1 transition"
-            onClick={() => navigate(`/user/${user.id || user.username}`)}
+            onClick={() => navigate(`/telegram/user/${user.userId || user.id || user.username}`)}
           >
             <div className="font-semibold text-gray-800">{user.username}</div>
             <div className="text-gray-500 text-sm">

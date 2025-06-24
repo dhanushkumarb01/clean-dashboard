@@ -22,7 +22,7 @@ const ChannelList = ({ channels = [], title = "Most Active Channels" }) => {
             <li
               key={ch?.id || ch?.name || Math.random()}
               className="cursor-pointer hover:bg-blue-50 rounded px-2 py-1 transition"
-              onClick={() => navigate(`/channel/${ch?.id || ch?.name}`)}
+              onClick={() => navigate(`/youtube/channel/${ch.channelId || ch.id || ch.name}`)}
             >
               <div className="font-semibold text-gray-800">{ch?.name || 'Unnamed Channel'}</div>
               <div className="text-gray-500 text-sm">{ch?.comments || 0} comments</div>

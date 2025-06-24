@@ -150,61 +150,36 @@ export const youtube = {
 
   // Get overview data for dashboard
   fetchOverview: async (options = {}) => {
-    try {
-      const response = await api.get('/youtube/overview', {
-        params: {
-          fresh: options.fresh ? 'true' : undefined
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching YouTube overview:', error);
-      throw error;
-    }
+    const response = await api.get('/api/youtube/overview', {
+      params: {
+        fresh: options.fresh ? 'true' : undefined
+      }
+    });
+    return response.data;
   },
 
   // Get current quota usage
   getQuotaUsage: async () => {
-    try {
-      const response = await api.get('/youtube/quota');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching quota usage:', error);
-      throw error;
-    }
+    const response = await api.get('/api/youtube/quota');
+    return response.data;
   },
 
   // Get most active users
   getMostActiveUsers: async () => {
-    try {
-      const response = await api.get('/youtube/most-active-users');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching most active users:', error);
-      throw error;
-    }
+    const response = await api.get('/api/youtube/most-active-users');
+    return response.data;
   },
 
   // Get most active channels
   getMostActiveChannels: async () => {
-    try {
-      const response = await api.get('/youtube/most-active-channels');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching most active channels:', error);
-      throw error;
-    }
+    const response = await api.get('/api/youtube/most-active-channels');
+    return response.data;
   },
 
   // Get channel statistics by channel ID
   getChannelStatistics: async (channelId) => {
-    try {
-      const response = await api.get(`/youtube/channel/${channelId}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching channel statistics for ${channelId}:`, error);
-      throw error;
-    }
+    const response = await api.get(`/api/youtube/channel/${channelId}`);
+    return response.data;
   },
 
   // Get author report
@@ -219,23 +194,13 @@ export const youtube = {
   },
 
   getMessageAnalysis: async () => {
-    try {
-      const response = await api.get('/youtube/messages/analysis');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching YouTube message analysis:', error);
-      throw error;
-    }
+    const response = await api.get('/api/youtube/messages/analysis');
+    return response.data;
   },
 
   getThreatStats: async () => {
-    try {
-      const response = await api.get('/youtube/threats/stats');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching YouTube threat stats:', error);
-      throw error;
-    }
+    const response = await api.get('/api/youtube/threats/stats');
+    return response.data;
   },
 };
 
@@ -243,41 +208,26 @@ export const youtube = {
 export const telegram = {
   // Get Telegram statistics
   getStats: async () => {
-    try {
-      const response = await api.get('/telegram/stats');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching Telegram stats:', error);
-      throw error;
-    }
+    const response = await api.get('/api/telegram/stats');
+    return response.data.data;
   },
 
   // Get most active users
   getMostActiveUsers: async () => {
-    try {
-      const response = await api.get('/telegram/most-active-users');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching most active users:', error);
-      throw error;
-    }
+    const response = await api.get('/api/telegram/most-active-users');
+    return response.data.data;
   },
 
   // Get most active groups
   getMostActiveGroups: async () => {
-    try {
-      const response = await api.get('/telegram/most-active-groups');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching most active groups:', error);
-      throw error;
-    }
+    const response = await api.get('/api/telegram/most-active-groups');
+    return response.data.data;
   },
 
   // Get user report by user ID
   getUserReport: async (userId) => {
     try {
-      const response = await api.get(`/telegram/user/${userId}`);
+      const response = await api.get(`/api/telegram/user/${userId}`);
       return response.data.data;
     } catch (error) {
       console.error(`Error fetching Telegram user report for ${userId}:`, error);
@@ -288,7 +238,7 @@ export const telegram = {
   // Get group report by group ID
   getGroupReport: async (groupId) => {
     try {
-      const response = await api.get(`/telegram/group/${groupId}`);
+      const response = await api.get(`/api/telegram/group/${groupId}`);
       return response.data.data;
     } catch (error) {
       console.error(`Error fetching Telegram group report for ${groupId}:`, error);
@@ -299,7 +249,7 @@ export const telegram = {
   // Get top users by groups joined
   getTopUsersByGroups: async () => {
     try {
-      const response = await api.get('/telegram/top-users-by-groups');
+      const response = await api.get('/api/telegram/top-users-by-groups');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching top users by groups:', error);
@@ -310,7 +260,7 @@ export const telegram = {
   // Get statistics history for charts
   getStatsHistory: async (limit = 30) => {
     try {
-      const response = await api.get('/telegram/stats-history', {
+      const response = await api.get('/api/telegram/stats-history', {
         params: { limit }
       });
       return response.data.data;
@@ -323,7 +273,7 @@ export const telegram = {
   // Store new statistics (for Python script)
   storeStats: async (statsData) => {
     try {
-      const response = await api.post('/telegram/store-stats', statsData);
+      const response = await api.post('/api/telegram/store-stats', statsData);
       return response.data;
     } catch (error) {
       console.error('Error storing Telegram stats:', error);
@@ -333,28 +283,23 @@ export const telegram = {
 
   // Get Telegram messages with filtering and pagination
   getMessages: async (options = {}) => {
-    try {
-      const response = await api.get('/telegram/messages', {
-        params: {
-          page: options.page || 1,
-          limit: options.limit || 50,
-          flagged: options.flagged,
-          riskScore: options.riskScore,
-          chatId: options.chatId,
-          senderId: options.senderId
-        }
-      });
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching Telegram messages:', error);
-      throw error;
-    }
+    const response = await api.get('/api/telegram/messages', {
+      params: {
+        page: options.page || 1,
+        limit: options.limit || 50,
+        flagged: options.flagged,
+        riskScore: options.riskScore,
+        chatId: options.chatId,
+        senderId: options.senderId
+      }
+    });
+    return response.data.data;
   },
 
   // Flag/unflag a message
   flagMessage: async (messageId, flagged, reason = null) => {
     try {
-      const response = await api.put(`/telegram/messages/${messageId}/flag`, {
+      const response = await api.put(`/api/telegram/messages/${messageId}/flag`, {
         flagged,
         reason
       });
@@ -368,7 +313,7 @@ export const telegram = {
   // Batch flag messages
   batchFlagMessages: async (messageIds, flagged, reason = null) => {
     try {
-      const response = await api.put('/telegram/messages/batch-flag', {
+      const response = await api.put('/api/telegram/messages/batch-flag', {
         messageIds,
         flagged,
         reason
@@ -383,7 +328,7 @@ export const telegram = {
   // Get message statistics
   getMessageStats: async () => {
     try {
-      const response = await api.get('/telegram/messages/stats');
+      const response = await api.get('/api/telegram/messages/stats');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching message stats:', error);
@@ -394,7 +339,7 @@ export const telegram = {
   // Get law enforcement analytics
   getLawEnforcementStats: async () => {
     try {
-      const response = await api.get('/telegram/law-enforcement-stats');
+      const response = await api.get('/api/telegram/law-enforcement-stats');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching law enforcement stats:', error);
@@ -405,7 +350,7 @@ export const telegram = {
   // Get suspicious activity summary
   getSuspiciousActivity: async () => {
     try {
-      const response = await api.get('/telegram/suspicious-activity');
+      const response = await api.get('/api/telegram/suspicious-activity');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching suspicious activity:', error);
@@ -418,13 +363,8 @@ export const telegram = {
 export const whatsapp = {
   // Get WhatsApp dashboard statistics
   getStats: async () => {
-    try {
-      const response = await api.get('/whatsapp/stats');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching WhatsApp stats:', error);
-      throw error;
-    }
+    const response = await api.get('/api/whatsapp/stats');
+    return response.data.data;
   },
 
   // Send WhatsApp message
@@ -444,15 +384,8 @@ export const whatsapp = {
 
   // Get recent messages
   getRecentMessages: async (limit = 50, offset = 0) => {
-    try {
-      const response = await api.get('/whatsapp/messages', {
-        params: { limit, offset }
-      });
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching recent messages:', error);
-      throw error;
-    }
+    const response = await api.get('/api/whatsapp/messages', { params: { limit, offset } });
+    return response.data.data;
   },
 
   // Get conversation with specific contact

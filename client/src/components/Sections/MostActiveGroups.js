@@ -13,7 +13,7 @@ const MostActiveGroups = ({ groups, title = "Most Active Groups And Channels" })
           <li
             key={g.id || g.name}
             className="cursor-pointer hover:bg-blue-50 rounded px-2 py-1 transition"
-            onClick={() => navigate(`/group/${g.id || g.name}`)}
+            onClick={() => navigate(`/telegram/group/${g.groupId || g.id || g.name}`)}
           >
             <div className="font-semibold text-gray-800">{g.name}</div>
             <div className="text-gray-500 text-sm">{g.messages} messages</div>

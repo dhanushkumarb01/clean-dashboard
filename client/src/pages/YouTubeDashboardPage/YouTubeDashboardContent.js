@@ -171,7 +171,7 @@ const YouTubeDashboardContent = () => {
   
   // Stats without subscriber count, view count, and video count (moved to Channel Statistics page)
   const stats = [
-    { label: "Total Comments", value: overview.stats?.commentCount?.toLocaleString() || overview.totalComments?.toLocaleString() || "0" },
+    { label: "Total Comments", value: overview.totalComments?.toLocaleString() || "0" },
     { label: "Unique Authors", value: overview.uniqueCommentAuthors?.toLocaleString() || "0" },
     { label: "Total Channels", value: overview.totalChannels?.toLocaleString() || "0" },
     { label: "Avg. Comments/Day", value: overview.avgCommentsPerDay?.toLocaleString() || "0" },

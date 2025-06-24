@@ -20,9 +20,9 @@ const MostActiveUsersList = ({ users }) => {
       <ul className="space-y-3">
         {users.map((user, index) => (
           <li 
-            key={user._id || index} 
+            key={user._id || user.authorChannelId || index} 
             className="flex items-center justify-between py-2 border-b last:border-b-0 border-gray-100 cursor-pointer hover:bg-gray-50"
-            onClick={() => navigate(`/youtube-report/${user._id}`)}
+            onClick={() => navigate(`/youtube-report/${user.authorChannelId || user._id}`)}
           >
             <span className="text-gray-800 font-medium">{user.authorDisplayName || 'Unknown Author'}</span>
             <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">

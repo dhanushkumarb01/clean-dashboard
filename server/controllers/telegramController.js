@@ -239,7 +239,7 @@ const getUserReport = async (req, res) => {
       });
     }
 
-    const user = latestStats.mostActiveUsers.find(u => u.userId === userId);
+    const user = latestStats.mostActiveUsers.find(u => String(u.userId) === String(userId));
 
     if (!user) {
       return res.status(404).json({
@@ -278,7 +278,7 @@ const getGroupReport = async (req, res) => {
       });
     }
 
-    const group = latestStats.mostActiveGroups.find(g => g.groupId === groupId);
+    const group = latestStats.mostActiveGroups.find(g => String(g.groupId) === String(groupId));
 
     if (!group) {
       return res.status(404).json({

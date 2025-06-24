@@ -24,7 +24,7 @@ const LoginPage = () => {
   const handleGoogleLogin = async () => {
     try {
       // Redirect to backend's Google OAuth endpoint
-      window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/google`;
+        window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/google`;
     } catch (error) {
       console.error('Login error:', error);
       // Handle error (show message to user)
