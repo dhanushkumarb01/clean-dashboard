@@ -1,37 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar/Sidebar';
 import { youtube } from '../utils/api';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const YouTubeReportPage = () => {
   const { authorChannelId } = useParams();
+  const location = useLocation();
+  const fallbackUser = location.state?.user;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
 
   useEffect(() => {
-    const fetchReportData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await youtube.getAuthorReport(authorChannelId);
-        if (data) {
-          setReportData(data);
-        } else {
-          // Set default data instead of error
-          setReportData({
-            authorDisplayName: 'Unknown User',
-            totalComments: 0,
-            commentActivity: [],
-            totalLikes: 0,
-            averageLikes: 0,
-            maxLikes: 0
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching YouTube report (using default data):', err);
-        // Set default data instead of showing error to user
+  const fetchReportData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await youtube.getAuthorReport(authorChannelId);
+
+      if (data) {
+        setReportData(data);
+      } else if (fallbackUser) {
+        // Use fallback user if API returns null
+        setReportData({
+          authorDisplayName: fallbackUser.authorDisplayName || 'Unknown User',
+          totalComments: fallbackUser.totalComments || 0,
+          commentActivity: [],
+          totalLikes: 0,
+          averageLikes: 0,
+          maxLikes: 0
+        });
+      } else {
+        // Fallback to default unknown user
         setReportData({
           authorDisplayName: 'Unknown User',
           totalComments: 0,
@@ -40,13 +41,36 @@ const YouTubeReportPage = () => {
           averageLikes: 0,
           maxLikes: 0
         });
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching YouTube report:', err);
+      if (fallbackUser) {
+        setReportData({
+          authorDisplayName: fallbackUser.authorDisplayName || 'Unknown User',
+          totalComments: fallbackUser.totalComments || 0,
+          commentActivity: [],
+          totalLikes: 0,
+          averageLikes: 0,
+          maxLikes: 0
+        });
+      } else {
+        setReportData({
+          authorDisplayName: 'Unknown User',
+          totalComments: 0,
+          commentActivity: [],
+          totalLikes: 0,
+          averageLikes: 0,
+          maxLikes: 0
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchReportData();
-  }, [authorChannelId]);
+  fetchReportData();
+}, [authorChannelId, fallbackUser]);
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
