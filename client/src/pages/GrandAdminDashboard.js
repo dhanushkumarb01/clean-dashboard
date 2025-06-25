@@ -270,7 +270,7 @@ const GrandAdminDashboard = () => {
           {/* Users Table */}
           <div className="card border-0">
             <div className="card-header d-flex justify-content-between align-items-center">
-              <h6 className="mb-0 fw-bold text-white">
+              <h6 className="mb-0 fw-bold text-black">
                 <i className="bi bi-people me-2"></i>
                 User Management
               </h6>

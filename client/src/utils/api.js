@@ -356,7 +356,13 @@ export const telegram = {
       console.error('Error fetching suspicious activity:', error);
       throw error;
     }
-  }
+  },
+
+  // Get Telegram user summary (new endpoint)
+  getUserSummary: async (userId) => {
+    const response = await api.get(`/api/telegram/user/${userId}/summary`);
+    return response.data.data;
+  },
 };
 
 // WhatsApp endpoints

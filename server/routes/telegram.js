@@ -33,6 +33,9 @@ router.get('/enhanced-analytics', telegramController.getEnhancedAnalytics);
 router.get('/location-intelligence', telegramController.getLocationIntelligence);
 router.get('/suspicious-user/:userId', telegramController.getSuspiciousUserReport);
 
+// ** NEW: User Summary Routes **
+router.get('/user/:userId/summary', telegramController.getUserSummary);
+
 // Log route access in development
 if (process.env.NODE_ENV === 'development') {
   router.use((req, res, next) => {

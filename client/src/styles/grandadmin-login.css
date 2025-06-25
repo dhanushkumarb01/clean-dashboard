@@ -1,7 +1,7 @@
 /* GrandAdmin Login/Registration/Complete Registration Styles */
 /* (Insert the provided CSS for login/registration/complete registration here, exactly as in your HTML) */
 
-body, .grandadmin-login-bg {
+.grandadmin-login-bg {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;

@@ -1,5 +1,6 @@
 const TelegramStats = require('../models/TelegramStats');
 const PDFDocument = require('pdfkit');
+const TelegramMessage = require('../models/TelegramMessage');
 
 // Get latest Telegram statistics
 const getTelegramStats = async (req, res) => {
@@ -899,6 +900,57 @@ const unflagMessage = async (req, res) => {
   }
 };
 
+// Get Telegram user summary (for user profile page)
+const getUserSummary = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    // 1. Get latest stats document
+    const latestStats = await TelegramStats.findOne().sort({ timestamp: -1 });
+    // 2. Find user in mostActiveUsers
+    let statsUser = null;
+    if (latestStats && latestStats.mostActiveUsers) {
+      statsUser = latestStats.mostActiveUsers.find(u => String(u.userId) === String(userId));
+    }
+    // 3. Get latest message for up-to-date name/username
+    const latestMsg = await TelegramMessage.findOne({ senderId: userId }).sort({ timestamp: -1 });
+    // 4. Get all unique groups
+    const groups = await TelegramMessage.distinct('chatId', { senderId: userId });
+    // 5. Get last active time
+    const lastActive = latestMsg ? latestMsg.timestamp : null;
+    // 6. Get recent messages
+    const recentMessagesRaw = await TelegramMessage.find({ senderId: userId })
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .select('messageText timestamp chatName');
+    const recentMessages = recentMessagesRaw.map(msg => ({
+      id: msg._id,
+      text: msg.messageText,
+      date: msg.timestamp,
+      chatName: msg.chatName
+    }));
+    // 7. Compose response
+    res.json({
+      success: true,
+      data: {
+        telegramId: userId,
+        username: latestMsg?.senderUsername || statsUser?.username || '',
+        firstName: latestMsg?.senderFirstName || statsUser?.firstName || '',
+        lastName: latestMsg?.senderLastName || statsUser?.lastName || '',
+        bio: statsUser?.bio || '',
+        messageCount: statsUser?.messageCount || await TelegramMessage.countDocuments({ senderId: userId }),
+        groupCount: groups.length,
+        lastActive,
+        risk: statsUser?.risk || 'Low Risk',
+        riskColor: statsUser?.riskColor || 'success',
+        recentMessages
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching Telegram user summary:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getTelegramStats,
   getMostActiveUsers,
@@ -921,4 +973,5 @@ module.exports = {
   getMessagesByChat,
   flagMessage,
   unflagMessage,
+  getUserSummary,
 };

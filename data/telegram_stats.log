@@ -491,3 +491,95 @@
 2025-06-21 16:40:01,379 - telethon.network.mtprotosender - INFO - Disconnecting from 91.108.56.156:443/TcpFull...
 2025-06-21 16:40:01,379 - telethon.network.mtprotosender - INFO - Disconnection from 91.108.56.156:443/TcpFull complete!
 2025-06-21 16:40:01,394 - __main__ - INFO - Telegram statistics and message collection completed successfully
+2025-06-25 13:18:53,989 - __main__ - INFO - Starting Telegram statistics and message collection...
+2025-06-25 13:18:54,212 - telethon.network.mtprotosender - INFO - Connecting to 91.108.56.156:443/TcpFull...
+2025-06-25 13:18:54,267 - telethon.network.mtprotosender - INFO - Connection to 91.108.56.156:443/TcpFull complete!
+2025-06-25 13:18:54,657 - __main__ - INFO - Telegram client initialized successfully
+2025-06-25 13:18:54,657 - __main__ - INFO - Starting message content collection...
+2025-06-25 13:18:54,831 - __main__ - INFO - Collecting messages from group: Adobe India Hackathon Answers Group (limit: 200)
+2025-06-25 13:18:59,494 - __main__ - INFO - Collected 200 messages from Adobe India Hackathon Answers Group
+2025-06-25 13:19:01,501 - __main__ - INFO - Collecting messages from group: Walmart Sparkathon Exam Answers Group (limit: 200)
+2025-06-25 13:19:05,109 - __main__ - INFO - Collected 199 messages from Walmart Sparkathon Exam Answers Group
+2025-06-25 13:19:07,121 - __main__ - INFO - Collecting messages from private: shashank (limit: 100)
+2025-06-25 13:19:07,192 - __main__ - INFO - Collected 0 messages from shashank
+2025-06-25 13:19:09,198 - __main__ - INFO - Collecting messages from channel: War Updates (limit: 200)
+2025-06-25 13:19:14,244 - __main__ - INFO - Collected 200 messages from War Updates
+2025-06-25 13:19:16,253 - __main__ - INFO - Collecting messages from channel: The Dictator (limit: 200)
+2025-06-25 13:19:21,551 - __main__ - INFO - Collected 200 messages from The Dictator
+2025-06-25 13:19:23,565 - __main__ - INFO - Processed 5 chats, collected 799 messages so far
+2025-06-25 13:19:23,565 - __main__ - INFO - Collecting messages from private: omg (limit: 100)
+2025-06-25 13:19:23,630 - __main__ - INFO - Collected 0 messages from omg
+2025-06-25 13:19:25,634 - __main__ - INFO - Collecting messages from private: Pawan Dhankhar (limit: 100)
+2025-06-25 13:19:26,726 - __main__ - INFO - Collected 72 messages from Pawan Dhankhar
+2025-06-25 13:19:28,730 - __main__ - INFO - Collecting messages from private: Telegram (limit: 100)
+2025-06-25 13:19:28,824 - __main__ - INFO - Collected 3 messages from Telegram
+2025-06-25 13:19:30,830 - __main__ - INFO - Collecting messages from private: Ayaan (limit: 100)
+2025-06-25 13:19:30,904 - __main__ - INFO - Collected 5 messages from Ayaan
+2025-06-25 13:19:35,587 - __main__ - INFO - Processed 10 chats, collected 881 messages so far
+2025-06-25 13:19:35,588 - __main__ - INFO - Collecting messages from private: Mukul Yadav (limit: 100)
+2025-06-25 13:19:35,728 - __main__ - INFO - Collected 21 messages from Mukul Yadav
+2025-06-25 13:19:37,737 - __main__ - INFO - Collecting messages from private: @theunchained (limit: 100)
+2025-06-25 13:19:39,862 - __main__ - INFO - Collected 100 messages from @theunchained
+2025-06-25 13:19:41,865 - __main__ - INFO - Collecting messages from private: Dhanush Kumar (limit: 100)
+2025-06-25 13:19:41,936 - __main__ - INFO - Collected 1 messages from Dhanush Kumar
+2025-06-25 13:19:43,944 - __main__ - INFO - Collecting messages from private: aditya chawla (limit: 100)
+2025-06-25 13:19:44,029 - __main__ - INFO - Collected 3 messages from aditya chawla
+2025-06-25 13:19:48,144 - __main__ - INFO - Processed 15 chats, collected 1008 messages so far
+2025-06-25 13:19:48,145 - __main__ - INFO - Collecting messages from private:  (limit: 100)
+2025-06-25 13:19:48,206 - __main__ - INFO - Collected 0 messages from 
+2025-06-25 13:19:50,212 - __main__ - INFO - Collecting messages from private:  (limit: 100)
+2025-06-25 13:19:50,287 - __main__ - INFO - Collected 16 messages from 
+2025-06-25 13:19:54,468 - __main__ - INFO - Collecting messages from private:  (limit: 100)
+2025-06-25 13:19:54,559 - __main__ - INFO - Collected 36 messages from 
+2025-06-25 13:19:56,555 - __main__ - INFO - Message collection completed: 1064 messages from 19 chats
+2025-06-25 13:19:56,556 - __main__ - INFO - Storing 1064 messages in MongoDB...
+2025-06-25 13:19:59,679 - __main__ - INFO - Batch 1: 100 messages stored successfully
+2025-06-25 13:20:03,923 - __main__ - INFO - Batch 2: 100 messages stored successfully
+2025-06-25 13:20:07,896 - __main__ - INFO - Batch 3: 100 messages stored successfully
+2025-06-25 13:20:11,877 - __main__ - INFO - Batch 4: 100 messages stored successfully
+2025-06-25 13:20:16,340 - __main__ - INFO - Batch 5: 100 messages stored successfully
+2025-06-25 13:20:20,268 - __main__ - INFO - Batch 6: 100 messages stored successfully
+2025-06-25 13:20:24,369 - __main__ - INFO - Batch 7: 100 messages stored successfully
+2025-06-25 13:20:28,464 - __main__ - INFO - Batch 8: 100 messages stored successfully
+2025-06-25 13:20:32,435 - __main__ - INFO - Batch 9: 100 messages stored successfully
+2025-06-25 13:20:36,450 - __main__ - INFO - Batch 10: 100 messages stored successfully
+2025-06-25 13:20:39,378 - __main__ - INFO - Batch 11: 64 messages stored successfully
+2025-06-25 13:20:40,380 - __main__ - INFO - Message storage completed: 1064 out of 1064 messages stored
+2025-06-25 13:20:40,381 - __main__ - INFO - Collecting basic statistics...
+2025-06-25 13:20:40,646 - __main__ - INFO - Fetching participants for group/channel: Adobe India Hackathon Answers Group (ID: -1001709781365)
+2025-06-25 13:20:45,694 - telethon.client.users - INFO - Sleeping for 26s (0:00:26) on GetParticipantsRequest flood wait
+2025-06-25 13:21:16,089 - __main__ - INFO - Found 10000 participants in Adobe India Hackathon Answers Group
+2025-06-25 13:21:16,093 - __main__ - INFO - Fetching participants for group/channel: Walmart Sparkathon Exam Answers Group (ID: -1001643937615)
+2025-06-25 13:21:21,251 - telethon.client.users - INFO - Sleeping for 26s (0:00:26) on GetParticipantsRequest flood wait
+2025-06-25 13:21:51,110 - __main__ - INFO - Found 10000 participants in Walmart Sparkathon Exam Answers Group
+2025-06-25 13:21:51,113 - __main__ - INFO - Fetching participants for group/channel: War Updates (ID: -1002249400757)
+2025-06-25 13:21:51,179 - __main__ - WARNING - Could not get participants for War Updates: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-25 13:21:51,180 - __main__ - INFO - Fetching participants for group/channel: The Dictator (ID: -1002083389101)
+2025-06-25 13:21:51,239 - __main__ - WARNING - Could not get participants for The Dictator: Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours), or invalid permissions used for the channel or group (caused by GetParticipantsRequest)
+2025-06-25 13:21:51,239 - __main__ - INFO - Total unique users identified across all groups (excluding bots): 18487
+2025-06-25 13:21:51,240 - __main__ - INFO - Basic stats collected: 4 groups, 1064 messages
+2025-06-25 13:21:51,240 - __main__ - INFO - Collecting most active users...
+2025-06-25 13:21:51,241 - __main__ - INFO - Most active users collected: 10 users
+2025-06-25 13:21:51,241 - __main__ - INFO - Collecting most active groups...
+2025-06-25 13:21:51,655 - __main__ - INFO - Most active groups collected: 4 groups
+2025-06-25 13:21:51,655 - __main__ - INFO - Collecting top users by groups...
+2025-06-25 13:21:51,656 - __main__ - INFO - Top users by groups collection skipped (feature not fully implemented)
+2025-06-25 13:21:51,656 - __main__ - INFO - Collecting 1-on-1 private chat user details...
+2025-06-25 13:21:51,851 - __main__ - INFO - User: Username: None, First Name: shashank, Last Name: None, Telegram ID: 8136656299
+2025-06-25 13:21:51,851 - __main__ - INFO - User: Username: None, First Name: omg, Last Name: None, Telegram ID: 8127900036
+2025-06-25 13:21:51,851 - __main__ - INFO - User: Username: None, First Name: Pawan, Last Name: Dhankhar, Telegram ID: 7609613426
+2025-06-25 13:21:51,851 - __main__ - INFO - User: Username: None, First Name: Telegram, Last Name: None, Telegram ID: 777000
+2025-06-25 13:21:51,851 - __main__ - INFO - User: Username: ayaan_62773, First Name: Ayaan, Last Name: None, Telegram ID: 6283420379
+2025-06-25 13:21:51,857 - __main__ - INFO - User: Username: None, First Name: Mukul, Last Name: Yadav, Telegram ID: 7497322575
+2025-06-25 13:21:51,858 - __main__ - INFO - User: Username: theunchainedG, First Name: @theunchained, Last Name: None, Telegram ID: 6778535649
+2025-06-25 13:21:51,858 - __main__ - INFO - User: Username: Dhanush019, First Name: Dhanush, Last Name: Kumar, Telegram ID: 5893019124
+2025-06-25 13:21:51,859 - __main__ - INFO - User: Username: None, First Name: aditya chawla, Last Name: None, Telegram ID: 5755993467
+2025-06-25 13:21:51,866 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7407836890
+2025-06-25 13:21:51,866 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 7200808318
+2025-06-25 13:21:51,871 - __main__ - INFO - User: Username: None, First Name: None, Last Name: None, Telegram ID: 6183479237
+2025-06-25 13:21:51,872 - __main__ - INFO - Total unique 1-on-1 private chat users: 15
+2025-06-25 13:21:51,872 - __main__ - INFO - Storing statistics in MongoDB...
+2025-06-25 13:21:51,987 - __main__ - INFO - Statistics stored successfully: Telegram statistics stored successfully
+2025-06-25 13:21:51,988 - telethon.network.mtprotosender - INFO - Disconnecting from 91.108.56.156:443/TcpFull...
+2025-06-25 13:21:51,989 - telethon.network.mtprotosender - INFO - Disconnection from 91.108.56.156:443/TcpFull complete!
+2025-06-25 13:21:52,004 - __main__ - INFO - Telegram statistics and message collection completed successfully
