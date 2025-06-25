@@ -108,53 +108,53 @@ const TelegramUserReportPage = () => {
             Search
           </button>
         </form>
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="bg-blue-900 rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 via-yellow-300 to-blue-400 flex items-center justify-center text-4xl font-bold text-white shadow-lg mr-6">
+            <div className="w-20 h-20 rounded-full bg-black flex items-center justify-center text-4xl font-bold text-white shadow-lg mr-6">
               {userDetails?.firstName ? userDetails.firstName[0].toUpperCase() : (userDetails?.username ? userDetails.username[0].toUpperCase() : 'U')}
             </div>
             <div>
-              <div className="text-2xl font-bold text-pink-700">{userDetails?.firstName} {userDetails?.lastName}</div>
-              <div className="text-md text-blue-700 font-semibold">@{userDetails?.username || 'N/A'}</div>
-              <div className="text-md text-yellow-700 font-mono">Telegram ID: {userDetails?.telegramId || currentId}</div>
+              <div className="text-2xl font-bold text-white">{userDetails?.firstName} {userDetails?.lastName}</div>
+              <div className="text-md text-blue-100 font-semibold">@{userDetails?.username || 'N/A'}</div>
+              <div className="text-md text-blue-200 font-mono">Telegram ID: {userDetails?.telegramId || currentId}</div>
             </div>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-cyan-200 rounded-lg shadow-lg p-6">
-            <div className="text-lg font-semibold text-cyan-800 mb-2">Total Messages</div>
-            <div className="text-4xl font-extrabold text-cyan-700">{userDetails?.messageCount?.toLocaleString() || '0'}</div>
+          <div className="bg-green-900 rounded-lg shadow-lg p-6">
+            <div className="text-lg font-semibold text-green-100 mb-2">Total Messages</div>
+            <div className="text-4xl font-extrabold text-white">{userDetails?.messageCount?.toLocaleString() || '0'}</div>
           </div>
-          <div className="bg-pink-200 rounded-lg shadow-lg p-6">
-            <div className="text-lg font-semibold text-pink-800 mb-2">Groups</div>
-            <div className="text-3xl font-bold text-pink-700">{userDetails?.groupCount || 0}</div>
-            <div className="text-xs text-blue-700 mt-1 font-semibold">Last Active: {userDetails?.lastActive ? new Date(userDetails.lastActive).toLocaleString() : '-'}</div>
+          <div className="bg-blue-900 rounded-lg shadow-lg p-6">
+            <div className="text-lg font-semibold text-blue-100 mb-2">Groups</div>
+            <div className="text-3xl font-bold text-white">{userDetails?.groupCount || 0}</div>
+            <div className="text-xs text-blue-200 mt-1 font-semibold">Last Active: {userDetails?.lastActive ? new Date(userDetails.lastActive).toLocaleString() : '-'}</div>
           </div>
         </div>
-        <div className="bg-blue-100 rounded-lg shadow-lg p-6 mb-6">
+        <div className="bg-blue-900 rounded-lg shadow-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-blue-700">Full Name:</span>
-                <span className="text-sm text-blue-900 font-bold">{userDetails?.firstName && userDetails?.lastName ? `${userDetails.firstName} ${userDetails.lastName}` : userDetails?.firstName || userDetails?.lastName || 'Not provided'}</span>
+                <span className="text-sm font-medium text-blue-100">Full Name:</span>
+                <span className="text-sm text-white font-bold">{userDetails?.firstName && userDetails?.lastName ? `${userDetails.firstName} ${userDetails.lastName}` : userDetails?.firstName || userDetails?.lastName || 'Not provided'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-pink-700">Username:</span>
-                <span className="text-sm text-pink-900 font-bold">{userDetails?.username ? `@${userDetails.username}` : 'Not provided'}</span>
+                <span className="text-sm font-medium text-blue-100">Username:</span>
+                <span className="text-sm text-white font-bold">{userDetails?.username ? `@${userDetails.username}` : 'Not provided'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-green-700">Bio:</span>
-                <span className="text-sm text-green-900">{userDetails?.bio || '-'}</span>
+                <span className="text-sm font-medium text-green-100">Bio:</span>
+                <span className="text-sm text-green-100">{userDetails?.bio || '-'}</span>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-yellow-700">Telegram ID:</span>
-                <span className="text-sm text-yellow-900 font-mono font-bold">{userDetails?.telegramId || currentId}</span>
+                <span className="text-sm font-medium text-blue-100">Telegram ID:</span>
+                <span className="text-sm text-blue-200 font-mono font-bold">{userDetails?.telegramId || currentId}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-blue-700">Activity Level:</span>
-                <span className="text-sm text-blue-900">{userDetails?.activityLevel || '-'}</span>
+                <span className="text-sm font-medium text-blue-100">Activity Level:</span>
+                <span className="text-sm text-white">{userDetails?.activityLevel || '-'}</span>
               </div>
             </div>
           </div>

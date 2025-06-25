@@ -169,164 +169,126 @@ const GrandAdminDashboard = () => {
     'status-badge ' + (verified ? 'status-active' : 'status-pending');
 
   return (
-    <div className="main-content">
-      <div className="dashboard-container">
-        {/* Navbar */}
-        <nav className="navbar navbar-expand-lg navbar-light">
-          <div className="container-fluid">
-            <h5 className="navbar-brand mb-0">
-              <i className="bi bi-shield-lock me-2"></i>
-              Grand Admin Dashboard
-            </h5>
-            <div className="d-flex align-items-center">
-              <div className="search-container me-3" style={{ maxWidth: 300 }}>
-                <i className="bi bi-search"></i>
-                <input type="text" className="form-control" placeholder="Search users..." value={search} onChange={e => setSearch(e.target.value)} />
-              </div>
-              <button className="btn btn-outline-primary me-2" onClick={() => navigate('/dashboard')}>
-                <i className="bi bi-grid me-1"></i> Dashboard
-              </button>
-              <div className="dropdown">
-                <a href="#" className="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                  <div className="user-avatar">
-                    <i className="bi bi-person"></i>
-                  </div>
-                  <span className="ms-2 d-none d-md-inline fw-semibold">Grand Admin</span>
-                </a>
-                <ul className="dropdown-menu dropdown-menu-end">
-                  <li><a className="dropdown-item" href="/" target="_blank"><i className="bi bi-house me-2"></i>Main App</a></li>
-                  <li><hr className="dropdown-divider" /></li>
-                  <li><a className="dropdown-item text-danger" href="#" onClick={handleLogout}><i className="bi bi-box-arrow-right me-2"></i>Logout</a></li>
-                </ul>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">User Management</h1>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search users..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <button
+            className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow"
+            onClick={() => navigate('/dashboard')}
+          >
+            <i className="bi bi-grid"></i> Dashboard
+          </button>
+          <button
+            className="px-4 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors flex items-center gap-2 shadow"
+            onClick={handleLogout}
+          >
+            <i className="bi bi-box-arrow-right"></i> Logout
+          </button>
+        </div>
+      </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-pink-50 rounded-xl p-6 flex flex-col items-start shadow">
+          <div className="flex items-center mb-2">
+            <span className="text-pink-500 text-2xl mr-2"><i className="bi bi-shield-lock"></i></span>
+            <span className="text-lg font-semibold text-pink-700">Grand Admins</span>
           </div>
-        </nav>
-        {/* Stats Cards */}
-        <div className="container-fluid">
-          <div className="row g-3 mb-3">
-            <div className="col-12 col-sm-6 col-xl-3">
-              <div className="card stat-card grandadmin h-100 border-0">
-                <div className="card-body">
-                  <div className="d-flex align-items-center">
-                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%)' }}>
-                      <i className="bi bi-shield-lock" style={{ color: '#e91e63' }}></i>
-                    </div>
-                    <div>
-                      <div className="stat-label">Grand Admins</div>
-                      <div className="stat-number" id="grandadminCount">{grandAdmins.length}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6 col-xl-3">
-              <div className="card stat-card superadmin h-100 border-0">
-                <div className="card-body">
-                  <div className="d-flex align-items-center">
-                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)' }}>
-                      <i className="bi bi-shield-check" style={{ color: '#9c27b0' }}></i>
-                    </div>
-                    <div>
-                      <div className="stat-label">Super Admins</div>
-                      <div className="stat-number" id="superadminCount">{roleCounts.superadmin}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6 col-xl-3">
-              <div className="card stat-card admin h-100 border-0">
-                <div className="card-body">
-                  <div className="d-flex align-items-center">
-                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)' }}>
-                      <i className="bi bi-shield" style={{ color: '#4caf50' }}></i>
-                    </div>
-                    <div>
-                      <div className="stat-label">Admins</div>
-                      <div className="stat-number" id="adminCount">{roleCounts.admin}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6 col-xl-3">
-              <div className="card stat-card user h-100 border-0">
-                <div className="card-body">
-                  <div className="d-flex align-items-center">
-                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)' }}>
-                      <i className="bi bi-people" style={{ color: '#2196f3' }}></i>
-                    </div>
-                    <div>
-                      <div className="stat-label">Users</div>
-                      <div className="stat-number" id="userCount">{roleCounts.user}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="text-3xl font-bold text-pink-700">{grandAdmins.length}</div>
+          <div className="text-sm text-pink-600 mt-1">Full access</div>
+        </div>
+        <div className="bg-purple-50 rounded-xl p-6 flex flex-col items-start shadow">
+          <div className="flex items-center mb-2">
+            <span className="text-purple-500 text-2xl mr-2"><i className="bi bi-shield-check"></i></span>
+            <span className="text-lg font-semibold text-purple-700">Super Admins</span>
           </div>
-
-          {/* Users Table */}
-          <div className="card border-0">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h6 className="mb-0 fw-bold text-black">
-                <i className="bi bi-people me-2"></i>
-                User Management
-              </h6>
-              <button className="btn btn-lg btn-outline-primary bg-white text-primary border-primary d-flex align-items-center gap-2" onClick={openAddModal} style={{ fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(102,126,234,0.15)' }}>
-                <i className="bi bi-person-plus-fill"></i> Add User
-              </button>
-            </div>
-            <div className="card-body p-0">
-              <div className="table-container">
-                <table className="table table-hover mb-0">
-                  <thead>
-                    <tr>
-                      <th>User</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Created</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="usersTableBody">
-                    {loading ? (
-                      <tr><td colSpan="7" className="text-center">Loading...</td></tr>
-                    ) : error ? (
-                      <tr><td colSpan="7" className="text-danger text-center">{error}</td></tr>
-                    ) : filteredUsers.length === 0 ? (
-                      <tr><td colSpan="7" className="text-center text-muted">No users found</td></tr>
-                    ) : (
-                      filteredUsers.map(user => (
-                        <tr key={user._id}>
-                          <td>
-                            <div className="d-flex align-items-center">
-                              <div className="user-avatar">{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</div>
-                              <div><div className="fw-semibold">{user.name || 'N/A'}</div></div>
-                            </div>
-                          </td>
-                          <td>{user.email || 'N/A'}</td>
-                          <td>{user.phone || 'N/A'}</td>
-                          <td><span className={getRoleBadgeClass(user.role)}>{user.role || 'User'}</span></td>
-                          <td><span className={getStatusBadgeClass(user.emailVerified)}>{user.emailVerified ? 'Verified' : 'Pending'}</span></td>
-                          <td>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
-                          <td>
-                            <div className="d-flex gap-1">
-                              <button className="btn btn-sm action-btn btn-edit" onClick={() => openEditModal(user)} title="Edit"><i className="bi bi-pencil"></i></button>
-                              <button className="btn btn-sm action-btn btn-delete" onClick={() => handleDeleteUser(user._id)} title="Delete"><i className="bi bi-trash"></i></button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          <div className="text-3xl font-bold text-purple-700">{roleCounts.superadmin}</div>
+          <div className="text-sm text-purple-600 mt-1">High-level access</div>
+        </div>
+        <div className="bg-blue-50 rounded-xl p-6 flex flex-col items-start shadow">
+          <div className="flex items-center mb-2">
+            <span className="text-blue-500 text-2xl mr-2"><i className="bi bi-people"></i></span>
+            <span className="text-lg font-semibold text-blue-700">Admins</span>
           </div>
+          <div className="text-3xl font-bold text-blue-700">{roleCounts.admin}</div>
+          <div className="text-sm text-blue-600 mt-1">Standard access</div>
+        </div>
+        <div className="bg-green-50 rounded-xl p-6 flex flex-col items-start shadow">
+          <div className="flex items-center mb-2">
+            <span className="text-green-500 text-2xl mr-2"><i className="bi bi-people"></i></span>
+            <span className="text-lg font-semibold text-green-700">Users</span>
+          </div>
+          <div className="text-3xl font-bold text-green-700">{roleCounts.user}</div>
+          <div className="text-sm text-green-600 mt-1">Basic access</div>
+        </div>
+      </div>
+      {/* User Management Table */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-2 md:mb-0">User Management</h2>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors shadow"
+            onClick={openAddModal}
+          >
+            + Add User
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr><td colSpan="6" className="text-center py-4">Loading...</td></tr>
+              ) : error ? (
+                <tr><td colSpan="6" className="text-center text-red-500 py-4">{error}</td></tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr><td colSpan="6" className="text-center text-gray-400 py-4">No users found</td></tr>
+              ) : (
+                filteredUsers.map(user => (
+                  <tr key={user._id}>
+                    <td className="px-6 py-4 whitespace-nowrap flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-600">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{user.name || 'N/A'}</div>
+                        <div className="text-xs text-gray-500">{user.email || 'N/A'}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{user.email || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-block px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">{user.role || 'User'}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${user.emailVerified ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{user.emailVerified ? 'Active' : 'Pending'}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap flex gap-2">
+                      <button className="p-2 rounded bg-gray-100 hover:bg-gray-200 text-gray-600" onClick={() => openEditModal(user)} title="Edit"><i className="bi bi-pencil"></i></button>
+                      <button className="p-2 rounded bg-gray-100 hover:bg-gray-200 text-red-600" onClick={() => handleDeleteUser(user._id)} title="Delete"><i className="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
       {/* Add/Edit User Modal */}

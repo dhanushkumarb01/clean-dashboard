@@ -52,7 +52,11 @@ const GrandAdminLogin = () => {
       if (data.success) {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/admin-dashboard');
+        if (loginRole === 'GRANDADMIN') {
+          navigate('/admin-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else if (data.requiresVerification) {
         setStep('verify');
         setError('Verification code sent to your email.');
@@ -191,8 +195,10 @@ const GrandAdminLogin = () => {
             </div>
             <div className="form-group">
               <label>Login as</label>
-              <select value={loginRole} onChange={e => setLoginRole(e.target.value)} required disabled>
+              <select value={loginRole} onChange={e => setLoginRole(e.target.value)} required>
                 <option value="GRANDADMIN">Grand Admin</option>
+                <option value="ADMIN">Admin</option>
+                <option value="USER">User</option>
               </select>
             </div>
             <button className="btn btn-primary" type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
