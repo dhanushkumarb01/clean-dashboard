@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const auth = require('../middleware/auth');
+const { 
+  requestEmailVerification, 
+  completeRegistration, 
+  grandAdminLogin 
+} = require('../controllers/authController');
 
 // Google OAuth routes (no auth required)
 router.get('/google', (req, res) => {
@@ -49,5 +54,19 @@ router.get('/me', authController.getCurrentUser);
 router.get('/youtube/channel', authController.getYouTubeChannel);
 router.get('/youtube/stats', authController.getYouTubeStats);
 router.post('/youtube/refresh', authController.refreshYouTubeStats);
+
+// GrandAdmin registration and login endpoints
+router.post('/request-email-verification', requestEmailVerification);
+router.post('/complete-registration', completeRegistration);
+router.post('/login', grandAdminLogin);
+
+// GrandAdmin: Assign role (create user)
+router.post('/grandadmin/assign-role', auth, authController.assignRole);
+// GrandAdmin: Get all users
+router.get('/grandadmin/users', auth, authController.getAllUsers);
+// GrandAdmin: Delete user
+router.delete('/grandadmin/delete-user/:id', auth, authController.deleteUser);
+// GrandAdmin: Get all grandadmins
+router.get('/grandadmin/list', auth, authController.getGrandAdmins);
 
 module.exports = router;

@@ -18,6 +18,8 @@ import TelegramUserReportPage from './pages/TelegramDashboard/TelegramUserReport
 import TelegramGroupReportPage from './pages/TelegramDashboard/TelegramGroupReportPage';
 import SignupPage from './pages/SignupPage';
 import InstagramDashboard from './pages/InstagramDashboard';
+import GrandAdminLogin from './pages/GrandAdminLogin';
+import GrandAdminDashboard from './pages/GrandAdminDashboard';
 
 // Auth callback handler component
 const AuthCallbackHandler = () => {
@@ -55,84 +57,27 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* GrandAdmin routes */}
+        <Route path="/" element={<GrandAdminLogin />} />
+        <Route path="/admin-dashboard" element={<ProtectedRoute requiredRole="GRANDADMIN"><GrandAdminDashboard /></ProtectedRoute>} />
+        <Route path="/complete-registration" element={<GrandAdminLogin />} />
+        {/* Existing dashboard route (unchanged) */}
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardContainer><YouTubeDashboardContent /></DashboardContainer></ProtectedRoute>} />
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/auth/error" element={<AuthError />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/google/callback" element={<AuthCallback />} />
-
-        {/* Protected routes */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <DashboardContainer>
-              <YouTubeDashboardContent />
-            </DashboardContainer>
-          </ProtectedRoute>
-        } />
-        <Route path="/user/:id" element={
-          <ProtectedRoute>
-            <UserDashboardPage />
-          </ProtectedRoute>
-        } />
-        <Route 
-          path="/youtube-report/:authorChannelId" 
-          element={<ProtectedRoute><YouTubeReportPage /></ProtectedRoute>}
-        />
-        <Route 
-          path="/youtube/channel/:channelId" 
-          element={<ProtectedRoute><ChannelStatisticsPage /></ProtectedRoute>}
-        />
-        <Route 
-          path="/telegram" 
-          element={
-            <ProtectedRoute>
-              <DashboardContainer>
-                <TelegramDashboard />
-              </DashboardContainer>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/whatsapp" 
-          element={
-            <ProtectedRoute>
-              <DashboardContainer>
-                <WhatsAppDashboard />
-              </DashboardContainer>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/telegram/user/:userId"
-          element={
-            <ProtectedRoute>
-              <DashboardContainer>
-                <TelegramUserReportPage />
-              </DashboardContainer>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/telegram/group/:groupId"
-          element={
-            <ProtectedRoute>
-              <DashboardContainer>
-                <TelegramGroupReportPage />
-              </DashboardContainer>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/instagram" 
-          element={
-            <ProtectedRoute>
-              <DashboardContainer>
-                <InstagramDashboard />
-              </DashboardContainer>
-            </ProtectedRoute>
-          }
-        />
+        {/* Other protected routes (unchanged) */}
+        <Route path="/user/:id" element={<ProtectedRoute><UserDashboardPage /></ProtectedRoute>} />
+        <Route path="/youtube-report/:authorChannelId" element={<ProtectedRoute><YouTubeReportPage /></ProtectedRoute>} />
+        <Route path="/youtube/channel/:channelId" element={<ProtectedRoute><ChannelStatisticsPage /></ProtectedRoute>} />
+        <Route path="/telegram" element={<ProtectedRoute><DashboardContainer><TelegramDashboard /></DashboardContainer></ProtectedRoute>} />
+        <Route path="/whatsapp" element={<ProtectedRoute><DashboardContainer><WhatsAppDashboard /></DashboardContainer></ProtectedRoute>} />
+        <Route path="/telegram/user/:userId" element={<ProtectedRoute><DashboardContainer><TelegramUserReportPage /></DashboardContainer></ProtectedRoute>} />
+        <Route path="/telegram/group/:groupId" element={<ProtectedRoute><DashboardContainer><TelegramGroupReportPage /></DashboardContainer></ProtectedRoute>} />
+        <Route path="/instagram" element={<ProtectedRoute><DashboardContainer><InstagramDashboard /></DashboardContainer></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

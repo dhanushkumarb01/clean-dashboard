@@ -11,11 +11,11 @@ const DashboardContainer = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen min-w-screen bg-gray-50" style={{ width: '100vw', height: '100vh' }}>
       <Sidebar onLogout={handleLogout} />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col" style={{ minWidth: 0, minHeight: 0 }}>
         {/* Main content area, renders children */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-8" style={{ width: '100%', height: '100%' }}>
           {children}
         </div>
       </div>

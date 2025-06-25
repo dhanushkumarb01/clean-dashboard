@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { google } = require('googleapis');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 exports.googleCallback = async (req, res) => {
   console.log('--> googleCallback function started');
@@ -324,5 +327,293 @@ exports.loginWithMobileNumber = async (req, res) => {
   } catch (error) {
     console.error('Login with mobile number error:', error);
     res.status(500).json({ success: false, message: 'Server error during mobile number login.' });
+  }
+};
+
+// --- GrandAdmin Registration and Login Logic ---
+
+// Models
+const baseUserSchema = {
+  email: { type: String, required: true, unique: true },
+  phone: { type: String, required: false, unique: true, sparse: true, index: { sparse: true } },
+  name: { type: String, required: false },
+  emailVerified: { type: Boolean, default: false },
+  emailVerificationToken: { type: String },
+  emailVerificationExpires: { type: Date },
+  phoneVerified: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  password: { type: String, required: true },
+  verificationCode: { type: String },
+  verificationCodeExpires: { type: Date },
+  role: { type: String, required: true, enum: ['USER', 'ADMIN', 'SUPERADMIN', 'GRANDADMIN'] }
+};
+const grandAdminSchema = new mongoose.Schema(baseUserSchema);
+const GrandAdmin = mongoose.models.GrandAdmin || mongoose.model('GrandAdmin', grandAdminSchema, 'grandadmins');
+
+// PendingVerification Schema
+const pendingVerificationSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  token: { type: String, required: true },
+  expires: { type: Date, required: true }
+});
+const PendingVerification = mongoose.models.PendingVerification || mongoose.model('PendingVerification', pendingVerificationSchema);
+
+// Email transporter setup (use your .env for credentials)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// POST /api/request-email-verification
+exports.requestEmailVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
+    // Check if email already exists
+    const exists = await GrandAdmin.findOne({ email });
+    if (exists) return res.status(400).json({ success: false, message: 'Email already registered' });
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await PendingVerification.findOneAndUpdate(
+      { email },
+      { token: verificationToken, expires: verificationExpires },
+      { upsert: true, new: true }
+    );
+    // Send verification email
+    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/complete-registration?email=${encodeURIComponent(email)}&token=${encodeURIComponent(verificationToken)}`;
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Email Verification - Complete Your Registration',
+      html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #667eea;">Email Verification</h2>
+        <p>Hello!</p>
+        <p>Click the button below to verify your email address:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationUrl}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 10px; display: inline-block; font-weight: bold;">Verify Email Address</a>
+        </div>
+        <p>This link will expire in 24 hours.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      </div>`
+    });
+    res.json({ success: true, message: 'Verification email sent successfully! Please check your inbox.' });
+  } catch (error) {
+    console.error('Email verification request error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// POST /api/complete-registration
+exports.completeRegistration = async (req, res) => {
+  try {
+    const { email, phone, name, role, password, token } = req.body;
+    if (!email || !phone || !name || !role || !password || !token) {
+      return res.status(400).json({ success: false, message: 'Email, phone, name, role, password, and token are required' });
+    }
+    // Validate pending verification
+    const pending = await PendingVerification.findOne({ email, token, expires: { $gt: Date.now() } });
+    if (!pending) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+    }
+    // Check if email or phone exists
+    const exists = await GrandAdmin.findOne({ $or: [{ email }, { phone }] });
+    if (exists) return res.status(400).json({ success: false, message: 'Email or phone already registered' });
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Create new GrandAdmin
+    const newUser = new GrandAdmin({
+      email,
+      phone,
+      name,
+      password: hashedPassword,
+      role,
+      emailVerified: true,
+      phoneVerified: true,
+      createdAt: new Date()
+    });
+    await newUser.save();
+    await PendingVerification.deleteOne({ email });
+    // Generate JWT token
+    const tokenJwt = jwt.sign(
+      { userId: newUser._id, email: newUser.email, phone: newUser.phone, role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    res.json({
+      success: true,
+      message: 'Registration completed successfully!',
+      data: {
+        token: tokenJwt,
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          phone: newUser.phone,
+          role
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Complete registration error:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ success: false, message: 'Invalid data provided' });
+    }
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// POST /api/login (GrandAdmin)
+exports.grandAdminLogin = async (req, res) => {
+  try {
+    const { email, password, role, verificationCode } = req.body;
+    if (!email || !password || !role) {
+      return res.status(400).json({ success: false, message: 'Please provide email, password, and role' });
+    }
+    if (role !== 'GRANDADMIN') {
+      return res.status(403).json({ success: false, message: 'Only GrandAdmin login is allowed here' });
+    }
+    const user = await GrandAdmin.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'User not found' });
+    }
+    // Check password
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(400).json({ success: false, message: 'Invalid password' });
+    }
+    // If verification code is provided, verify it (not implemented here, but can be added)
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, phone: user.phone, role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role
+        }
+      }
+    });
+  } catch (error) {
+    console.error('GrandAdmin login error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// GrandAdmin: Assign role (create user)
+exports.assignRole = async (req, res) => {
+  try {
+    // Only GrandAdmin can create users
+    if (!req.user || req.user.role !== 'GRANDADMIN') {
+      return res.status(403).json({ success: false, message: 'Access denied: Only GrandAdmin can create users.' });
+    }
+    const { name, email, phone, password, role } = req.body;
+    if (!name || !email || !phone || !password || !role) {
+      return res.status(400).json({ success: false, message: 'All fields are required.' });
+    }
+    if (!['USER', 'ADMIN', 'SUPERADMIN'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role. Only USER, ADMIN, or SUPERADMIN allowed.' });
+    }
+    // Check if user already exists
+    const existing = await User.findOne({ $or: [{ email }, { phone }] });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'A user with this email or phone already exists.' });
+    }
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Create user
+    const newUser = new User({
+      name,
+      email,
+      mobileNumber: phone,
+      password: hashedPassword,
+      role,
+      createdAt: new Date(),
+    });
+    await newUser.save();
+    // Send credentials to user's email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Your Account Credentials',
+      html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #667eea;">Welcome to the Dashboard!</h2>
+        <p>Hello <b>${name}</b>,</p>
+        <p>Your account has been created by the Grand Admin. Here are your credentials:</p>
+        <ul>
+          <li><b>Email:</b> ${email}</li>
+          <li><b>Phone:</b> ${phone}</li>
+          <li><b>Password:</b> ${password}</li>
+          <li><b>Role:</b> ${role}</li>
+        </ul>
+        <p>Please log in and change your password after your first login.</p>
+        <p>Best regards,<br/>Dashboard Team</p>
+      </div>`
+    });
+    res.json({ success: true, message: 'User created and credentials sent to email.' });
+  } catch (error) {
+    console.error('GrandAdmin assignRole error:', error);
+    res.status(500).json({ success: false, message: 'Server error: Could not create user.' });
+  }
+};
+
+// GrandAdmin: Get all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'GRANDADMIN') {
+      return res.status(403).json({ success: false, message: 'Access denied: Only GrandAdmin can view all users.' });
+    }
+    const users = await User.find({}, '-password'); // Exclude password field
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error('GrandAdmin getAllUsers error:', error);
+    res.status(500).json({ success: false, message: 'Server error: Could not fetch users.' });
+  }
+};
+
+// GrandAdmin: Delete user
+exports.deleteUser = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'GRANDADMIN') {
+      return res.status(403).json({ success: false, message: 'Access denied: Only GrandAdmin can delete users.' });
+    }
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'User ID is required.' });
+    }
+    const deleted = await User.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+    res.json({ success: true, message: 'User deleted successfully.' });
+  } catch (error) {
+    console.error('GrandAdmin deleteUser error:', error);
+    res.status(500).json({ success: false, message: 'Server error: Could not delete user.' });
+  }
+};
+
+// GrandAdmin: Get all grandadmins
+exports.getGrandAdmins = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'GRANDADMIN') {
+      return res.status(403).json({ success: false, message: 'Access denied: Only GrandAdmin can view all grandadmins.' });
+    }
+    const grandadmins = await GrandAdmin.find({}, '-password'); // Exclude password field
+    res.json({ success: true, grandadmins });
+  } catch (error) {
+    console.error('GrandAdmin getGrandAdmins error:', error);
+    res.status(500).json({ success: false, message: 'Server error: Could not fetch grandadmins.' });
   }
 };

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const dashboardItems = [
-  { label: "YouTube Analytics", icon: "🎥", path: "/" },
+  { label: "YouTube Analytics", icon: "🎥", path: "/dashboard" },
   { label: "Telegram Analytics", icon: "📱", path: "/telegram" },
   { label: "WhatsApp Business", icon: "💚", path: "/whatsapp" },
   { label: "Instagram Analytics", icon: "📸", path: "/instagram" },
@@ -87,6 +87,18 @@ const Sidebar = ({ onLogout }) => {
           </svg>
           Logout
         </button>
+        {/* Back to Grand Admin button */}
+        {location.pathname !== "/admin-dashboard" && (
+          <button
+            onClick={() => navigate("/admin-dashboard")}
+            className="w-full flex items-center justify-center mt-3 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Grand Admin
+          </button>
+        )}
       </div>
     </aside>
   );
