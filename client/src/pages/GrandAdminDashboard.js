@@ -4,7 +4,7 @@ import '../styles/grandadmin-dashboard.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-const API_URL = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_URL}/auth` : 'https://clean-dashboard.onrender.com/api/auth';
+const API_URL = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_URL}/api/auth` : 'https://clean-dashboard.onrender.com/api/auth';
 
 const GrandAdminDashboard = () => {
   const navigate = useNavigate();
