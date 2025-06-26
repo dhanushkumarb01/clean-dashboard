@@ -6,7 +6,7 @@ import MostActiveGroupsList from "././MostActiveGroupsList";
 import TelegramMessagesList from "../../components/TelegramMessagesList";
 import LawEnforcementAnalytics from "../../components/LawEnforcementAnalytics";
 import { telegram } from "../../utils/api";
-import axios from 'axios';
+import api from '../../utils/api';
 // Enhanced Analytics and Location Intelligence Components - temporarily disabled while creating proper directory structure
 // import EnhancedAnalytics from "../../components/EnhancedAnalytics";
 // import LocationIntelligence from "../../components/LocationIntelligence";
@@ -188,7 +188,7 @@ const TelegramDashboard = () => {
     setLoginLoading(true);
     setLoginError('');
     try {
-      const res = await axios.post('/api/telegram/request-login', { phone });
+      const res = await api.post('/api/telegram/request-login', { phone });
       if (res.data.success) {
         setStep(2);
         setPhoneCodeHash(res.data.phone_code_hash);
@@ -207,7 +207,7 @@ const TelegramDashboard = () => {
     setLoginLoading(true);
     setLoginError('');
     try {
-      const res = await axios.post('/api/telegram/verify-login', { phone, code: otp, phone_code_hash: phoneCodeHash, password });
+      const res = await api.post('/api/telegram/verify-login', { phone, code: otp, phone_code_hash: phoneCodeHash, password });
       if (res.data.success) {
         setLoginSuccess(true);
         setStep(3);
