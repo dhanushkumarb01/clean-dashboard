@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import random
 
 # Configuration
-BACKEND_URL = 'http://localhost:5000'
+BACKEND_URL = 'https://clean-dashboard.onrender.com'
 
 def create_sample_data():
     """Create and send sample Telegram statistics"""

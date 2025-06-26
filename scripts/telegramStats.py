@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 API_ID = os.getenv('TELEGRAM_API_ID')
 API_HASH = os.getenv('TELEGRAM_API_HASH')
 PHONE_NUMBER = os.getenv('TELEGRAM_PHONE_NUMBER')
-BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:5000')
+BACKEND_URL = os.getenv('BACKEND_URL', 'https://clean-dashboard.onrender.com')
 SESSION_NAME = 'telegram_stats_session'
 
 # Suspicious keywords for content analysis

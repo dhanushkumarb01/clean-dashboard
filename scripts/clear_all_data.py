@@ -8,7 +8,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'http://localhost:5000'
+BACKEND_URL = 'https://clean-dashboard.onrender.com'
 
 def clear_all_data():
     """Clear all sample data from the database"""

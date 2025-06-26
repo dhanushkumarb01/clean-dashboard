@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/grandadmin-login.css';
 
-const API_URL = '/api/auth';
+const API_URL = 'https://clean-dashboard.onrender.com/api/auth/login';
 
 const GrandAdminLogin = () => {
   const navigate = useNavigate();

@@ -7,7 +7,7 @@ Removes sample data from the database
 import requests
 
 # Configuration
-BACKEND_URL = 'http://localhost:5000'
+BACKEND_URL = 'https://clean-dashboard.onrender.com'
 
 def clear_sample_data():
     """Clear sample data from the database"""

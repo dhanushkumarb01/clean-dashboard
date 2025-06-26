@@ -10,7 +10,7 @@ const {
 
 // Google OAuth routes (no auth required)
 router.get('/google', (req, res) => {
-  const redirect_uri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/api/youtube/oauth2callback';
+  const redirect_uri = process.env.GOOGLE_REDIRECT_URI || 'https://clean-dashboard.onrender.com/api/youtube/oauth2callback';
   const client_id = process.env.GOOGLE_CLIENT_ID;
   const scope = encodeURIComponent([
     'https://www.googleapis.com/auth/youtube.readonly',
