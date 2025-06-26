@@ -985,7 +985,7 @@ const requestTelegramLogin = async (req, res) => {
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ success: false, error: 'Phone number required' });
   try {
-    const scriptPath = path.join(__dirname, '../../scripts/telegramStats.py');
+    const scriptPath = path.join(__dirname, 'scripts/telegramStats.py');
     const py = spawn('python', [scriptPath, '--phone', phone]);
     let output = '';
     let responded = false;
@@ -1016,7 +1016,7 @@ const verifyTelegramLogin = async (req, res) => {
   const { phone, code, phone_code_hash, password } = req.body;
   if (!phone || !code || !phone_code_hash) return res.status(400).json({ success: false, error: 'Phone, code, and phone_code_hash required' });
   try {
-    const scriptPath = path.join(__dirname, '../../scripts/telegramStats.py');
+    const scriptPath = path.join(__dirname, 'scripts/telegramStats.py');
     const args = [scriptPath, '--phone', phone, '--code', code, '--phone_code_hash', phone_code_hash];
     if (password) args.push('--password', password);
     const py = spawn('python', args);
