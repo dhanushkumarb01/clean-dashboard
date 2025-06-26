@@ -680,7 +680,7 @@ const getAuthorReport = async (userId, authorChannelId) => {
   try {
     console.log(`Fetching author report for authorChannelId: ${authorChannelId}`);
 
-    // Get author details and total comments - remove userId filter to get all comments by this author
+    // Get author details and total comments
     const authorStats = await Comment.aggregate([
       { $match: { authorChannelId: authorChannelId } },
       { $group: {
@@ -691,13 +691,13 @@ const getAuthorReport = async (userId, authorChannelId) => {
     ]);
 
     if (authorStats.length === 0) {
-      console.log(`No comments found for authorChannelId: ${authorChannelId}`);
+      console.log(`No comments or user found for authorChannelId: ${authorChannelId}`);
       return null;
     }
 
-    const { authorDisplayName, totalComments } = authorStats[0];
+    const { authorDisplayName = authorChannelId, totalComments = 0 } = authorStats[0] || {};
 
-    // Get comment activity over time (e.g., daily) - remove userId filter
+    // Get comment activity over time (e.g., daily)
     const commentActivity = await Comment.aggregate([
       { $match: { authorChannelId: authorChannelId } },
       { $group: {
@@ -707,17 +707,38 @@ const getAuthorReport = async (userId, authorChannelId) => {
       { $sort: { _id: 1 } } // Sort by date
     ]);
 
-    // Format for charts if needed (e.g., fill in missing dates, etc.)
+    // Format for charts if needed
     const formattedActivity = commentActivity.map(item => ({
       date: item._id,
       comments: item.commentCount
     }));
 
+    // Fetch all comments by this author
+    const userCommentsRaw = await Comment.find({ authorChannelId: authorChannelId })
+      .sort({ publishedAt: -1 })
+      .select('textDisplay publishedAt videoId commentId userId channelId');
+
+    const userComments = userCommentsRaw.map(comment => ({
+      id: comment.commentId,
+      text: comment.textDisplay,
+      textDisplay: comment.textDisplay,
+      date: comment.publishedAt,
+      videoId: comment.videoId,
+      userId: comment.userId,
+      channelId: comment.channelId
+    }));
+
+    // Fetch the 10 most recent comments by this author
+    const recentComments = userComments.slice(0, 10);
+
     return {
       authorDisplayName,
+      authorChannelId,
       totalComments,
       commentActivity: formattedActivity,
-      // Placeholder for likes as we don't store them in comments
+      recentComments,
+      userSummary: null,
+      userComments,
       totalLikes: 0,
       averageLikes: 0,
       maxLikes: 0

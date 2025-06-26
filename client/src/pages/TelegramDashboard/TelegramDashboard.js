@@ -274,12 +274,6 @@ const TelegramDashboard = () => {
         <TelegramMessagesList />
       </div>
 
-      {/* Enhanced Analytics Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">📊 Enhanced Analytics</h2>
-        <EnhancedAnalytics />
-      </div>
-
       {/* Law Enforcement Analytics Section */}
       <div className="mb-8">
         <LawEnforcementAnalytics />
@@ -287,8 +281,11 @@ const TelegramDashboard = () => {
 
       {/* Location Intelligence Section */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">🌍 Location Intelligence</h2>
-        <LocationIntelligence />
+        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
+          <div className="text-4xl mb-4">🌍</div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Location Intelligence</h2>
+          <p className="text-gray-500 text-center">This feature is in building process. Geographic distribution analytics will be available soon.</p>
+        </div>
       </div>
 
       {/* Original Active Users and Groups */}

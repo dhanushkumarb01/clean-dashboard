@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const telegramController = require('../controllers/telegramController');
 const auth = require('../middleware/auth');
+const { getMessageStats } = require('../controllers/telegramController');
 
 // Public routes (no auth required for data storage from Python script)
 router.post('/store-stats', telegramController.storeTelegramStats);
@@ -26,6 +27,7 @@ router.get('/messages/flagged', telegramController.getFlaggedMessages);
 router.get('/messages/chat/:chatId', telegramController.getMessagesByChat);
 router.post('/messages/:messageId/flag', telegramController.flagMessage);
 router.post('/messages/:messageId/unflag', telegramController.unflagMessage);
+router.get('/messages/stats', getMessageStats);
 
 // ** NEW: Law Enforcement Analytics Routes **
 router.get('/suspicious-users', telegramController.getSuspiciousUsers);

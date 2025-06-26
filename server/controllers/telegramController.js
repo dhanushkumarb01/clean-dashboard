@@ -913,8 +913,14 @@ const getUserSummary = async (req, res) => {
     }
     // 3. Get latest message for up-to-date name/username
     const latestMsg = await TelegramMessage.findOne({ senderId: userId }).sort({ timestamp: -1 });
-    // 4. Get all unique groups
-    const groups = await TelegramMessage.distinct('chatId', { senderId: userId });
+    // 4. Get all unique groups (IDs)
+    const groupIds = await TelegramMessage.distinct('chatId', { senderId: userId });
+    // 4b. Get group names for those group IDs
+    const groupDocs = await TelegramMessage.aggregate([
+      { $match: { senderId: userId, chatId: { $in: groupIds } } },
+      { $group: { _id: '$chatId', chatName: { $first: '$chatName' } } }
+    ]);
+    const joinedGroups = groupDocs.map(g => g.chatName).filter(Boolean);
     // 5. Get last active time
     const lastActive = latestMsg ? latestMsg.timestamp : null;
     // 6. Get recent messages
@@ -938,15 +944,36 @@ const getUserSummary = async (req, res) => {
         lastName: latestMsg?.senderLastName || statsUser?.lastName || '',
         bio: statsUser?.bio || '',
         messageCount: statsUser?.messageCount || await TelegramMessage.countDocuments({ senderId: userId }),
-        groupCount: groups.length,
+        groupCount: groupIds.length,
         lastActive,
         risk: statsUser?.risk || 'Low Risk',
         riskColor: statsUser?.riskColor || 'success',
-        recentMessages
+        recentMessages,
+        joinedGroups
       }
     });
   } catch (error) {
     console.error('Error fetching Telegram user summary:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+const getMessageStats = async (req, res) => {
+  try {
+    const TelegramMessage = require('../models/TelegramMessage');
+    const totalMessages = await TelegramMessage.countDocuments();
+    const totalGroups = await TelegramMessage.distinct('chatId').then(arr => arr.length);
+    const totalUsers = await TelegramMessage.distinct('senderId').then(arr => arr.length);
+    res.json({
+      success: true,
+      data: {
+        totalMessages,
+        totalGroups,
+        totalUsers
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching message stats:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
@@ -974,4 +1001,5 @@ module.exports = {
   flagMessage,
   unflagMessage,
   getUserSummary,
+  getMessageStats,
 };

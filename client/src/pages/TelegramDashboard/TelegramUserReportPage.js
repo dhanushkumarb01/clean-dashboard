@@ -72,7 +72,18 @@ const TelegramUserReportPage = () => {
         );
       case 2:
         return (
-          <div className="p-4 text-center text-gray-500">Joined Groups feature coming soon.</div>
+          <div className="p-4">
+            <div className="font-semibold mb-2">Joined Groups</div>
+            {userDetails?.joinedGroups && userDetails.joinedGroups.length > 0 ? (
+              <ul className="divide-y">
+                {userDetails.joinedGroups.map((group, idx) => (
+                  <li key={group || idx} className="py-2 text-blue-800 font-medium">{group}</li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-gray-500">No joined groups found.</div>
+            )}
+          </div>
         );
       default:
         return null;

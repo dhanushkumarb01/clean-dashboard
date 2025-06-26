@@ -185,7 +185,7 @@ export const youtube = {
   // Get author report
   getAuthorReport: async (authorChannelId) => {
     try {
-      const response = await api.get(`/youtube/report/${authorChannelId}`);
+      const response = await api.get(`/api/youtube/report/${authorChannelId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching author report for ${authorChannelId}:`, error);

@@ -13,6 +13,9 @@ router.get('/test', (req, res) => {
 // The /oauth2callback route has been MOVED to backend/routes/auth.js
 router.get('/login', youtubeController.getAuthUrl);
 
+// Make report by authorChannelId public for debugging
+router.get('/report/:authorChannelId', youtubeController.getAuthorReport);
+
 // Protected routes (auth required) - Apply middleware to all routes below
 router.use(auth); 
 
@@ -24,7 +27,6 @@ router.get('/overview', youtubeController.getOverview);
 router.get('/most-active-users', youtubeController.getMostActiveUsers);
 router.get('/most-active-channels', youtubeController.getMostActiveChannels);
 router.get('/channel/:channelId', youtubeController.getChannelStatistics);
-router.get('/report/:authorChannelId', youtubeController.getAuthorReport);
 router.get('/report', youtubeController.generateReport);
 router.post('/disconnect', youtubeController.disconnectYouTube);
 router.get('/messages/analysis', youtubeController.getYouTubeMessageAnalysis);

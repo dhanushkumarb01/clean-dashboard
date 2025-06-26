@@ -716,17 +716,22 @@ exports.getAuthorReport = async (req, res) => {
   try {
     const { authorChannelId } = req.params;
     console.log('📊 Fetching author report for:', authorChannelId);
-
+    // Debug: Log the authorChannelId being queried
+    const youtubeApi = require('../utils/youtubeApi');
     // No need to check for YouTube connection - we're fetching from database
     const reportData = await youtubeApi.getAuthorReport(null, authorChannelId);
-    
+    // Debug: Log the result
+    if (reportData && reportData.userComments) {
+      console.log(`Found ${reportData.userComments.length} comments for authorChannelId:`, authorChannelId);
+    } else {
+      console.log('No comments found for authorChannelId:', authorChannelId);
+    }
     if (!reportData) {
       return res.status(404).json({ 
         error: 'Author not found',
         message: 'No data found for this author.'
       });
     }
-    
     res.json(reportData);
   } catch (err) {
     console.error('Author report error:', err);
