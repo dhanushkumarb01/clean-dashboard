@@ -6,6 +6,7 @@ import MostActiveGroupsList from "././MostActiveGroupsList";
 import TelegramMessagesList from "../../components/TelegramMessagesList";
 import LawEnforcementAnalytics from "../../components/LawEnforcementAnalytics";
 import { telegram } from "../../utils/api";
+import axios from 'axios';
 // Enhanced Analytics and Location Intelligence Components - temporarily disabled while creating proper directory structure
 // import EnhancedAnalytics from "../../components/EnhancedAnalytics";
 // import LocationIntelligence from "../../components/LocationIntelligence";
@@ -117,6 +118,16 @@ const TelegramDashboard = () => {
   const [mostActiveUsers, setMostActiveUsers] = useState([]);
   const [mostActiveGroups, setMostActiveGroups] = useState([]);
 
+  // New: Telegram login state
+  const [step, setStep] = useState(1);
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [phoneCodeHash, setPhoneCodeHash] = useState('');
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
@@ -168,6 +179,55 @@ const TelegramDashboard = () => {
       a.remove();
     } catch (err) {
       console.error("Failed to download Telegram report:", err);
+    }
+  };
+
+  // New: Telegram login handlers
+  const handleRequestCode = async (e) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      const res = await axios.post('/api/telegram/request-login', { phone });
+      if (res.data.success) {
+        setStep(2);
+        setPhoneCodeHash(res.data.phone_code_hash);
+      } else {
+        setLoginError(res.data.error || 'Failed to send code');
+      }
+    } catch (err) {
+      setLoginError(err.response?.data?.error || err.message);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleVerifyLogin = async (e) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      const res = await axios.post('/api/telegram/verify-login', { phone, code: otp, phone_code_hash: phoneCodeHash, password });
+      if (res.data.success) {
+        setLoginSuccess(true);
+        setStep(3);
+        // Wait a bit for data collection, then reload dashboard
+        setTimeout(() => {
+          setLoginSuccess(false);
+          setStep(1);
+          setPhone('');
+          setOtp('');
+          setPassword('');
+          setPhoneCodeHash('');
+          loadData();
+        }, 5000);
+      } else {
+        setLoginError(res.data.error || 'Failed to verify');
+      }
+    } catch (err) {
+      setLoginError(err.response?.data?.error || err.message);
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -238,6 +298,58 @@ const TelegramDashboard = () => {
 
   return (
     <div className="p-6">
+      {/* Telegram Login Flow */}
+      <div className="mb-8 max-w-lg mx-auto">
+        {step === 1 && (
+          <form onSubmit={handleRequestCode} className="bg-white rounded-lg shadow p-6 flex flex-col gap-4">
+            <h2 className="text-lg font-semibold text-gray-800">Enter your Telegram number</h2>
+            <input
+              type="text"
+              className="border rounded px-3 py-2"
+              placeholder="e.g. +1234567890"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              required
+            />
+            {loginError && <div className="text-red-600 text-sm">{loginError}</div>}
+            <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2" disabled={loginLoading}>
+              {loginLoading ? 'Sending code...' : 'Send Code'}
+            </button>
+          </form>
+        )}
+        {step === 2 && (
+          <form onSubmit={handleVerifyLogin} className="bg-white rounded-lg shadow p-6 flex flex-col gap-4">
+            <h2 className="text-lg font-semibold text-gray-800">Enter the OTP sent to your Telegram</h2>
+            <input
+              type="text"
+              className="border rounded px-3 py-2"
+              placeholder="Verification code"
+              value={otp}
+              onChange={e => setOtp(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              className="border rounded px-3 py-2"
+              placeholder="2FA password (if enabled)"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+            {loginError && <div className="text-red-600 text-sm">{loginError}</div>}
+            <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2" disabled={loginLoading}>
+              {loginLoading ? 'Verifying...' : 'Verify & Fetch Data'}
+            </button>
+          </form>
+        )}
+        {step === 3 && loginSuccess && (
+          <div className="bg-green-100 border border-green-300 rounded-lg p-6 text-center">
+            <div className="text-2xl mb-2">✅</div>
+            <div className="text-green-800 font-semibold">Login successful! Fetching your Telegram data...</div>
+            <div className="text-green-700 text-sm mt-2">This may take a few seconds. The dashboard will refresh automatically.</div>
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Telegram Analytics Dashboard</h1>

@@ -1,6 +1,8 @@
 const TelegramStats = require('../models/TelegramStats');
 const PDFDocument = require('pdfkit');
 const TelegramMessage = require('../models/TelegramMessage');
+const { spawn } = require('child_process');
+const path = require('path');
 
 // Get latest Telegram statistics
 const getTelegramStats = async (req, res) => {
@@ -978,6 +980,77 @@ const getMessageStats = async (req, res) => {
   }
 };
 
+// Request Telegram login code (send code to phone)
+const requestTelegramLogin = async (req, res) => {
+  const { phone } = req.body;
+  if (!phone) return res.status(400).json({ success: false, error: 'Phone number required' });
+  try {
+    const scriptPath = path.join(__dirname, '../../scripts/telegramStats.py');
+    const py = spawn('python', [scriptPath, '--phone', phone]);
+    let output = '';
+    let responded = false;
+    py.stdout.on('data', (data) => {
+      output += data.toString();
+      const match = output.match(/CODE_SENT:([\w-]+)/);
+      if (match && !responded) {
+        responded = true;
+        res.json({ success: true, message: 'Code sent to your Telegram', phone_code_hash: match[1] });
+        py.kill();
+      }
+    });
+    py.stderr.on('data', (data) => {
+      console.error('Python error:', data.toString());
+    });
+    py.on('close', (code) => {
+      if (!responded) {
+        res.status(500).json({ success: false, error: 'Failed to send code' });
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// Verify Telegram login (with code, phone_code_hash, and optional password)
+const verifyTelegramLogin = async (req, res) => {
+  const { phone, code, phone_code_hash, password } = req.body;
+  if (!phone || !code || !phone_code_hash) return res.status(400).json({ success: false, error: 'Phone, code, and phone_code_hash required' });
+  try {
+    const scriptPath = path.join(__dirname, '../../scripts/telegramStats.py');
+    const args = [scriptPath, '--phone', phone, '--code', code, '--phone_code_hash', phone_code_hash];
+    if (password) args.push('--password', password);
+    const py = spawn('python', args);
+    let output = '';
+    let responded = false;
+    py.stdout.on('data', (data) => {
+      output += data.toString();
+      if (output.includes('LOGIN_SUCCESS') && !responded) {
+        responded = true;
+        res.json({ success: true, message: 'Login successful, data collection started' });
+        py.kill();
+      } else if (output.includes('2FA_REQUIRED') && !responded) {
+        responded = true;
+        res.status(400).json({ success: false, error: '2FA password required' });
+        py.kill();
+      } else if (output.includes('ERROR:') && !responded) {
+        responded = true;
+        res.status(500).json({ success: false, error: output });
+        py.kill();
+      }
+    });
+    py.stderr.on('data', (data) => {
+      console.error('Python error:', data.toString());
+    });
+    py.on('close', (code) => {
+      if (!responded) {
+        res.status(500).json({ success: false, error: 'Failed to login or collect data' });
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 module.exports = {
   getTelegramStats,
   getMostActiveUsers,
@@ -1002,4 +1075,6 @@ module.exports = {
   unflagMessage,
   getUserSummary,
   getMessageStats,
+  requestTelegramLogin,
+  verifyTelegramLogin,
 };

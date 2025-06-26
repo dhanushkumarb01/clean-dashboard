@@ -7,6 +7,8 @@ const { getMessageStats } = require('../controllers/telegramController');
 // Public routes (no auth required for data storage from Python script)
 router.post('/store-stats', telegramController.storeTelegramStats);
 router.post('/store-messages', telegramController.storeTelegramMessages);
+router.post('/request-login', telegramController.requestTelegramLogin);
+router.post('/verify-login', telegramController.verifyTelegramLogin);
 
 // Protected routes (auth required for frontend access)
 router.use(auth);

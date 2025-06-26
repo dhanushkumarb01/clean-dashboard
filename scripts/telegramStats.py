@@ -19,6 +19,10 @@ from telethon.errors import FloodWaitError, SessionPasswordNeededError
 import logging
 from dotenv import load_dotenv
 import uuid
+import argparse
+
+# Ensure data directory exists for logging
+os.makedirs('../data', exist_ok=True)
 
 # Load environment variables from config directory
 load_dotenv('../config/scripts.env')
@@ -94,6 +98,32 @@ class TelegramStatsCollector:
         except Exception as e:
             logger.error(f"Failed to initialize Telegram client: {e}")
             return False
+    
+    async def initialize_client_cli(self, args):
+        try:
+            self.client = TelegramClient(SESSION_NAME, int(API_ID), API_HASH)
+            await self.client.connect()
+            if not await self.client.is_user_authorized():
+                if not args.code:
+                    result = await self.client.send_code_request(args.phone)
+                    phone_code_hash = result.phone_code_hash
+                    print(f'CODE_SENT:{phone_code_hash}')
+                    return
+                try:
+                    if hasattr(args, 'phone_code_hash') and args.phone_code_hash:
+                        await self.client.sign_in(args.phone, args.code, phone_code_hash=args.phone_code_hash)
+                    else:
+                        await self.client.sign_in(args.phone, args.code)
+                except SessionPasswordNeededError:
+                    if not args.password:
+                        print('2FA_REQUIRED')
+                        return
+                    await self.client.sign_in(password=args.password)
+            print('LOGIN_SUCCESS')
+            # Now run data collection as usual
+            await self.run_collection()
+        except Exception as e:
+            print(f'ERROR: {e}')
     
     def analyze_message_content(self, message_text):
         """Analyze message content for suspicious keywords and other flags"""
@@ -692,17 +722,20 @@ class TelegramStatsCollector:
                 await self.client.disconnect()
             return False
 
-async def main():
-    """Main function"""
-    collector = TelegramStatsCollector()
-    success = await collector.run_collection()
-    
-    if success:
-        logger.info("Telegram statistics and message collection completed successfully")
-        sys.exit(0)
-    else:
-        logger.error("Telegram statistics and message collection failed")
-        sys.exit(1)
+def parse_args():
+    parser = argparse.ArgumentParser(description='Telegram Stats Collector')
+    parser.add_argument('--phone', type=str, required=True, help='Telegram phone number')
+    parser.add_argument('--code', type=str, help='Telegram login code (OTP)')
+    parser.add_argument('--phone_code_hash', type=str, help='Telegram phone_code_hash (from send_code_request)')
+    parser.add_argument('--password', type=str, help='Telegram 2FA password (if enabled)')
+    return parser.parse_args()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def cli_main():
+    args = parse_args()
+    global PHONE_NUMBER
+    PHONE_NUMBER = args.phone
+    collector = TelegramStatsCollector()
+    await collector.initialize_client_cli(args)
+
+if __name__ == '__main__':
+    asyncio.run(cli_main())
