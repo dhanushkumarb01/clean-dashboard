@@ -31,7 +31,7 @@ This module provides automated collection of Telegram group and channel statisti
 
 ```bash
 cd scripts
-pip install -r requirements.txt
+pip install -r ../requirements.txt
 ```
 
 ### 3. Configure Environment Variables
@@ -140,7 +140,6 @@ The script collects the following statistics:
 scripts/
 ├── telegramStats.py          # Main collection script
 ├── runTelegramStats.sh       # Shell script wrapper
-├── requirements.txt          # Python dependencies
 ├── env.example              # Environment variables template
 ├── .env                     # Your environment variables (create this)
 ├── logs/                    # Log files directory

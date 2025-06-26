@@ -14,5 +14,8 @@ fi
 # Navigate to the script directory
 cd "$(dirname "$0")"
 
+# Install Python dependencies from server root
+pip install -r ../requirements.txt
+
 # Run the Python script
 python telegramStats.py 
