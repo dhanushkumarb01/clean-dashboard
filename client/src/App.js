@@ -35,7 +35,7 @@ const AuthCallbackHandler = () => {
       navigate(`/auth/error?message=${encodeURIComponent(error)}`);
     } else if (code) {
       // Construct the callback URL properly
-      const apiBase = process.env.REACT_APP_API_URL?.replace(/\/api$/, '') || 'http://localhost:5000';
+      const apiBase = process.env.REACT_APP_API_URL?.replace(/\/api$/, '') || 'https://clean-dashboard.onrender.com';
       const callbackUrl = `${apiBase}/api/auth/google/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ''}`;
       
       console.log('Redirecting to callback URL:', callbackUrl);

@@ -384,7 +384,7 @@ exports.requestEmailVerification = async (req, res) => {
       { upsert: true, new: true }
     );
     // Send verification email
-    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/complete-registration?email=${encodeURIComponent(email)}&token=${encodeURIComponent(verificationToken)}`;
+    const verificationUrl = `${process.env.FRONTEND_URL || 'https://clean-dashboard-dun.vercel.app'}/complete-registration?email=${encodeURIComponent(email)}&token=${encodeURIComponent(verificationToken)}`;
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,

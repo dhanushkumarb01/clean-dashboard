@@ -24,7 +24,7 @@ const LoginPage = () => {
   const handleGoogleLogin = async () => {
     try {
       // Redirect to backend's Google OAuth endpoint
-        window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/google`;
+        window.location.href = `${process.env.REACT_APP_API_URL || 'https://clean-dashboard.onrender.com'}/api/auth/google`;
     } catch (error) {
       console.error('Login error:', error);
       // Handle error (show message to user)
@@ -36,7 +36,7 @@ const LoginPage = () => {
     console.log('Attempting phone login with:', { mobileNumber, password });
     // TODO: Implement actual API call for phone number login
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/login-phone`, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'https://clean-dashboard.onrender.com/api'}/auth/login-phone`, {
         mobileNumber,
         password,
       });

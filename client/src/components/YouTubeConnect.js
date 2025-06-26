@@ -4,7 +4,7 @@ import axios from 'axios';
 import ErrorBoundary from './ErrorBoundary';
 
 // API URL configuration - ensure consistent use of localhost
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://clean-dashboard.onrender.com';
 
 // Validate API URL and ensure it uses localhost
 if (!API_BASE_URL.includes('localhost')) {

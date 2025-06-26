@@ -23,7 +23,7 @@ const SignupPage = () => {
     }
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/signup-phone`, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'https://clean-dashboard.onrender.com/api'}/auth/signup-phone`, {
         mobileNumber,
         password,
       });
