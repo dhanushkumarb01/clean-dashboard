@@ -3,6 +3,7 @@ const PDFDocument = require('pdfkit');
 const TelegramMessage = require('../models/TelegramMessage');
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 // Get latest Telegram statistics
 const getTelegramStats = async (req, res) => {
@@ -985,7 +986,36 @@ const requestTelegramLogin = async (req, res) => {
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ success: false, error: 'Phone number required' });
   try {
+    // Log environment variables
+    console.log('TELEGRAM_API_ID:', process.env.TELEGRAM_API_ID);
+    console.log('TELEGRAM_API_HASH:', process.env.TELEGRAM_API_HASH);
+    // Check for Python and script existence
+    const pythonPaths = ['/usr/bin/python3', '/usr/local/bin/python3', 'python3', 'python'];
+    let pythonExists = false;
+    for (const p of pythonPaths) {
+      try {
+        if (fs.existsSync(p)) {
+          pythonExists = true;
+          break;
+        }
+      } catch (e) {}
+    }
+    console.log('Python exists:', pythonExists);
     const scriptPath = path.join(__dirname, '..', 'scripts', 'telegramStats.py');
+    console.log('Script path:', scriptPath);
+    console.log('Script exists:', fs.existsSync(scriptPath));
+    if (!process.env.TELEGRAM_API_ID || !process.env.TELEGRAM_API_HASH) {
+      console.error('Missing TELEGRAM_API_ID or TELEGRAM_API_HASH');
+      return res.status(500).json({ success: false, error: 'Missing Telegram API credentials in environment variables' });
+    }
+    if (!pythonExists) {
+      console.error('Python3 is not installed or not found in expected paths');
+      return res.status(500).json({ success: false, error: 'Python3 is not installed on the server' });
+    }
+    if (!fs.existsSync(scriptPath)) {
+      console.error('telegramStats.py script not found at', scriptPath);
+      return res.status(500).json({ success: false, error: 'telegramStats.py script not found on server' });
+    }
     const py = spawn('python3', [scriptPath, '--phone', phone]);
     let output = '';
     let responded = false;
@@ -999,14 +1029,19 @@ const requestTelegramLogin = async (req, res) => {
       }
     });
     py.stderr.on('data', (data) => {
-      console.error('Python error:', data.toString());
+      console.error('Python stderr:', data.toString());
+    });
+    py.on('error', (err) => {
+      console.error('Failed to start Python process:', err);
     });
     py.on('close', (code) => {
       if (!responded) {
+        console.error('Python process closed with code:', code);
         res.status(500).json({ success: false, error: 'Failed to send code' });
       }
     });
   } catch (err) {
+    console.error('Caught exception in requestTelegramLogin:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -1016,7 +1051,36 @@ const verifyTelegramLogin = async (req, res) => {
   const { phone, code, phone_code_hash, password } = req.body;
   if (!phone || !code || !phone_code_hash) return res.status(400).json({ success: false, error: 'Phone, code, and phone_code_hash required' });
   try {
+    // Log environment variables
+    console.log('TELEGRAM_API_ID:', process.env.TELEGRAM_API_ID);
+    console.log('TELEGRAM_API_HASH:', process.env.TELEGRAM_API_HASH);
+    // Check for Python and script existence
+    const pythonPaths = ['/usr/bin/python3', '/usr/local/bin/python3', 'python3', 'python'];
+    let pythonExists = false;
+    for (const p of pythonPaths) {
+      try {
+        if (fs.existsSync(p)) {
+          pythonExists = true;
+          break;
+        }
+      } catch (e) {}
+    }
+    console.log('Python exists:', pythonExists);
     const scriptPath = path.join(__dirname, '..', 'scripts', 'telegramStats.py');
+    console.log('Script path:', scriptPath);
+    console.log('Script exists:', fs.existsSync(scriptPath));
+    if (!process.env.TELEGRAM_API_ID || !process.env.TELEGRAM_API_HASH) {
+      console.error('Missing TELEGRAM_API_ID or TELEGRAM_API_HASH');
+      return res.status(500).json({ success: false, error: 'Missing Telegram API credentials in environment variables' });
+    }
+    if (!pythonExists) {
+      console.error('Python3 is not installed or not found in expected paths');
+      return res.status(500).json({ success: false, error: 'Python3 is not installed on the server' });
+    }
+    if (!fs.existsSync(scriptPath)) {
+      console.error('telegramStats.py script not found at', scriptPath);
+      return res.status(500).json({ success: false, error: 'telegramStats.py script not found on server' });
+    }
     const args = [scriptPath, '--phone', phone, '--code', code, '--phone_code_hash', phone_code_hash];
     if (password) args.push('--password', password);
     const py = spawn('python3', args);
@@ -1039,14 +1103,19 @@ const verifyTelegramLogin = async (req, res) => {
       }
     });
     py.stderr.on('data', (data) => {
-      console.error('Python error:', data.toString());
+      console.error('Python stderr:', data.toString());
+    });
+    py.on('error', (err) => {
+      console.error('Failed to start Python process:', err);
     });
     py.on('close', (code) => {
       if (!responded) {
+        console.error('Python process closed with code:', code);
         res.status(500).json({ success: false, error: 'Failed to login or collect data' });
       }
     });
   } catch (err) {
+    console.error('Caught exception in verifyTelegramLogin:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
