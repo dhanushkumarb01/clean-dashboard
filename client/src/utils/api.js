@@ -52,7 +52,7 @@ const handleApiError = (error) => {
 
 // Create axios instance with defaults
 const api = axios.create({
-  baseURL: 'https://clean-dashboard.onrender.com/api',
+  baseURL: process.env.REACT_APP_API_URL || 'https://clean-dashboard.onrender.com',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
