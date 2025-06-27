@@ -231,6 +231,25 @@ const TelegramDashboard = () => {
     setLoginLoading(true);
     setLoginError('');
     try {
+      // First, check if stats exist for this phone
+      setLoading(true);
+      setError(null);
+      let statsData = null;
+      try {
+        statsData = await telegram.getStats(phone);
+      } catch (err) {
+        // Ignore error, may mean no data
+      }
+      if (statsData && !statsData.isEmpty) {
+        setStats(statsData);
+        setShowDashboard(true);
+        setStep(3);
+        setLoading(false);
+        setLoginLoading(false);
+        return;
+      }
+      setLoading(false);
+      // If no stats, proceed to request-login as before
       const res = await api.post('/api/telegram/request-login', { phone });
       if (res.data.status === 'ready') {
         setShowDashboard(false);
