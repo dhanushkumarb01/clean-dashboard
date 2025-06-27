@@ -50,6 +50,10 @@ SESSION_NAME = 'telegram_stats_session'
 SESSIONS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../sessions'))
 os.makedirs(SESSIONS_DIR, exist_ok=True)
 
+def get_session_path(phone):
+    safe_phone = phone.replace('+', '')
+    return os.path.join(SESSIONS_DIR, f'{safe_phone}.session')
+
 # Defensive check for missing environment variables
 missing = [k for k, v in {
     'TELEGRAM_API_ID': API_ID,
@@ -804,8 +808,3 @@ async def cli_main():
 
 if __name__ == '__main__':
     asyncio.run(cli_main())
-
-# Helper: get session file path for a phone
-def get_session_path(phone):
-    safe_phone = phone.replace('+', '')
-    return os.path.join(SESSIONS_DIR, f'{safe_phone}.session')
