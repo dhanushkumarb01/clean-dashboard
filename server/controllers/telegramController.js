@@ -991,37 +991,54 @@ const requestTelegramLogin = async (req, res) => {
   console.log('📄 Script path:', scriptPath);
 
   try {
-    // (Keep all previous environment and input checks here)
-    // ...
     const pythonProcess = spawn('python3', [scriptPath, '--phone', phone]);
     let output = '';
     let errorOutput = '';
 
     pythonProcess.stdout.on('data', (data) => {
-      console.log('🐍 STDOUT:', data.toString());
-      output += data.toString();
+      const str = data.toString();
+      console.log('🐍 STDOUT:', str);
+      output += str;
     });
 
     pythonProcess.stderr.on('data', (data) => {
-      console.error('🐍 STDERR:', data.toString());
-      errorOutput += data.toString();
+      const err = data.toString();
+      console.error('🐍 STDERR:', err);
+      errorOutput += err;
     });
 
     pythonProcess.on('close', (code) => {
       console.log('📦 Python process exited with code', code);
-      if (code !== 0 || errorOutput) {
-        console.error('🐍 Python script failed:', errorOutput || `Exited with code ${code}`);
+
+      if (code !== 0 || errorOutput.trim() !== '') {
         return res.status(500).json({
           success: false,
-          error: 'Failed to send code',
-          details: errorOutput || `Exited with code ${code}`
+          error: 'Python script error',
+          details: errorOutput || `Exited with code ${code}`,
         });
       }
-      return res.status(200).json({ message: 'Code sent', result: output });
+
+      // OPTIONAL: Try to parse JSON from Python if it returns structured data
+      let result;
+      try {
+        result = JSON.parse(output);
+      } catch (e) {
+        result = { raw: output.trim() };
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Code sent',
+        result,
+      });
     });
   } catch (err) {
     console.error('❌ requestTelegramLogin crashed:', err);
-    return res.status(500).json({ error: 'Internal server error', details: err.message });
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      details: err.message,
+    });
   }
 };
 
