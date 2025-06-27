@@ -404,22 +404,25 @@ class TelegramStatsCollector:
     
     def store_messages_via_api(self):
         if not self.collected_messages:
-            print("No messages to insert for phone:", PHONE_NUMBER)
-            return
+            print(f"[WARN] No messages to POST for phone: {PHONE_NUMBER}")
         # Ensure phone is present in every message
         for msg in self.collected_messages:
             msg['phone'] = PHONE_NUMBER
         payload = {"messages": self.collected_messages}
+        url = f"{BACKEND_URL}/api/telegram/store-messages"
+        print(f"[DEBUG] POSTing messages to: {url}")
+        print(f"[DEBUG] Payload (first 1): {json.dumps(self.collected_messages[:1], default=str) if self.collected_messages else '[]'} ... total: {len(self.collected_messages)}")
         try:
-            print(f"POSTing {len(self.collected_messages)} messages to backend API for phone: {PHONE_NUMBER}")
-            response = requests.post(f"{BACKEND_URL}/api/telegram/store-messages", json=payload, headers={'Content-Type': 'application/json'}, timeout=60)
+            response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'}, timeout=60)
+            print(f"[DEBUG] Response status: {response.status_code}")
+            print(f"[DEBUG] Response text: {response.text}")
             if response.status_code == 200:
                 print(f"✅ API inserted messages for phone: {PHONE_NUMBER}")
             else:
                 print(f"❌ API failed to insert messages: {response.status_code}")
-                print(f"Response: {response.text}")
         except Exception as e:
-            print("❌ API call failed for messages:", e)
+            print(f"❌ API call failed for messages: {e}")
+            print(f"[ERROR] Payload: {json.dumps(payload, default=str)[:1000]}")
 
     async def collect_basic_stats(self):
         """Collect basic statistics from all dialogs"""
@@ -710,22 +713,25 @@ class TelegramStatsCollector:
             logger.error(f"Error collecting private chat users: {e}", exc_info=True)
     
     def store_stats_via_api(self):
-        # Add phone and collection period
         self.stats['phone'] = PHONE_NUMBER
         self.stats['collectionPeriod'] = {
             'start': (datetime.now() - timedelta(days=7)).isoformat(),
             'end': datetime.now().isoformat()
         }
+        url = f"{BACKEND_URL}/api/telegram/store-stats"
+        print(f"[DEBUG] POSTing stats to: {url}")
+        print(f"[DEBUG] Payload: {json.dumps(self.stats, default=str)[:1000]}")
         try:
-            print(f"POSTing stats to backend API for phone: {PHONE_NUMBER}")
-            response = requests.post(f"{BACKEND_URL}/api/telegram/store-stats", json=self.stats, headers={'Content-Type': 'application/json'}, timeout=60)
+            response = requests.post(url, json=self.stats, headers={'Content-Type': 'application/json'}, timeout=60)
+            print(f"[DEBUG] Response status: {response.status_code}")
+            print(f"[DEBUG] Response text: {response.text}")
             if response.status_code == 200:
                 print(f"✅ API inserted stats for phone: {PHONE_NUMBER}")
             else:
                 print(f"❌ API failed to insert stats: {response.status_code}")
-                print(f"Response: {response.text}")
         except Exception as e:
-            print("❌ API call failed for stats:", e)
+            print(f"❌ API call failed for stats: {e}")
+            print(f"[ERROR] Payload: {json.dumps(self.stats, default=str)[:1000]}")
 
     async def run_collection(self):
         print("run_collection START for phone:", PHONE_NUMBER)
@@ -736,9 +742,8 @@ class TelegramStatsCollector:
                 return False
             await self.collect_all_messages()
             print("Collected all messages for phone:", PHONE_NUMBER)
-            if self.collected_messages:
-                self.store_messages_via_api()
-                print("Inserted messages for phone:", PHONE_NUMBER)
+            self.store_messages_via_api()
+            print("Inserted messages for phone:", PHONE_NUMBER)
             await self.collect_basic_stats()
             print("Collected basic stats for phone:", PHONE_NUMBER)
             await self.collect_most_active_users()
@@ -749,7 +754,6 @@ class TelegramStatsCollector:
             print("Collected top users by groups for phone:", PHONE_NUMBER)
             await self.collect_private_chat_users()
             print("Collected private chat users for phone:", PHONE_NUMBER)
-            # Always insert stats, even if minimal
             self.store_stats_via_api()
             logger.info(f"Stats for phone {PHONE_NUMBER} inserted into backend API before any fetch/display.")
             await self.client.disconnect()
