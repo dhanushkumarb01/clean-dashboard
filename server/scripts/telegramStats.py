@@ -830,25 +830,79 @@ async def cli_main():
                 }
                 collected_messages.append(msg)
     print(f'[✔] Collected {len(collected_messages)} messages')
-    # 2. Collect stats
-    total_groups = 0
-    total_users = set()
-    async for dialog in client.iter_dialogs():
-        if dialog.is_group or dialog.is_channel:
-            total_groups += 1
-            try:
-                participants = await client.get_participants(dialog.entity, limit=100)
-                for p in participants:
-                    if isinstance(p, User) and not getattr(p, 'bot', False):
-                        total_users.add(p.id)
-            except Exception:
-                pass
+    # 2. Collect stats and analytics
+    # Compute time range for collectionPeriod
+    now = datetime.utcnow()
+    start_period = now - timedelta(days=7)
+    end_period = now
+    # Compute media files
+    total_media_files = sum(1 for m in collected_messages if m.get('messageText') == '' and m.get('mediaType'))
+    # Compute message rate (messages per day)
+    message_rate = round(len(collected_messages) / 7, 2) if collected_messages else 0
+    # Compute group propagation (percentage of groups with recent activity)
+    group_ids = set(m['chatId'] for m in collected_messages if m['chatType'] in ['group', 'channel'])
+    active_groups = len(group_ids)
+    group_propagation = round((active_groups / total_groups) * 100, 2) if total_groups else 0
+    # Compute avg views per message (if available)
+    avg_views = 0
+    if collected_messages:
+        views = [m.get('views', 0) for m in collected_messages if 'views' in m]
+        avg_views = round(sum(views) / len(views), 2) if views else 0
+    # Most active users
+    user_message_counts = Counter(m['senderId'] for m in collected_messages)
+    most_active_users = []
+    for user_id, count in user_message_counts.most_common(10):
+        most_active_users.append({
+            'userId': user_id,
+            'username': None,
+            'firstName': None,
+            'lastName': None,
+            'messageCount': count,
+            'telegramId': user_id
+        })
+    # Most active groups
+    group_message_counts = Counter(m['chatId'] for m in collected_messages if m['chatType'] in ['group', 'channel'])
+    most_active_groups = []
+    for group_id, count in group_message_counts.most_common(10):
+        most_active_groups.append({
+            'groupId': group_id,
+            'title': None,
+            'username': None,
+            'messageCount': count,
+            'memberCount': 0,
+            'isChannel': False
+        })
+    # Suspicious users, keyword cloud, etc. (default empty)
     stats_doc = {
         'phone': PHONE_NUMBER,
         'totalGroups': total_groups,
+        'activeUsers': len(user_message_counts),
         'totalUsers': len(total_users),
         'totalMessages': len(collected_messages),
-        'timestamp': datetime.utcnow()
+        'totalMediaFiles': total_media_files,
+        'messageRate': message_rate,
+        'rateChange': 0,
+        'groupPropagation': group_propagation,
+        'avgViewsPerMessage': avg_views,
+        'mostActiveUsers': most_active_users,
+        'mostActiveGroups': most_active_groups,
+        'topUsersByGroups': [],
+        'mostActiveUserLast7Days': { 'messageCount': 0 },
+        'avgMessagesPerDay': 0,
+        'peakHourOfActivity': 0,
+        'messageGrowthLast7Days': 0,
+        'totalSuspiciousUsers': 0,
+        'suspiciousUsers': [],
+        'topUserLocations': [],
+        'keywordCloud': [],
+        'dataSource': 'telethon',
+        'collectionPeriod': {
+            'start': start_period,
+            'end': end_period
+        },
+        'timestamp': now,
+        'createdAt': now,
+        'updatedAt': now
     }
     print(f'[✔] Stats collected for {PHONE_NUMBER}')
     # 3. Insert into MongoDB
@@ -858,7 +912,7 @@ async def cli_main():
             messages_collection.insert_many(collected_messages)
         print(f"[DEBUG] Inserting stats: {stats_doc}")
         stats_collection.insert_one(stats_doc)
-        print('[✔] Data inserted into MongoDB')
+        print(f'[✔] Data inserted into MongoDB with enriched structure for {PHONE_NUMBER}')
     except Exception as e:
         print(f'[✘] MongoDB insert failed: {e}')
     # 4. Confirm session file
