@@ -24,8 +24,8 @@ const AuthCallback = () => {
         }        // Store the token
         localStorage.setItem('token', token);
 
-        // Redirect to root which is our dashboard
-        navigate('/');
+        // Redirect to YouTube dashboard after sign-in
+        navigate('/dashboard');
       } catch (err) {
         console.error('Callback error:', err);
         navigate('/login', { state: { error: err.message } });
