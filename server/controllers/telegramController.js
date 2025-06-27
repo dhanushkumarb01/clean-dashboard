@@ -1021,6 +1021,7 @@ const requestTelegramLogin = async (req, res) => {
     let responded = false;
     py.stdout.on('data', (data) => {
       output += data.toString();
+      console.log('Python script output:', data.toString()); // Log each chunk
       const match = output.match(/CODE_SENT:([\w-]+)/);
       if (match && !responded) {
         responded = true;
@@ -1036,8 +1037,13 @@ const requestTelegramLogin = async (req, res) => {
     });
     py.on('close', (code) => {
       if (!responded) {
-        console.error('Python process closed with code:', code);
-        res.status(500).json({ success: false, error: 'Failed to send code' });
+        console.log('Python process closed with code:', code);
+        // Try to parse output as JSON, else send as text
+        let dataToSend = output.trim();
+        try {
+          dataToSend = JSON.parse(dataToSend);
+        } catch (e) {}
+        res.status(200).json({ success: false, output: dataToSend, code });
       }
     });
   } catch (err) {
@@ -1088,6 +1094,7 @@ const verifyTelegramLogin = async (req, res) => {
     let responded = false;
     py.stdout.on('data', (data) => {
       output += data.toString();
+      console.log('Python script output:', data.toString()); // Log each chunk
       if (output.includes('LOGIN_SUCCESS') && !responded) {
         responded = true;
         res.json({ success: true, message: 'Login successful, data collection started' });
@@ -1110,8 +1117,13 @@ const verifyTelegramLogin = async (req, res) => {
     });
     py.on('close', (code) => {
       if (!responded) {
-        console.error('Python process closed with code:', code);
-        res.status(500).json({ success: false, error: 'Failed to login or collect data' });
+        console.log('Python process closed with code:', code);
+        // Try to parse output as JSON, else send as text
+        let dataToSend = output.trim();
+        try {
+          dataToSend = JSON.parse(dataToSend);
+        } catch (e) {}
+        res.status(200).json({ success: false, output: dataToSend, code });
       }
     });
   } catch (err) {
