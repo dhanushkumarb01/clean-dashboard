@@ -714,6 +714,7 @@ class TelegramStatsCollector:
             logger.error(f"Error collecting private chat users: {e}", exc_info=True)
     
     def store_stats_directly_in_mongodb(self):
+        print("store_stats_directly_in_mongodb CALLED for phone:", self.stats.get('phone', 'UNKNOWN'))
         try:
             # Ensure phone is present in stats
             self.stats['phone'] = PHONE_NUMBER
@@ -765,26 +766,36 @@ class TelegramStatsCollector:
             return False
     
     async def run_collection(self):
-        """Run the complete statistics collection process"""
+        print("run_collection START for phone:", PHONE_NUMBER)
         try:
             logger.info("Starting Telegram statistics and message collection...")
             if not await self.initialize_client():
+                print("run_collection ABORT: failed to initialize client for phone:", PHONE_NUMBER)
                 return False
             await self.collect_all_messages()
+            print("Collected all messages for phone:", PHONE_NUMBER)
             if self.collected_messages:
                 self.store_messages_directly_in_mongodb()
+                print("Inserted messages for phone:", PHONE_NUMBER)
             await self.collect_basic_stats()
+            print("Collected basic stats for phone:", PHONE_NUMBER)
             await self.collect_most_active_users()
+            print("Collected most active users for phone:", PHONE_NUMBER)
             await self.collect_most_active_groups()
+            print("Collected most active groups for phone:", PHONE_NUMBER)
             await self.collect_top_users_by_groups()
+            print("Collected top users by groups for phone:", PHONE_NUMBER)
             await self.collect_private_chat_users()
+            print("Collected private chat users for phone:", PHONE_NUMBER)
             # Always insert stats, even if minimal
             self.store_stats_directly_in_mongodb()
             logger.info(f"Stats for phone {PHONE_NUMBER} inserted into MongoDB before any fetch/display.")
             await self.client.disconnect()
+            print("run_collection END for phone:", PHONE_NUMBER)
             return True
         except Exception as e:
             logger.error(f"Error in collection process: {e}")
+            print("run_collection ERROR for phone:", PHONE_NUMBER, e)
             if self.client:
                 await self.client.disconnect()
             return False
@@ -804,6 +815,8 @@ async def cli_main():
     assert PHONE_NUMBER, 'PHONE_NUMBER must be set from CLI args!'
     collector = TelegramStatsCollector()
     await collector.initialize_client_cli(args)
+    # Always run collection after login
+    await collector.run_collection()
 
 if __name__ == '__main__':
     asyncio.run(cli_main())
