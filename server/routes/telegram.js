@@ -53,4 +53,8 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
+router.get('/request-login', (req, res) => {
+  res.send('This route works — but you should use POST.');
+});
+
 module.exports = router;
