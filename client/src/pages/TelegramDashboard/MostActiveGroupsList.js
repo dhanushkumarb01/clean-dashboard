@@ -1,6 +1,16 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
+// Helper to extract number from MongoDB extended JSON or plain number
+function getNumber(val) {
+  if (typeof val === 'object' && val !== null) {
+    if ('$numberInt' in val) return parseInt(val['$numberInt'], 10);
+    if ('$numberDouble' in val) return parseFloat(val['$numberDouble']);
+    if ('$numberLong' in val) return parseInt(val['$numberLong'], 10);
+  }
+  return typeof val === 'number' ? val : 0;
+}
+
 const MostActiveGroupsList = ({ groups }) => {
   const navigate = useNavigate();
 
@@ -72,16 +82,16 @@ const MostActiveGroupsList = ({ groups }) => {
                       <span>•</span>
                     </>
                   )}
-                  <span>{group.memberCount || 0} members</span>
+                  <span>{getNumber(group.memberCount)} members</span>
                   <span>•</span>
-                  <span>{group.messageCount || group.messages || 0} messages</span>
+                  <span>{getNumber(group.messageCount) || getNumber(group.messages)} messages</span>
                 </div>
               </div>
             </div>
             <div className="flex-shrink-0">
               <div className="flex items-center space-x-1">
                 <span className="text-sm font-semibold text-blue-600">
-                  {group.messageCount || group.messages || 0}
+                  {getNumber(group.messageCount) || getNumber(group.messages)}
                 </span>
                 <span className="text-xs text-gray-400">msgs</span>
               </div>
