@@ -22,13 +22,13 @@ import uuid
 import argparse
 import sqlite3
 import time
-from pymongo import MongoClient
+from pymongo import MongoClient, errors as pymongo_errors
 
 # Ensure data directory exists for logging
 os.makedirs('data', exist_ok=True)
 
 # Load environment variables from config directory
-load_dotenv('../config/scripts.env')
+load_dotenv(os.path.join(os.path.dirname(__file__), '../config/scripts.env'))
 
 # Configure logging
 logging.basicConfig(
@@ -47,7 +47,7 @@ API_HASH = os.getenv('TELEGRAM_API_HASH')
 PHONE_NUMBER = os.getenv('TELEGRAM_PHONE_NUMBER')
 BACKEND_URL = os.getenv('BACKEND_URL', 'https://clean-dashboard.onrender.com')
 SESSION_NAME = 'telegram_stats_session'
-SESSIONS_DIR = os.path.join(os.path.dirname(__file__), '../sessions')
+SESSIONS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../sessions'))
 os.makedirs(SESSIONS_DIR, exist_ok=True)
 
 # Defensive check for missing environment variables
@@ -102,7 +102,7 @@ class TelegramStatsCollector:
         
     async def initialize_client(self):
         """Initialize Telegram client"""
-        session_path = os.path.join(SESSIONS_DIR, f"{PHONE_NUMBER}")
+        session_path = get_session_path(PHONE_NUMBER)
         lock_path = session_path + '.lock'
         retry = False
         for attempt in range(2):
@@ -149,7 +149,7 @@ class TelegramStatsCollector:
         return False
     
     async def initialize_client_cli(self, args):
-        session_path = os.path.join(SESSIONS_DIR, f"{args.phone}")
+        session_path = get_session_path(args.phone)
         lock_path = session_path + '.lock'
         retry = False
         for attempt in range(2):
@@ -804,3 +804,8 @@ async def cli_main():
 
 if __name__ == '__main__':
     asyncio.run(cli_main())
+
+# Helper: get session file path for a phone
+def get_session_path(phone):
+    safe_phone = phone.replace('+', '')
+    return os.path.join(SESSIONS_DIR, f'{safe_phone}.session')
