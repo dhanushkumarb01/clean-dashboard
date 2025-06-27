@@ -22,6 +22,7 @@ import uuid
 import argparse
 import sqlite3
 import time
+import pymongo
 
 # Ensure data directory exists for logging
 os.makedirs('data', exist_ok=True)
@@ -48,6 +49,13 @@ BACKEND_URL = os.getenv('BACKEND_URL', 'https://clean-dashboard.onrender.com')
 SESSION_NAME = 'telegram_stats_session'
 SESSIONS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../sessions'))
 os.makedirs(SESSIONS_DIR, exist_ok=True)
+
+# MongoDB connection
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/test')
+mongo_client = pymongo.MongoClient(MONGO_URI)
+mongo_db = mongo_client['test']
+stats_collection = mongo_db['telegramstats']
+messages_collection = mongo_db['telegrammessages']
 
 def get_session_path(phone):
     safe_phone = phone.replace('+', '')
@@ -782,39 +790,77 @@ async def cli_main():
     session_path = get_session_path(PHONE_NUMBER)
     client = TelegramClient(session_path, int(API_ID), API_HASH)
     await client.connect()
-    try:
-        if not await client.is_user_authorized():
-            if not args.code:
-                # Step 1: Send code and print phone_code_hash, then exit
-                result = await client.send_code_request(PHONE_NUMBER)
-                phone_code_hash = result.phone_code_hash
-                print(f'CODE_SENT:{phone_code_hash}')
+    if not await client.is_user_authorized():
+        if not args.code:
+            result = await client.send_code_request(PHONE_NUMBER)
+            print(f'CODE_SENT:{result.phone_code_hash}')
+            await client.disconnect()
+            return
+        try:
+            if args.phone_code_hash:
+                await client.sign_in(PHONE_NUMBER, args.code, phone_code_hash=args.phone_code_hash)
+            else:
+                await client.sign_in(PHONE_NUMBER, args.code)
+        except SessionPasswordNeededError:
+            if args.password:
+                await client.sign_in(password=args.password)
+            else:
+                print('2FA_REQUIRED')
                 await client.disconnect()
                 return
-            # Step 2: Use code and phone_code_hash to sign in
+    print('[✔] LOGIN_SUCCESS')
+    # Data collection
+    # 1. Collect messages
+    collected_messages = []
+    async for dialog in client.iter_dialogs():
+        if dialog.is_group or dialog.is_channel or dialog.is_user:
+            async for message in client.iter_messages(dialog.entity, limit=200):
+                if not message.text and not message.media:
+                    continue
+                msg = {
+                    'messageId': str(message.id),
+                    'chatId': str(dialog.id),
+                    'chatName': dialog.title or 'Unknown Chat',
+                    'chatType': 'group' if dialog.is_group else ('channel' if dialog.is_channel else 'private'),
+                    'senderId': str(message.sender_id) if message.sender_id else 'unknown',
+                    'messageText': message.text or '',
+                    'timestamp': message.date.isoformat(),
+                    'phone': PHONE_NUMBER
+                }
+                collected_messages.append(msg)
+    print(f'[✔] Collected {len(collected_messages)} messages')
+    # 2. Collect stats
+    total_groups = 0
+    total_users = set()
+    async for dialog in client.iter_dialogs():
+        if dialog.is_group or dialog.is_channel:
+            total_groups += 1
             try:
-                if args.phone_code_hash:
-                    await client.sign_in(PHONE_NUMBER, args.code, phone_code_hash=args.phone_code_hash)
-                else:
-                    print('ERROR: phone_code_hash required for sign in')
-                    await client.disconnect()
-                    return
-            except SessionPasswordNeededError:
-                if args.password:
-                    await client.sign_in(password=args.password)
-                else:
-                    print('2FA_REQUIRED')
-                    await client.disconnect()
-                    return
-        print('LOGIN_SUCCESS')
-        # After successful login, collect and store stats
-        collector = TelegramStatsCollector()
-        collector.client = client
-        await collector.run_collection()
+                participants = await client.get_participants(dialog.entity, limit=100)
+                for p in participants:
+                    if isinstance(p, User) and not getattr(p, 'bot', False):
+                        total_users.add(p.id)
+            except Exception:
+                pass
+    stats_doc = {
+        'phone': PHONE_NUMBER,
+        'totalGroups': total_groups,
+        'totalUsers': len(total_users),
+        'totalMessages': len(collected_messages),
+        'timestamp': datetime.utcnow()
+    }
+    print(f'[✔] Stats collected for {PHONE_NUMBER}')
+    # 3. Insert into MongoDB
+    try:
+        if collected_messages:
+            messages_collection.insert_many(collected_messages)
+        stats_collection.insert_one(stats_doc)
+        print('[✔] Data inserted into MongoDB')
     except Exception as e:
-        print(f'ERROR: {e}')
-    finally:
-        await client.disconnect()
+        print(f'[✘] MongoDB insert failed: {e}')
+    # 4. Confirm session file
+    print(f'[✔] Session file stored at: {session_path}')
+    await client.disconnect()
 
 if __name__ == '__main__':
     asyncio.run(cli_main())
