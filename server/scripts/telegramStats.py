@@ -20,6 +20,8 @@ import logging
 from dotenv import load_dotenv
 import uuid
 import argparse
+import sqlite3
+import time
 
 # Ensure data directory exists for logging
 os.makedirs('data', exist_ok=True)
@@ -91,58 +93,108 @@ class TelegramStatsCollector:
         
     async def initialize_client(self):
         """Initialize Telegram client"""
-        try:
-            if not all([API_ID, API_HASH, PHONE_NUMBER]):
-                raise ValueError("Missing required environment variables: TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_PHONE_NUMBER")
-            
-            session_path = os.path.join(SESSIONS_DIR, f"{PHONE_NUMBER}")
-            self.client = TelegramClient(session_path, int(API_ID), API_HASH)
-            await self.client.start(phone=PHONE_NUMBER)
-            
-            if not await self.client.is_user_authorized():
-                logger.info("First time login required. Please check your Telegram for the verification code.")
-                await self.client.send_code_request(PHONE_NUMBER)
-                code = input("Enter the verification code: ")
-                try:
-                    await self.client.sign_in(PHONE_NUMBER, code)
-                except SessionPasswordNeededError:
-                    password = input("Enter your 2FA password: ")
-                    await self.client.sign_in(password=password)
-            
-            logger.info("Telegram client initialized successfully")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize Telegram client: {e}")
-            return False
+        session_path = os.path.join(SESSIONS_DIR, f"{PHONE_NUMBER}")
+        lock_path = session_path + '.lock'
+        retry = False
+        for attempt in range(2):
+            try:
+                # Lock file logic: only one process per session
+                if os.path.exists(lock_path):
+                    logger.error(f"Session lock detected for {session_path}. Another process may be using this session.")
+                    raise RuntimeError(f"Session lock detected for {session_path}. Only one process can use a session at a time.")
+                with open(lock_path, 'w') as lockf:
+                    lockf.write(str(os.getpid()))
+                logger.info(f"Using session file: {session_path}")
+                self.client = TelegramClient(session_path, int(API_ID), API_HASH)
+                await self.client.start(phone=PHONE_NUMBER)
+                if not await self.client.is_user_authorized():
+                    logger.info("First time login required. Please check your Telegram for the verification code.")
+                    await self.client.send_code_request(PHONE_NUMBER)
+                    code = input("Enter the verification code: ")
+                    try:
+                        await self.client.sign_in(PHONE_NUMBER, code)
+                    except SessionPasswordNeededError:
+                        password = input("Enter your 2FA password: ")
+                        await self.client.sign_in(password=password)
+                logger.info("Telegram client initialized successfully")
+                os.remove(lock_path)
+                return True
+            except sqlite3.OperationalError as e:
+                if 'database is locked' in str(e) and not retry:
+                    logger.warning(f"Session DB is locked for {session_path}. Deleting and retrying once...")
+                    if os.path.exists(session_path + '.session'):
+                        os.remove(session_path + '.session')
+                    retry = True
+                    time.sleep(1)
+                    continue
+                else:
+                    logger.error(f"Failed to initialize Telegram client: {e}")
+                    if os.path.exists(lock_path):
+                        os.remove(lock_path)
+                    return False
+            except Exception as e:
+                logger.error(f"Failed to initialize Telegram client: {e}")
+                if os.path.exists(lock_path):
+                    os.remove(lock_path)
+                return False
+        return False
     
     async def initialize_client_cli(self, args):
-        try:
-            session_path = os.path.join(SESSIONS_DIR, f"{args.phone}")
-            self.client = TelegramClient(session_path, int(API_ID), API_HASH)
-            await self.client.connect()
-            if not await self.client.is_user_authorized():
-                if not args.code:
-                    result = await self.client.send_code_request(args.phone)
-                    phone_code_hash = result.phone_code_hash
-                    print(f'CODE_SENT:{phone_code_hash}')
-                    logging.debug("Sending code to: %s", args.phone)
-                    return
-                try:
-                    if hasattr(args, 'phone_code_hash') and args.phone_code_hash:
-                        await self.client.sign_in(args.phone, args.code, phone_code_hash=args.phone_code_hash)
-                    else:
-                        await self.client.sign_in(args.phone, args.code)
-                except SessionPasswordNeededError:
-                    if not args.password:
-                        print('2FA_REQUIRED')
+        session_path = os.path.join(SESSIONS_DIR, f"{args.phone}")
+        lock_path = session_path + '.lock'
+        retry = False
+        for attempt in range(2):
+            try:
+                if os.path.exists(lock_path):
+                    print(f"Session lock detected for {session_path}. Another process may be using this session.")
+                    raise RuntimeError(f"Session lock detected for {session_path}. Only one process can use a session at a time.")
+                with open(lock_path, 'w') as lockf:
+                    lockf.write(str(os.getpid()))
+                self.client = TelegramClient(session_path, int(API_ID), API_HASH)
+                await self.client.connect()
+                if not await self.client.is_user_authorized():
+                    if not args.code:
+                        result = await self.client.send_code_request(args.phone)
+                        phone_code_hash = result.phone_code_hash
+                        print(f'CODE_SENT:{phone_code_hash}')
+                        logging.debug("Sending code to: %s", args.phone)
+                        os.remove(lock_path)
                         return
-                    await self.client.sign_in(password=args.password)
-            print('LOGIN_SUCCESS')
-            # Now run data collection as usual
-            await self.run_collection()
-        except Exception as e:
-            print(f'ERROR: {e}')
+                    try:
+                        if hasattr(args, 'phone_code_hash') and args.phone_code_hash:
+                            await self.client.sign_in(args.phone, args.code, phone_code_hash=args.phone_code_hash)
+                        else:
+                            await self.client.sign_in(args.phone, args.code)
+                    except SessionPasswordNeededError:
+                        if not args.password:
+                            print('2FA_REQUIRED')
+                            os.remove(lock_path)
+                            return
+                        await self.client.sign_in(password=args.password)
+                print('LOGIN_SUCCESS')
+                os.remove(lock_path)
+                # Now run data collection as usual
+                await self.run_collection()
+                return
+            except sqlite3.OperationalError as e:
+                if 'database is locked' in str(e) and not retry:
+                    print(f"Session DB is locked for {session_path}. Deleting and retrying once...")
+                    if os.path.exists(session_path + '.session'):
+                        os.remove(session_path + '.session')
+                    retry = True
+                    time.sleep(1)
+                    continue
+                else:
+                    print(f'ERROR: {e}')
+                    if os.path.exists(lock_path):
+                        os.remove(lock_path)
+                    return
+            except Exception as e:
+                print(f'ERROR: {e}')
+                if os.path.exists(lock_path):
+                    os.remove(lock_path)
+                return
+        return
     
     def analyze_message_content(self, message_text):
         """Analyze message content for suspicious keywords and other flags"""
