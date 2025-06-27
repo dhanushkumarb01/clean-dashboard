@@ -1001,14 +1001,7 @@ const requestTelegramLogin = async (req, res) => {
   console.log('📄 Script path:', scriptPath);
 
   try {
-    // In requestTelegramLogin, before sending OTP, check for session file for phone
-    const sessionPath = path.join(__dirname, '..', 'sessions', `${phone.replace('+', '')}.session`);
-    if (fs.existsSync(sessionPath)) {
-      console.log('[SESSION_EXISTS] Skipping OTP, session found for', phone);
-      // Tell frontend to skip OTP UI
-      return res.status(200).json({ success: true, status: 'ready', message: 'Session exists, skipping OTP.' });
-    }
-
+    // Always run the script, regardless of session file existence
     const pythonProcess = spawn('python3', [scriptPath, '--phone', phone]);
     let output = '';
     let errorOutput = '';
@@ -1091,16 +1084,7 @@ const verifyTelegramLogin = async (req, res) => {
   }
   if (!hash) return res.status(400).json({ success: false, error: 'phone_code_hash required (not found in memory)' });
   try {
-    // At the start of verifyTelegramLogin, check for session file
-    const sessionPath = path.join(__dirname, '..', 'sessions', `${phone.replace('+', '')}.session`);
-    if (fs.existsSync(sessionPath)) {
-      console.log('[SESSION_EXISTS] Skipping OTP verification, session found for', phone);
-      return res.status(200).json({ success: true, status: 'ready', message: 'Session exists, skipping OTP verification.' });
-    }
-    // Log environment variables
-    console.log('TELEGRAM_API_ID:', process.env.TELEGRAM_API_ID);
-    console.log('TELEGRAM_API_HASH:', process.env.TELEGRAM_API_HASH);
-    // Check for Python and script existence
+    // Always run the script, regardless of session file existence
     const pythonPaths = ['/usr/bin/python3', '/usr/local/bin/python3', 'python3', 'python'];
     let pythonExists = false;
     for (const p of pythonPaths) {
