@@ -47,7 +47,10 @@ const telegramMessageSchema = new mongoose.Schema({
   // Metadata
   collectionBatch: { type: String }, // To track which collection run this came from
   dataSource: { type: String, default: 'telethon' },
-  isDeleted: { type: Boolean, default: false }
+  isDeleted: { type: Boolean, default: false },
+  
+  // New fields
+  phone: { type: String, required: true, index: true },
 }, {
   timestamps: true
 });

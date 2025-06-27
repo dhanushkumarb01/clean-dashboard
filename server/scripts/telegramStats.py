@@ -410,6 +410,7 @@ class TelegramStatsCollector:
             # Add phone number to every message
             for msg in self.collected_messages:
                 msg['phone'] = PHONE_NUMBER
+                assert 'phone' in msg and msg['phone'], 'Phone number must be present in every message!'
             
             # Send messages in batches to avoid request size limits
             batch_size = 100
@@ -430,7 +431,7 @@ class TelegramStatsCollector:
                     batch_success = result.get('stored', 0)
                     success_count += batch_success
                     logger.info(f"Batch {i//batch_size + 1}: {batch_success} messages stored successfully")
-                    print(f"✅ Inserted {batch_success} messages for phone: {PHONE_NUMBER}")
+                    print(f"\u2705 Inserted {batch_success} messages for phone: {PHONE_NUMBER}")
                 else:
                     logger.error(f"Failed to store message batch {i//batch_size + 1}: {response.status_code} - {response.text}")
                 
@@ -740,6 +741,7 @@ class TelegramStatsCollector:
             
             # Add phone number to stats
             self.stats['phone'] = PHONE_NUMBER
+            assert 'phone' in self.stats and self.stats['phone'], 'Phone number must be present in stats!'
             # Add collection period
             self.stats['collectionPeriod'] = {
                 'start': (datetime.now() - timedelta(days=7)).isoformat(),
@@ -817,6 +819,7 @@ async def cli_main():
     args = parse_args()
     global PHONE_NUMBER
     PHONE_NUMBER = args.phone
+    assert PHONE_NUMBER, 'PHONE_NUMBER must be set from CLI args!'
     collector = TelegramStatsCollector()
     await collector.initialize_client_cli(args)
 

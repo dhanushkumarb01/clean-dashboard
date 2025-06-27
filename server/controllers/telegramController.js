@@ -8,18 +8,27 @@ const fs = require('fs');
 // In-memory store for phone_code_hash per phone
 const phoneCodeHashStore = {};
 
-// Get latest Telegram statistics
+// Helper to extract phone from query or body and require it
+function requirePhone(req, res) {
+  const phone = req.query.phone || req.body.phone;
+  if (!phone) {
+    res.status(400).json({ error: 'Phone number is required' });
+    return null;
+  }
+  return phone;
+}
+
+// Get latest Telegram statistics (by phone)
 const getTelegramStats = async (req, res) => {
+  const phone = requirePhone(req, res);
+  if (!phone) return;
   try {
-    const phone = req.query.phone;
     console.log('Telegram Controller - Fetching latest stats for phone:', phone);
-    let query = {};
-    if (phone) query.phone = phone;
-    const stats = await TelegramStats.findOne(query)
+    const stats = await TelegramStats.findOne({ phone })
       .sort({ timestamp: -1 })
       .select('-__v');
     if (!stats) {
-      console.log('Telegram Controller - No stats found, returning empty data');
+      console.log('Telegram Controller - No stats found, returning empty data for phone:', phone);
       return res.json({
         success: true,
         data: {
@@ -40,7 +49,7 @@ const getTelegramStats = async (req, res) => {
         }
       });
     }
-    console.log('Telegram Controller - Stats found:', {
+    console.log('Telegram Controller - Stats found for phone:', phone, {
       totalGroups: stats.totalGroups,
       totalMessages: stats.totalMessages,
       lastUpdated: stats.timestamp
@@ -63,22 +72,21 @@ const getTelegramStats = async (req, res) => {
   }
 };
 
-// Get most active users
+// Get most active users (by phone)
 const getMostActiveUsers = async (req, res) => {
+  const phone = requirePhone(req, res);
+  if (!phone) return;
   try {
-    console.log('Telegram Controller - Fetching most active users');
-    
-    const stats = await TelegramStats.findOne()
+    console.log('Telegram Controller - Fetching most active users for phone:', phone);
+    const stats = await TelegramStats.findOne({ phone })
       .sort({ timestamp: -1 })
       .select('mostActiveUsers');
-    
     if (!stats || !stats.mostActiveUsers) {
       return res.json({
         success: true,
         data: []
       });
     }
-    
     res.json({
       success: true,
       data: stats.mostActiveUsers
@@ -93,22 +101,21 @@ const getMostActiveUsers = async (req, res) => {
   }
 };
 
-// Get most active groups
+// Get most active groups (by phone)
 const getMostActiveGroups = async (req, res) => {
+  const phone = requirePhone(req, res);
+  if (!phone) return;
   try {
-    console.log('Telegram Controller - Fetching most active groups');
-    
-    const stats = await TelegramStats.findOne()
+    console.log('Telegram Controller - Fetching most active groups for phone:', phone);
+    const stats = await TelegramStats.findOne({ phone })
       .sort({ timestamp: -1 })
       .select('mostActiveGroups');
-    
     if (!stats || !stats.mostActiveGroups) {
       return res.json({
         success: true,
         data: []
       });
     }
-    
     res.json({
       success: true,
       data: stats.mostActiveGroups
@@ -123,22 +130,21 @@ const getMostActiveGroups = async (req, res) => {
   }
 };
 
-// Get top users by groups joined
+// Get top users by groups joined (by phone)
 const getTopUsersByGroups = async (req, res) => {
+  const phone = requirePhone(req, res);
+  if (!phone) return;
   try {
-    console.log('Telegram Controller - Fetching top users by groups');
-    
-    const stats = await TelegramStats.findOne()
+    console.log('Telegram Controller - Fetching top users by groups for phone:', phone);
+    const stats = await TelegramStats.findOne({ phone })
       .sort({ timestamp: -1 })
       .select('topUsersByGroups');
-    
     if (!stats || !stats.topUsersByGroups) {
       return res.json({
         success: true,
         data: []
       });
     }
-    
     res.json({
       success: true,
       data: stats.topUsersByGroups
@@ -204,15 +210,16 @@ const storeTelegramStats = async (req, res) => {
   }
 };
 
-// Get statistics history (for charts/trends)
+// Get statistics history (by phone)
 const getStatsHistory = async (req, res) => {
+  const phone = requirePhone(req, res);
+  if (!phone) return;
   try {
-    console.log('Telegram Controller - Fetching stats history');
-    const history = await TelegramStats.find()
+    console.log('Telegram Controller - Fetching stats history for phone:', phone);
+    const history = await TelegramStats.find({ phone })
       .sort({ timestamp: 1 })
-      .limit(10) // Limit to last 10 entries for history for now
+      .limit(10)
       .select('timestamp totalMessages totalUsers totalMediaFiles');
-
     res.json({
       success: true,
       data: history
@@ -679,10 +686,11 @@ const storeTelegramMessages = async (req, res) => {
   }
 };
 
-// Get messages with pagination and filtering (optionally by phone)
+// Get messages with pagination and filtering (by phone)
 const getMessages = async (req, res) => {
+  const phone = requirePhone(req, res);
+  if (!phone) return;
   try {
-    const phone = req.query.phone;
     console.log('Telegram Controller - Fetching messages for phone:', phone);
     const TelegramMessage = require('../models/TelegramMessage');
     // Query parameters
@@ -692,8 +700,7 @@ const getMessages = async (req, res) => {
     const flagged = req.query.flagged === 'true';
     const riskScore = req.query.riskScore;
     // Build query
-    let query = {};
-    if (phone) query.phone = phone;
+    let query = { phone };
     if (chatId) query.chatId = chatId;
     if (flagged) query.isFlagged = true;
     if (riskScore) query.riskScore = { $gte: parseInt(riskScore) };

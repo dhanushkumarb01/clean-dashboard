@@ -207,27 +207,27 @@ export const youtube = {
 // Telegram endpoints
 export const telegram = {
   // Get Telegram statistics
-  getStats: async () => {
-    const response = await api.get('/api/telegram/stats');
+  getStats: async (phone) => {
+    const response = await api.get('/api/telegram/stats', { params: { phone } });
     return response.data.data;
   },
 
   // Get most active users
-  getMostActiveUsers: async () => {
-    const response = await api.get('/api/telegram/most-active-users');
+  getMostActiveUsers: async (phone) => {
+    const response = await api.get('/api/telegram/most-active-users', { params: { phone } });
     return response.data.data;
   },
 
   // Get most active groups
-  getMostActiveGroups: async () => {
-    const response = await api.get('/api/telegram/most-active-groups');
+  getMostActiveGroups: async (phone) => {
+    const response = await api.get('/api/telegram/most-active-groups', { params: { phone } });
     return response.data.data;
   },
 
   // Get user report by user ID
-  getUserReport: async (userId) => {
+  getUserReport: async (userId, phone) => {
     try {
-      const response = await api.get(`/api/telegram/user/${userId}`);
+      const response = await api.get(`/api/telegram/user/${userId}`, { params: { phone } });
       return response.data.data;
     } catch (error) {
       console.error(`Error fetching Telegram user report for ${userId}:`, error);
@@ -236,9 +236,9 @@ export const telegram = {
   },
 
   // Get group report by group ID
-  getGroupReport: async (groupId) => {
+  getGroupReport: async (groupId, phone) => {
     try {
-      const response = await api.get(`/api/telegram/group/${groupId}`);
+      const response = await api.get(`/api/telegram/group/${groupId}`, { params: { phone } });
       return response.data.data;
     } catch (error) {
       console.error(`Error fetching Telegram group report for ${groupId}:`, error);
@@ -247,9 +247,9 @@ export const telegram = {
   },
 
   // Get top users by groups joined
-  getTopUsersByGroups: async () => {
+  getTopUsersByGroups: async (phone) => {
     try {
-      const response = await api.get('/api/telegram/top-users-by-groups');
+      const response = await api.get('/api/telegram/top-users-by-groups', { params: { phone } });
       return response.data.data;
     } catch (error) {
       console.error('Error fetching top users by groups:', error);
@@ -258,10 +258,10 @@ export const telegram = {
   },
 
   // Get statistics history for charts
-  getStatsHistory: async (limit = 30) => {
+  getStatsHistory: async (phone, limit = 30) => {
     try {
       const response = await api.get('/api/telegram/stats-history', {
-        params: { limit }
+        params: { phone, limit }
       });
       return response.data.data;
     } catch (error) {
@@ -285,6 +285,7 @@ export const telegram = {
   getMessages: async (options = {}) => {
     const response = await api.get('/api/telegram/messages', {
       params: {
+        phone: options.phone,
         page: options.page || 1,
         limit: options.limit || 50,
         flagged: options.flagged,

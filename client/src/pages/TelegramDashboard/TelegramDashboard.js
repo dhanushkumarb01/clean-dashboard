@@ -120,7 +120,7 @@ const TelegramDashboard = () => {
 
   // New: Telegram login state
   const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(() => localStorage.getItem('telegramPhone') || '');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
@@ -130,6 +130,8 @@ const TelegramDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("telegramPhone");
+    setPhone('');
     navigate("/login");
   };
 
@@ -140,10 +142,11 @@ const TelegramDashboard = () => {
       
       console.log('Loading Telegram dashboard data...');
       
+      if (!phone) throw new Error('No phone number found. Please login.');
       const [statsData, usersData, groupsData] = await Promise.all([
-        telegram.getStats(),
-        telegram.getMostActiveUsers(),
-        telegram.getMostActiveGroups()
+        telegram.getStats(phone),
+        telegram.getMostActiveUsers(phone),
+        telegram.getMostActiveGroups(phone)
       ]);
       
       console.log('Telegram Statistics:', {
@@ -192,6 +195,7 @@ const TelegramDashboard = () => {
       if (res.data.success) {
         setStep(2);
         setPhoneCodeHash(res.data.phone_code_hash);
+        localStorage.setItem('telegramPhone', phone);
       } else {
         setLoginError(res.data.error || 'Failed to send code');
       }
@@ -215,7 +219,6 @@ const TelegramDashboard = () => {
         setTimeout(() => {
           setLoginSuccess(false);
           setStep(1);
-          setPhone('');
           setOtp('');
           setPassword('');
           setPhoneCodeHash('');
@@ -232,8 +235,8 @@ const TelegramDashboard = () => {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (phone) loadData();
+  }, [phone]);
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} onRetry={loadData} />;

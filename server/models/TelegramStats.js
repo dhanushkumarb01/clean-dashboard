@@ -94,7 +94,8 @@ const telegramStatsSchema = new mongoose.Schema({
   collectionPeriod: {
     start: { type: Date },
     end: { type: Date }
-  }
+  },
+  phone: { type: String, required: true, index: true },
 }, {
   timestamps: true
 });
