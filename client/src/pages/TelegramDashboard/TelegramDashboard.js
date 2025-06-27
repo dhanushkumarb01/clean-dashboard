@@ -201,6 +201,31 @@ const TelegramDashboard = () => {
     }
   };
 
+  // Add this helper function for polling
+  const pollForStats = async (phone, onReady, onError, maxWait = 300000, interval = 5000) => {
+    const start = Date.now();
+    setLoading(true);
+    setError(null);
+    let found = false;
+    while (Date.now() - start < maxWait) {
+      try {
+        const statsData = await telegram.getStats(phone);
+        if (statsData && !statsData.isEmpty) {
+          found = true;
+          onReady(statsData);
+          break;
+        }
+      } catch (err) {
+        // Ignore errors during polling, only show error if timeout
+      }
+      await new Promise(res => setTimeout(res, interval));
+    }
+    setLoading(false);
+    if (!found) {
+      onError('Timeout: Data collection took too long. Please try again.');
+    }
+  };
+
   const handleRequestCode = async (e) => {
     e.preventDefault();
     setLoginLoading(true);
@@ -208,9 +233,22 @@ const TelegramDashboard = () => {
     try {
       const res = await api.post('/api/telegram/request-login', { phone });
       if (res.data.status === 'ready') {
-        setShowDashboard(true);
+        setShowDashboard(false);
         localStorage.setItem('telegramPhone', phone);
-        loadData();
+        // Start polling for stats
+        pollForStats(
+          phone,
+          (statsData) => {
+            setStats(statsData);
+            setShowDashboard(true);
+            setStep(3);
+          },
+          (errMsg) => {
+            setError(errMsg);
+            setShowDashboard(false);
+            setStep(1);
+          }
+        );
       } else if (res.data.status === 'otp_sent' || res.data.success) {
         setStep(2);
         setPhoneCodeHash(res.data.phone_code_hash);
@@ -234,11 +272,20 @@ const TelegramDashboard = () => {
       if (res.data.status === 'ready' || res.data.success) {
         setLoginSuccess(true);
         setStep(3);
-        setTimeout(() => {
-          setLoginSuccess(false);
-          setShowDashboard(true);
-          loadData();
-        }, 5000);
+        // Start polling for stats
+        pollForStats(
+          phone,
+          (statsData) => {
+            setLoginSuccess(false);
+            setStats(statsData);
+            setShowDashboard(true);
+          },
+          (errMsg) => {
+            setError(errMsg);
+            setShowDashboard(false);
+            setStep(1);
+          }
+        );
       } else {
         setLoginError(res.data.error || 'Failed to verify');
       }
