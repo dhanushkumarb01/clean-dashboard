@@ -21,6 +21,7 @@ function requirePhone(req, res) {
 // Get latest Telegram statistics (by phone)
 const getTelegramStats = async (req, res) => {
   const phone = requirePhone(req, res);
+  console.log('DEBUG: GET /stats called with phone:', phone);
   if (!phone) return;
   try {
     console.log('Telegram Controller - Fetching latest stats for phone:', phone);
@@ -75,6 +76,7 @@ const getTelegramStats = async (req, res) => {
 // Get most active users (by phone)
 const getMostActiveUsers = async (req, res) => {
   const phone = requirePhone(req, res);
+  console.log('DEBUG: GET /most-active-users called with phone:', phone);
   if (!phone) return;
   try {
     console.log('Telegram Controller - Fetching most active users for phone:', phone);
@@ -104,6 +106,7 @@ const getMostActiveUsers = async (req, res) => {
 // Get most active groups (by phone)
 const getMostActiveGroups = async (req, res) => {
   const phone = requirePhone(req, res);
+  console.log('DEBUG: GET /most-active-groups called with phone:', phone);
   if (!phone) return;
   try {
     console.log('Telegram Controller - Fetching most active groups for phone:', phone);
@@ -133,6 +136,7 @@ const getMostActiveGroups = async (req, res) => {
 // Get top users by groups joined (by phone)
 const getTopUsersByGroups = async (req, res) => {
   const phone = requirePhone(req, res);
+  console.log('DEBUG: GET /top-users-by-groups called with phone:', phone);
   if (!phone) return;
   try {
     console.log('Telegram Controller - Fetching top users by groups for phone:', phone);
@@ -213,6 +217,7 @@ const storeTelegramStats = async (req, res) => {
 // Get statistics history (by phone)
 const getStatsHistory = async (req, res) => {
   const phone = requirePhone(req, res);
+  console.log('DEBUG: GET /stats-history called with phone:', phone);
   if (!phone) return;
   try {
     console.log('Telegram Controller - Fetching stats history for phone:', phone);
@@ -689,6 +694,7 @@ const storeTelegramMessages = async (req, res) => {
 // Get messages with pagination and filtering (by phone)
 const getMessages = async (req, res) => {
   const phone = requirePhone(req, res);
+  console.log('DEBUG: GET /messages called with phone:', phone);
   if (!phone) return;
   try {
     console.log('Telegram Controller - Fetching messages for phone:', phone);

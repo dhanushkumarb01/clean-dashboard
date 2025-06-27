@@ -16,6 +16,7 @@ const TelegramMessagesList = () => {
     total: 0,
     pages: 0
   });
+  const phone = localStorage.getItem('telegramPhone') || '';
 
   const loadMessages = async () => {
     try {
@@ -24,7 +25,8 @@ const TelegramMessagesList = () => {
       
       const filterOptions = {
         page: filters.page,
-        limit: 50
+        limit: 50,
+        phone
       };
       
       if (filters.flagged !== '') {
@@ -34,6 +36,7 @@ const TelegramMessagesList = () => {
         filterOptions.riskScore = parseInt(filters.riskScore);
       }
       
+      console.log('Calling getMessages API with phone:', phone);
       const response = await telegram.getMessages(filterOptions);
       setMessages(response.messages || []);
       setPagination(response.pagination || {});
