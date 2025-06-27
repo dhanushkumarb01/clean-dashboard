@@ -44,6 +44,8 @@ API_HASH = os.getenv('TELEGRAM_API_HASH')
 PHONE_NUMBER = os.getenv('TELEGRAM_PHONE_NUMBER')
 BACKEND_URL = os.getenv('BACKEND_URL', 'https://clean-dashboard.onrender.com')
 SESSION_NAME = 'telegram_stats_session'
+SESSIONS_DIR = os.path.join(os.path.dirname(__file__), '../sessions')
+os.makedirs(SESSIONS_DIR, exist_ok=True)
 
 # Defensive check for missing environment variables
 missing = [k for k, v in {
@@ -93,7 +95,8 @@ class TelegramStatsCollector:
             if not all([API_ID, API_HASH, PHONE_NUMBER]):
                 raise ValueError("Missing required environment variables: TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_PHONE_NUMBER")
             
-            self.client = TelegramClient(SESSION_NAME, int(API_ID), API_HASH)
+            session_path = os.path.join(SESSIONS_DIR, f"{PHONE_NUMBER}")
+            self.client = TelegramClient(session_path, int(API_ID), API_HASH)
             await self.client.start(phone=PHONE_NUMBER)
             
             if not await self.client.is_user_authorized():
@@ -115,7 +118,8 @@ class TelegramStatsCollector:
     
     async def initialize_client_cli(self, args):
         try:
-            self.client = TelegramClient(SESSION_NAME, int(API_ID), API_HASH)
+            session_path = os.path.join(SESSIONS_DIR, f"{args.phone}")
+            self.client = TelegramClient(session_path, int(API_ID), API_HASH)
             await self.client.connect()
             if not await self.client.is_user_authorized():
                 if not args.code:

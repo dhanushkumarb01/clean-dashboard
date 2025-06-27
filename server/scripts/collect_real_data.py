@@ -35,6 +35,8 @@ API_HASH = os.getenv('TELEGRAM_API_HASH')
 PHONE_NUMBER = os.getenv('TELEGRAM_PHONE_NUMBER')
 BACKEND_URL = os.getenv('BACKEND_URL', 'https://clean-dashboard.onrender.com')
 SESSION_NAME = 'telegram_real_session'
+SESSIONS_DIR = os.path.join(os.path.dirname(__file__), '../sessions')
+os.makedirs(SESSIONS_DIR, exist_ok=True)
 
 class RealTelegramCollector:
     def __init__(self):
@@ -68,7 +70,8 @@ class RealTelegramCollector:
                 return False
             
             print(f"📱 Connecting to Telegram as {PHONE_NUMBER}...")
-            self.client = TelegramClient(SESSION_NAME, int(API_ID), API_HASH)
+            session_path = os.path.join(SESSIONS_DIR, f"{PHONE_NUMBER}")
+            self.client = TelegramClient(session_path, int(API_ID), API_HASH)
             
             # Start the client
             await self.client.start(phone=PHONE_NUMBER)
