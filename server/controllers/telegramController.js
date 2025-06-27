@@ -5,6 +5,9 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+// In-memory store for phone_code_hash per phone
+const phoneCodeHashStore = {};
+
 // Get latest Telegram statistics
 const getTelegramStats = async (req, res) => {
   try {
@@ -1018,18 +1021,27 @@ const requestTelegramLogin = async (req, res) => {
         });
       }
 
-      // OPTIONAL: Try to parse JSON from Python if it returns structured data
+      // Try to extract CODE_SENT:<hash> from output
+      let phone_code_hash = null;
       let result;
       try {
         result = JSON.parse(output);
       } catch (e) {
         result = { raw: output.trim() };
       }
+      // If output contains CODE_SENT:<hash>
+      const match = output.match(/CODE_SENT:([\w-]+)/);
+      if (match) {
+        phone_code_hash = match[1];
+        phoneCodeHashStore[phone] = phone_code_hash;
+        console.log(`Stored phone_code_hash for ${phone}: ${phone_code_hash}`);
+      }
 
       return res.status(200).json({
         success: true,
         message: 'Code sent',
         result,
+        phone_code_hash,
       });
     });
   } catch (err) {
@@ -1045,7 +1057,14 @@ const requestTelegramLogin = async (req, res) => {
 // Verify Telegram login (with code, phone_code_hash, and optional password)
 const verifyTelegramLogin = async (req, res) => {
   const { phone, code, phone_code_hash, password } = req.body;
-  if (!phone || !code || !phone_code_hash) return res.status(400).json({ success: false, error: 'Phone, code, and phone_code_hash required' });
+  let hash = phone_code_hash;
+  if (!phone || !code) return res.status(400).json({ success: false, error: 'Phone and code required' });
+  // Use stored hash if not provided
+  if (!hash) {
+    hash = phoneCodeHashStore[phone];
+    console.log(`Using stored phone_code_hash for ${phone}: ${hash}`);
+  }
+  if (!hash) return res.status(400).json({ success: false, error: 'phone_code_hash required (not found in memory)' });
   try {
     // Log environment variables
     console.log('TELEGRAM_API_ID:', process.env.TELEGRAM_API_ID);
@@ -1077,7 +1096,7 @@ const verifyTelegramLogin = async (req, res) => {
       console.error('telegramStats.py script not found at', scriptPath);
       return res.status(500).json({ success: false, error: 'telegramStats.py script not found on server' });
     }
-    const args = [scriptPath, '--phone', phone, '--code', code, '--phone_code_hash', phone_code_hash];
+    const args = [scriptPath, '--phone', phone, '--code', code, '--phone_code_hash', hash];
     if (password) args.push('--password', password);
     const py = spawn('python3', args);
     let output = '';
@@ -1089,6 +1108,9 @@ const verifyTelegramLogin = async (req, res) => {
         responded = true;
         res.json({ success: true, message: 'Login successful, data collection started' });
         py.kill();
+        // Clean up stored hash
+        delete phoneCodeHashStore[phone];
+        console.log(`Deleted phone_code_hash for ${phone}`);
       } else if (output.includes('2FA_REQUIRED') && !responded) {
         responded = true;
         res.status(400).json({ success: false, error: '2FA password required' });
