@@ -64,6 +64,9 @@ SUSPICIOUS_KEYWORDS = [
     'credit repair', 'debt relief', 'casino', 'gambling', 'lottery', 'winner'
 ]
 
+logging.basicConfig(filename="/tmp/telegram_debug.log", level=logging.DEBUG)
+logging.debug("Script started")
+
 class TelegramStatsCollector:
     def __init__(self):
         self.client = None
@@ -119,6 +122,7 @@ class TelegramStatsCollector:
                     result = await self.client.send_code_request(args.phone)
                     phone_code_hash = result.phone_code_hash
                     print(f'CODE_SENT:{phone_code_hash}')
+                    logging.debug("Sending code to: %s", args.phone)
                     return
                 try:
                     if hasattr(args, 'phone_code_hash') and args.phone_code_hash:
@@ -687,6 +691,7 @@ class TelegramStatsCollector:
             if response.status_code == 200:
                 result = response.json()
                 logger.info(f"Statistics stored successfully: {result.get('message', 'OK')}")
+                logging.debug("Script ended successfully")
                 return True
             else:
                 logger.error(f"Failed to store statistics: {response.status_code} - {response.text}")
