@@ -745,6 +745,9 @@ class TelegramStatsCollector:
     
     def store_stats_directly_in_mongodb(self):
         try:
+            # Ensure phone is present in stats
+            self.stats['phone'] = PHONE_NUMBER
+            print('DEBUG: stats payload before insert:', self.stats)
             print("Attempting DB insert for phone:", self.stats['phone'])
             result = stats_collection.insert_one(self.stats)
             print("✅ Inserted stats successfully, _id:", result.inserted_id)
