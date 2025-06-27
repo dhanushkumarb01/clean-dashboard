@@ -983,6 +983,7 @@ const getMessageStats = async (req, res) => {
 
 // Request Telegram login code (send code to phone)
 const requestTelegramLogin = async (req, res) => {
+  console.log('🔐 POST /api/telegram/request-login hit');
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ success: false, error: 'Phone number required' });
   try {
