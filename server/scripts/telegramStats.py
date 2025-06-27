@@ -72,10 +72,13 @@ SUSPICIOUS_KEYWORDS = [
 logging.basicConfig(filename="/tmp/telegram_debug.log", level=logging.DEBUG)
 logging.debug("Script started")
 
-MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/telegram')
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/test')
 mongo_client = MongoClient(MONGO_URI)
-db = mongo_client.get_default_database()
-stats_collection = db['telegramstats']
+# Always use 'test' database regardless of URI
+mongo_db = mongo_client['test']
+stats_collection = mongo_db['telegramstats']
+messages_collection = mongo_db['telegrammessages']
+print(f"[MongoDB] Using database: {mongo_db.name}, stats collection: {stats_collection.name}, messages collection: {messages_collection.name}")
 
 class TelegramStatsCollector:
     def __init__(self):
