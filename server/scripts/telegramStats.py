@@ -717,12 +717,17 @@ class TelegramStatsCollector:
         try:
             # Ensure phone is present in stats
             self.stats['phone'] = PHONE_NUMBER
+            if 'timestamp' not in self.stats:
+                from datetime import datetime
+                self.stats['timestamp'] = datetime.utcnow()
             print('DEBUG: stats payload before insert:', self.stats)
             print("Attempting DB insert for phone:", self.stats['phone'])
             result = stats_collection.insert_one(self.stats)
             print("✅ Inserted stats successfully, _id:", result.inserted_id)
+            print(f"FINAL: Stats for phone {self.stats['phone']} are now in MongoDB.")
         except Exception as e:
             print("❌ DB insert failed:", e)
+            print(f"FINAL: Failed to insert stats for phone {self.stats.get('phone', 'UNKNOWN')}")
 
     def store_stats_in_mongodb(self):
         """Store collected statistics in MongoDB via Express API and directly via pymongo"""
@@ -763,25 +768,19 @@ class TelegramStatsCollector:
         """Run the complete statistics collection process"""
         try:
             logger.info("Starting Telegram statistics and message collection...")
-            # Initialize client
             if not await self.initialize_client():
                 return False
-            # Collect message content first (this will also be used for stats)
             await self.collect_all_messages()
-            # Store messages in MongoDB BEFORE any fetch or dashboard logic
             if self.collected_messages:
                 self.store_messages_directly_in_mongodb()
-            # Collect all statistics
             await self.collect_basic_stats()
             await self.collect_most_active_users()
             await self.collect_most_active_groups()
             await self.collect_top_users_by_groups()
             await self.collect_private_chat_users()
-            # Store stats in MongoDB BEFORE any fetch or dashboard logic
+            # Always insert stats, even if minimal
             self.store_stats_directly_in_mongodb()
             logger.info(f"Stats for phone {PHONE_NUMBER} inserted into MongoDB before any fetch/display.")
-            # Optionally, you can now fetch or trigger dashboard update logic
-            # Close client
             await self.client.disconnect()
             return True
         except Exception as e:
