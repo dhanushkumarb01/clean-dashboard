@@ -983,6 +983,7 @@ const getMessageStats = async (req, res) => {
 
 // Request Telegram login code (send code to phone)
 const requestTelegramLogin = async (req, res) => {
+  console.log('DEBUG: request-login body =', req.body);
   const phone = req.body.phone;
   console.log('⚡ requestTelegramLogin called for:', phone);
 
