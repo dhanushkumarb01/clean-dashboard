@@ -22,7 +22,6 @@ import uuid
 import argparse
 import sqlite3
 import time
-from pymongo import MongoClient, errors as pymongo_errors
 
 # Ensure data directory exists for logging
 os.makedirs('data', exist_ok=True)
@@ -75,14 +74,6 @@ SUSPICIOUS_KEYWORDS = [
 
 logging.basicConfig(filename="/tmp/telegram_debug.log", level=logging.DEBUG)
 logging.debug("Script started")
-
-MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/test')
-mongo_client = MongoClient(MONGO_URI)
-# Always use 'test' database regardless of URI
-mongo_db = mongo_client['test']
-stats_collection = mongo_db['telegramstats']
-messages_collection = mongo_db['telegrammessages']
-print(f"[MongoDB] Using database: {mongo_db.name}, stats collection: {stats_collection.name}, messages collection: {messages_collection.name}")
 
 class TelegramStatsCollector:
     def __init__(self):
@@ -411,19 +402,24 @@ class TelegramStatsCollector:
             logger.error(f"Error in message collection: {e}")
             return 0
     
-    def store_messages_directly_in_mongodb(self):
+    def store_messages_via_api(self):
+        if not self.collected_messages:
+            print("No messages to insert for phone:", PHONE_NUMBER)
+            return
+        # Ensure phone is present in every message
+        for msg in self.collected_messages:
+            msg['phone'] = PHONE_NUMBER
+        payload = {"messages": self.collected_messages}
         try:
-            if not self.collected_messages:
-                print("No messages to insert for phone:", PHONE_NUMBER)
-                return
-            # Ensure phone is present in every message
-            for msg in self.collected_messages:
-                msg['phone'] = PHONE_NUMBER
-            print(f"Attempting DB insert for {len(self.collected_messages)} messages for phone: {PHONE_NUMBER}")
-            result = messages_collection.insert_many(self.collected_messages)
-            print(f"✅ Inserted {len(result.inserted_ids)} messages successfully for phone: {PHONE_NUMBER}")
+            print(f"POSTing {len(self.collected_messages)} messages to backend API for phone: {PHONE_NUMBER}")
+            response = requests.post(f"{BACKEND_URL}/api/telegram/store-messages", json=payload, headers={'Content-Type': 'application/json'}, timeout=60)
+            if response.status_code == 200:
+                print(f"✅ API inserted messages for phone: {PHONE_NUMBER}")
+            else:
+                print(f"❌ API failed to insert messages: {response.status_code}")
+                print(f"Response: {response.text}")
         except Exception as e:
-            print("❌ DB insert failed for messages:", e)
+            print("❌ API call failed for messages:", e)
 
     async def collect_basic_stats(self):
         """Collect basic statistics from all dialogs"""
@@ -713,58 +709,24 @@ class TelegramStatsCollector:
         except Exception as e:
             logger.error(f"Error collecting private chat users: {e}", exc_info=True)
     
-    def store_stats_directly_in_mongodb(self):
-        print("store_stats_directly_in_mongodb CALLED for phone:", self.stats.get('phone', 'UNKNOWN'))
+    def store_stats_via_api(self):
+        # Add phone and collection period
+        self.stats['phone'] = PHONE_NUMBER
+        self.stats['collectionPeriod'] = {
+            'start': (datetime.now() - timedelta(days=7)).isoformat(),
+            'end': datetime.now().isoformat()
+        }
         try:
-            # Ensure phone is present in stats
-            self.stats['phone'] = PHONE_NUMBER
-            if 'timestamp' not in self.stats:
-                from datetime import datetime
-                self.stats['timestamp'] = datetime.utcnow()
-            print('DEBUG: stats payload before insert:', self.stats)
-            print("Attempting DB insert for phone:", self.stats['phone'])
-            result = stats_collection.insert_one(self.stats)
-            print("✅ Inserted stats successfully, _id:", result.inserted_id)
-            print(f"FINAL: Stats for phone {self.stats['phone']} are now in MongoDB.")
-        except Exception as e:
-            print("❌ DB insert failed:", e)
-            print(f"FINAL: Failed to insert stats for phone {self.stats.get('phone', 'UNKNOWN')}")
-
-    def store_stats_in_mongodb(self):
-        """Store collected statistics in MongoDB via Express API and directly via pymongo"""
-        try:
-            logger.info("Storing statistics in MongoDB...")
-            # Add phone number to stats
-            self.stats['phone'] = PHONE_NUMBER
-            assert 'phone' in self.stats and self.stats['phone'], 'Phone number must be present in stats!'
-            # Add collection period
-            self.stats['collectionPeriod'] = {
-                'start': (datetime.now() - timedelta(days=7)).isoformat(),
-                'end': datetime.now().isoformat()
-            }
-            # Send to Express API
-            response = requests.post(
-                f"{BACKEND_URL}/api/telegram/store-stats",
-                json=self.stats,
-                headers={'Content-Type': 'application/json'},
-                timeout=30
-            )
+            print(f"POSTing stats to backend API for phone: {PHONE_NUMBER}")
+            response = requests.post(f"{BACKEND_URL}/api/telegram/store-stats", json=self.stats, headers={'Content-Type': 'application/json'}, timeout=60)
             if response.status_code == 200:
-                result = response.json()
-                logger.info(f"Statistics stored successfully: {result.get('message', 'OK')}")
-                print(f"✅ Inserted stats for phone: {PHONE_NUMBER}")
-                logging.debug("Script ended successfully")
+                print(f"✅ API inserted stats for phone: {PHONE_NUMBER}")
             else:
-                logger.error(f"Failed to store statistics: {response.status_code} - {response.text}")
-            # Always try direct MongoDB insert as well
-            self.store_stats_directly_in_mongodb()
-            return True
+                print(f"❌ API failed to insert stats: {response.status_code}")
+                print(f"Response: {response.text}")
         except Exception as e:
-            logger.error(f"Error storing statistics: {e}")
-            # Try direct MongoDB insert on error
-            self.store_stats_directly_in_mongodb()
-            return False
-    
+            print("❌ API call failed for stats:", e)
+
     async def run_collection(self):
         print("run_collection START for phone:", PHONE_NUMBER)
         try:
@@ -775,7 +737,7 @@ class TelegramStatsCollector:
             await self.collect_all_messages()
             print("Collected all messages for phone:", PHONE_NUMBER)
             if self.collected_messages:
-                self.store_messages_directly_in_mongodb()
+                self.store_messages_via_api()
                 print("Inserted messages for phone:", PHONE_NUMBER)
             await self.collect_basic_stats()
             print("Collected basic stats for phone:", PHONE_NUMBER)
@@ -788,8 +750,8 @@ class TelegramStatsCollector:
             await self.collect_private_chat_users()
             print("Collected private chat users for phone:", PHONE_NUMBER)
             # Always insert stats, even if minimal
-            self.store_stats_directly_in_mongodb()
-            logger.info(f"Stats for phone {PHONE_NUMBER} inserted into MongoDB before any fetch/display.")
+            self.store_stats_via_api()
+            logger.info(f"Stats for phone {PHONE_NUMBER} inserted into backend API before any fetch/display.")
             await self.client.disconnect()
             print("run_collection END for phone:", PHONE_NUMBER)
             return True
