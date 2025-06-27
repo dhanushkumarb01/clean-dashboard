@@ -21,7 +21,6 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 
-// Import routes
 const authRoutes = require('./routes/auth');
 const youtubeRoutes = require('./routes/youtube');
 const telegramRoutes = require('./routes/telegram');
@@ -31,23 +30,21 @@ const instagramRoutes = require('./routes/instagramRoutes');
 
 const app = express();
 
-// Fix express-rate-limit X-Forwarded-For warning
-app.set('trust proxy', 1);
+app.set('trust proxy', 1); // Fix express-rate-limit X-Forwarded-For warning
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-
-// Middleware
+// ✅ Middleware (MUST come before routes)
 app.use(cors({
   origin: ['https://clean-dashboard-dun.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json()); // ✅ This line is now at the correct place
 app.use(cookieParser());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
 app.use(limiter);
 
 // Error handling middleware
@@ -59,17 +56,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Handle the OAuth callback route before applying any auth middleware
+// OAuth callback must be before auth middleware
 app.get('/api/youtube/oauth2callback', require('./controllers/authController').googleCallback);
 
-// Mount routes
+// ✅ Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/instagram', instagramRoutes);
 
-// MongoDB connection
+// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -80,7 +77,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   process.exit(1);
 });
 
-// Start server
+// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
