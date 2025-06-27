@@ -23,6 +23,14 @@ function requirePhone(req, res) {
   return phone;
 }
 
+// Helper to normalize phone number (always starts with '+')
+function normalizePhone(phone) {
+  if (!phone) return '';
+  let p = String(phone);
+  if (!p.startsWith('+')) p = '+' + p.replace(/^\+/, '');
+  return p;
+}
+
 // Get latest Telegram statistics (by phone)
 const getTelegramStats = async (req, res) => {
   const phone = requirePhone(req, res);
@@ -80,20 +88,31 @@ const getTelegramStats = async (req, res) => {
 
 // Get most active users (by phone)
 const getMostActiveUsers = async (req, res) => {
-  const phone = requirePhone(req, res);
+  let phone = requirePhone(req, res);
+  phone = normalizePhone(phone);
   console.log('DEBUG: GET /most-active-users called with phone:', phone);
   if (!phone) return;
   try {
-    console.log('Telegram Controller - Fetching most active users for phone:', phone);
-    const stats = await TelegramStats.findOne({ phone })
+    // Flexible query: match with or without plus
+    const query = {
+      $or: [
+        { phone },
+        { phone: phone.replace(/^\+/, '') },
+        { phone: '+' + phone.replace(/^\+/, '') }
+      ]
+    };
+    console.log('Looking for phone in DB with query:', query);
+    const stats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('mostActiveUsers');
     if (!stats || !stats.mostActiveUsers) {
+      console.log('No stats found for phone:', phone);
       return res.json({
         success: true,
         data: []
       });
     }
+    console.log('Found stats for phone:', phone, 'mostActiveUsers:', stats.mostActiveUsers.length);
     res.json({
       success: true,
       data: stats.mostActiveUsers
@@ -110,20 +129,31 @@ const getMostActiveUsers = async (req, res) => {
 
 // Get most active groups (by phone)
 const getMostActiveGroups = async (req, res) => {
-  const phone = requirePhone(req, res);
+  let phone = requirePhone(req, res);
+  phone = normalizePhone(phone);
   console.log('DEBUG: GET /most-active-groups called with phone:', phone);
   if (!phone) return;
   try {
-    console.log('Telegram Controller - Fetching most active groups for phone:', phone);
-    const stats = await TelegramStats.findOne({ phone })
+    // Flexible query: match with or without plus
+    const query = {
+      $or: [
+        { phone },
+        { phone: phone.replace(/^\+/, '') },
+        { phone: '+' + phone.replace(/^\+/, '') }
+      ]
+    };
+    console.log('Looking for phone in DB with query:', query);
+    const stats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('mostActiveGroups');
     if (!stats || !stats.mostActiveGroups) {
+      console.log('No stats found for phone:', phone);
       return res.json({
         success: true,
         data: []
       });
     }
+    console.log('Found stats for phone:', phone, 'mostActiveGroups:', stats.mostActiveGroups.length);
     res.json({
       success: true,
       data: stats.mostActiveGroups
