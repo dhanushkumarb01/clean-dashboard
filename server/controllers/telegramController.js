@@ -983,73 +983,81 @@ const getMessageStats = async (req, res) => {
 
 // Request Telegram login code (send code to phone)
 const requestTelegramLogin = async (req, res) => {
-  console.log('🔐 POST /api/telegram/request-login hit');
-  const { phone } = req.body;
-  if (!phone) return res.status(400).json({ success: false, error: 'Phone number required' });
   try {
-    // Log environment variables
-    console.log('TELEGRAM_API_ID:', process.env.TELEGRAM_API_ID);
-    console.log('TELEGRAM_API_HASH:', process.env.TELEGRAM_API_HASH);
-    // Check for Python and script existence
-    const pythonPaths = ['/usr/bin/python3', '/usr/local/bin/python3', 'python3', 'python'];
-    let pythonExists = false;
-    for (const p of pythonPaths) {
-      try {
-        if (fs.existsSync(p)) {
-          pythonExists = true;
-          break;
-        }
-      } catch (e) {}
-    }
-    console.log('Python exists:', pythonExists);
-    const scriptPath = path.join(__dirname, '..', 'scripts', 'telegramStats.py');
-    console.log('Script path:', scriptPath);
-    console.log('Script exists:', fs.existsSync(scriptPath));
-    if (!process.env.TELEGRAM_API_ID || !process.env.TELEGRAM_API_HASH) {
-      console.error('Missing TELEGRAM_API_ID or TELEGRAM_API_HASH');
-      return res.status(500).json({ success: false, error: 'Missing Telegram API credentials in environment variables' });
-    }
-    if (!pythonExists) {
-      console.error('Python3 is not installed or not found in expected paths');
-      return res.status(500).json({ success: false, error: 'Python3 is not installed on the server' });
-    }
-    if (!fs.existsSync(scriptPath)) {
-      console.error('telegramStats.py script not found at', scriptPath);
-      return res.status(500).json({ success: false, error: 'telegramStats.py script not found on server' });
-    }
-    const py = spawn('python3', [scriptPath, '--phone', phone]);
-    let output = '';
-    let responded = false;
-    py.stdout.on('data', (data) => {
-      output += data.toString();
-      console.log('Python script output:', data.toString()); // Log each chunk
-      const match = output.match(/CODE_SENT:([\w-]+)/);
-      if (match && !responded) {
-        responded = true;
-        res.json({ success: true, message: 'Code sent to your Telegram', phone_code_hash: match[1] });
-        py.kill();
-      }
-    });
-    py.stderr.on('data', (data) => {
-      console.error('Python stderr:', data.toString());
-    });
-    py.on('error', (err) => {
-      console.error('Failed to start Python process:', err);
-    });
-    py.on('close', (code) => {
-      if (!responded) {
-        console.log('Python process closed with code:', code);
-        // Try to parse output as JSON, else send as text
-        let dataToSend = output.trim();
+    console.log('⚡ requestTelegramLogin called');
+    console.log('API_ID:', process.env.TELEGRAM_API_ID);
+    console.log('API_HASH:', process.env.TELEGRAM_API_HASH);
+    console.log('Phone:', req.body.phone);
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ success: false, error: 'Phone number required' });
+    try {
+      // Log environment variables
+      console.log('TELEGRAM_API_ID:', process.env.TELEGRAM_API_ID);
+      console.log('TELEGRAM_API_HASH:', process.env.TELEGRAM_API_HASH);
+      // Check for Python and script existence
+      const pythonPaths = ['/usr/bin/python3', '/usr/local/bin/python3', 'python3', 'python'];
+      let pythonExists = false;
+      for (const p of pythonPaths) {
         try {
-          dataToSend = JSON.parse(dataToSend);
+          if (fs.existsSync(p)) {
+            pythonExists = true;
+            break;
+          }
         } catch (e) {}
-        res.status(200).json({ success: false, output: dataToSend, code });
       }
-    });
+      console.log('Python exists:', pythonExists);
+      const scriptPath = path.join(__dirname, '..', 'scripts', 'telegramStats.py');
+      console.log('Script path:', scriptPath);
+      console.log('Script exists:', fs.existsSync(scriptPath));
+      if (!process.env.TELEGRAM_API_ID || !process.env.TELEGRAM_API_HASH) {
+        console.error('Missing TELEGRAM_API_ID or TELEGRAM_API_HASH');
+        return res.status(500).json({ success: false, error: 'Missing Telegram API credentials in environment variables' });
+      }
+      if (!pythonExists) {
+        console.error('Python3 is not installed or not found in expected paths');
+        return res.status(500).json({ success: false, error: 'Python3 is not installed on the server' });
+      }
+      if (!fs.existsSync(scriptPath)) {
+        console.error('telegramStats.py script not found at', scriptPath);
+        return res.status(500).json({ success: false, error: 'telegramStats.py script not found on server' });
+      }
+      const py = spawn('python3', [scriptPath, '--phone', phone]);
+      let output = '';
+      let responded = false;
+      py.stdout.on('data', (data) => {
+        output += data.toString();
+        console.log('Python script output:', data.toString()); // Log each chunk
+        const match = output.match(/CODE_SENT:([\w-]+)/);
+        if (match && !responded) {
+          responded = true;
+          res.json({ success: true, message: 'Code sent to your Telegram', phone_code_hash: match[1] });
+          py.kill();
+        }
+      });
+      py.stderr.on('data', (data) => {
+        console.error('Python stderr:', data.toString());
+      });
+      py.on('error', (err) => {
+        console.error('Failed to start Python process:', err);
+      });
+      py.on('close', (code) => {
+        if (!responded) {
+          console.log('Python process closed with code:', code);
+          // Try to parse output as JSON, else send as text
+          let dataToSend = output.trim();
+          try {
+            dataToSend = JSON.parse(dataToSend);
+          } catch (e) {}
+          res.status(200).json({ success: false, output: dataToSend, code });
+        }
+      });
+    } catch (err) {
+      console.error('Caught exception in requestTelegramLogin:', err);
+      res.status(500).json({ success: false, error: err.message });
+    }
   } catch (err) {
-    console.error('Caught exception in requestTelegramLogin:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('❌ requestTelegramLogin error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
