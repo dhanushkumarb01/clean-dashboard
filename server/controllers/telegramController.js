@@ -1169,6 +1169,28 @@ const verifyTelegramLogin = async (req, res) => {
         res.status(200).json({ success: false, output: dataToSend, code });
       }
     });
+
+    // After running the script, poll MongoDB for stats for up to 30 seconds
+    const maxWait = 30; // seconds
+    let waited = 0;
+    let found = false;
+    while (waited < maxWait) {
+      const stats = await TelegramStats.findOne({ phone });
+      if (stats) {
+        found = true;
+        break;
+      }
+      await new Promise(res => setTimeout(res, 2000));
+      waited += 2;
+      console.log(`[POLLING] Waiting for stats for phone: ${phone} (${waited}s elapsed)`);
+    }
+    if (found) {
+      console.log(`[DATA_READY] Stats found for phone: ${phone}`);
+      return res.json({ success: true, status: 'ready', message: 'Data collected and ready.' });
+    } else {
+      console.log(`[DATA_EMPTY] No stats found for phone: ${phone} after polling.`);
+      return res.json({ success: true, status: 'emptyData', message: 'No data found after collection.' });
+    }
   } catch (err) {
     console.error('Caught exception in verifyTelegramLogin:', err);
     res.status(500).json({ success: false, error: err.message });

@@ -821,38 +821,69 @@ async def main():
                 return
         print('[OTP_VERIFIED] LOGIN_SUCCESS')
         # Data collection
-        collected_messages = []
-        async for dialog in client.iter_dialogs():
-            if dialog.is_group or dialog.is_channel or dialog.is_user:
-                async for message in client.iter_messages(dialog.entity, limit=200):
-                    if not message.text and not message.media:
-                        continue
-                    msg = {
-                        'messageId': str(message.id),
-                        'chatId': str(dialog.id),
-                        'chatName': dialog.title or 'Unknown Chat',
-                        'chatType': 'group' if dialog.is_group else ('channel' if dialog.is_channel else 'private'),
-                        'senderId': str(message.sender_id) if message.sender_id else 'unknown',
-                        'messageText': message.text or '',
-                        'timestamp': message.date.isoformat(),
-                        'phone': phone
-                    }
-                    collected_messages.append(msg)
-        if not collected_messages:
-            print('[DATA_EMPTY] No Telegram data found for this account.')
-            await client.disconnect()
-            return
-        # Build stats_doc as per schema (see previous message for full structure)
-        # ... (existing stats_doc construction code, as in previous message) ...
+        collector = TelegramStatsCollector()
+        collector.client = client
+        await collector.collect_all_messages()
+        print('Collected all messages for phone:', phone)
+        collector.store_messages_via_api()
+        print('Inserted messages for phone:', phone)
+        await collector.collect_basic_stats()
+        print('Collected basic stats for phone:', phone)
+        await collector.collect_most_active_users()
+        print('Collected most active users for phone:', phone)
+        await collector.collect_most_active_groups()
+        print('Collected most active groups for phone:', phone)
+        await collector.collect_top_users_by_groups()
+        print('Collected top users by groups for phone:', phone)
+        await collector.collect_private_chat_users()
+        print('Collected private chat users for phone:', phone)
+        # Build detailed stats_doc
+        now = datetime.now()
+        stats_doc = {
+            'phone': phone,
+            'totalGroups': collector.stats.get('totalGroups', 0),
+            'activeUsers': collector.stats.get('activeUsers', 0),
+            'totalUsers': collector.stats.get('totalUsers', 0),
+            'totalMessages': collector.stats.get('totalMessages', 0),
+            'totalMediaFiles': collector.stats.get('totalMediaFiles', 0),
+            'messageRate': collector.stats.get('messageRate', 0),
+            'rateChange': collector.stats.get('rateChange', 0),
+            'groupPropagation': collector.stats.get('groupPropagation', 0),
+            'avgViewsPerMessage': collector.stats.get('avgViewsPerMessage', 0),
+            'mostActiveUsers': collector.stats.get('mostActiveUsers', []),
+            'mostActiveGroups': collector.stats.get('mostActiveGroups', []),
+            'topUsersByGroups': collector.stats.get('topUsersByGroups', []),
+            'mostActiveUserLast7Days': collector.stats.get('mostActiveUserLast7Days', {}),
+            'avgMessagesPerDay': collector.stats.get('avgMessagesPerDay', 0),
+            'peakHourOfActivity': collector.stats.get('peakHourOfActivity', 0),
+            'messageGrowthLast7Days': collector.stats.get('messageGrowthLast7Days', 0),
+            'totalSuspiciousUsers': collector.stats.get('totalSuspiciousUsers', 0),
+            'suspiciousUsers': collector.stats.get('suspiciousUsers', []),
+            'topUserLocations': collector.stats.get('topUserLocations', []),
+            'keywordCloud': collector.stats.get('keywordCloud', []),
+            'dataSource': 'telethon',
+            'collectionPeriod': collector.stats.get('collectionPeriod', {
+                'start': (now - timedelta(days=7)).isoformat(),
+                'end': now.isoformat()
+            }),
+            'createdAt': now.isoformat(),
+            'updatedAt': now.isoformat(),
+            'timestamp': now.isoformat()
+        }
+        # POST stats to backend
         try:
-            if collected_messages:
-                print(f"[DEBUG] Inserting {len(collected_messages)} messages for phone: {phone}")
-                messages_collection.insert_many(collected_messages)
-            print(f"[DEBUG] Inserting stats: {stats_doc}")
-            stats_collection.insert_one(stats_doc)
-            print(f'[DATA_SAVED] Data inserted into MongoDB with enriched structure for {phone}')
+            print(f"[DEBUG] POSTing stats to backend API for phone: {phone}")
+            response = requests.post(
+                f"{BACKEND_URL}/api/telegram/store-stats",
+                json=stats_doc,
+                headers={'Content-Type': 'application/json'},
+                timeout=60
+            )
+            print(f"[DEBUG] Stats API response: {response.status_code} {response.text}")
+            if response.status_code != 200:
+                print(f"[ERROR] Failed to store stats via API: {response.status_code}")
         except Exception as e:
-            print(f'[ERROR] MongoDB insert failed: {e}')
+            print(f"[ERROR] Exception during stats API call: {e}")
         print(f'[✔] Session file stored at: {session_path}')
         await client.disconnect()
     except Exception as e:
