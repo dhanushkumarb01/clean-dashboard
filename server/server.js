@@ -32,9 +32,14 @@ const app = express();
 
 app.set('trust proxy', 1); // Fix express-rate-limit X-Forwarded-For warning
 
-// ✅ Middleware (MUST come before routes)
+const allowedOrigins = [
+  'https://clean-dashboard-dun.vercel.app',
+  'http://localhost:3000',
+  'https://localhost:3000'
+];
+console.log('CORS allowed origins:', allowedOrigins);
 app.use(cors({
-  origin: ['https://clean-dashboard-dun.vercel.app'],
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
