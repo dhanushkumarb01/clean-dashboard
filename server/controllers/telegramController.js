@@ -11,12 +11,13 @@ const phoneCodeHashStore = {};
 // Get latest Telegram statistics
 const getTelegramStats = async (req, res) => {
   try {
-    console.log('Telegram Controller - Fetching latest stats');
-    
-    const stats = await TelegramStats.findOne()
+    const phone = req.query.phone;
+    console.log('Telegram Controller - Fetching latest stats for phone:', phone);
+    let query = {};
+    if (phone) query.phone = phone;
+    const stats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('-__v');
-    
     if (!stats) {
       console.log('Telegram Controller - No stats found, returning empty data');
       return res.json({
@@ -39,13 +40,11 @@ const getTelegramStats = async (req, res) => {
         }
       });
     }
-    
     console.log('Telegram Controller - Stats found:', {
       totalGroups: stats.totalGroups,
       totalMessages: stats.totalMessages,
       lastUpdated: stats.timestamp
     });
-    
     res.json({
       success: true,
       data: {
@@ -159,9 +158,7 @@ const storeTelegramStats = async (req, res) => {
   try {
     console.log('Telegram Controller - Storing new stats');
     console.log('Incoming Telegram stats data (req.body):', JSON.stringify(req.body, null, 2));
-    
     const statsData = req.body;
-    
     // Validate required fields
     if (!statsData || typeof statsData !== 'object') {
       return res.status(400).json({
@@ -169,26 +166,26 @@ const storeTelegramStats = async (req, res) => {
         error: 'Invalid data format'
       });
     }
-    
+    // Ensure phone is stored
+    const phone = statsData.phone;
+    console.log('Storing stats for phone:', phone);
     // Create new stats document
     const newStats = new TelegramStats({
       ...statsData,
+      phone: phone,
       timestamp: statsData.timestamp ? new Date(statsData.timestamp) : new Date(),
       collectionPeriod: {
         start: statsData.collectionPeriod?.start ? new Date(statsData.collectionPeriod.start) : new Date(),
         end: statsData.collectionPeriod?.end ? new Date(statsData.collectionPeriod.end) : new Date()
       }
     });
-    
     await newStats.save();
-    
-    console.log('Telegram Controller - Stats stored successfully:', {
+    console.log('Telegram Controller - Stats stored successfully for phone:', phone, {
       id: newStats._id,
       totalGroups: newStats.totalGroups,
       totalMessages: newStats.totalMessages,
       timestamp: newStats.timestamp
     });
-    
     res.json({
       success: true,
       message: 'Telegram statistics stored successfully',
@@ -628,9 +625,7 @@ const storeTelegramMessages = async (req, res) => {
   try {
     console.log('Telegram Controller - Storing new messages');
     console.log('Incoming message count:', req.body.messages?.length || 0);
-    
     const { messages } = req.body;
-    
     // Validate required fields
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({
@@ -638,11 +633,12 @@ const storeTelegramMessages = async (req, res) => {
         error: 'Invalid data format - messages array required'
       });
     }
-    
+    // Extract phone from first message (all should have same phone)
+    const phone = messages[0]?.phone;
+    console.log('Storing messages for phone:', phone);
     const TelegramMessage = require('../models/TelegramMessage');
     let stored = 0;
     let errors = 0;
-    
     // Process messages in batch
     for (const messageData of messages) {
       try {
@@ -650,12 +646,11 @@ const storeTelegramMessages = async (req, res) => {
         const newMessage = new TelegramMessage({
           ...messageData,
           timestamp: new Date(messageData.timestamp),
-          editedTimestamp: messageData.editedTimestamp ? new Date(messageData.editedTimestamp) : null
+          editedTimestamp: messageData.editedTimestamp ? new Date(messageData.editedTimestamp) : null,
+          phone: messageData.phone // ensure phone is stored
         });
-        
         await newMessage.save();
         stored++;
-        
       } catch (error) {
         // Handle duplicate key errors gracefully
         if (error.code === 11000) {
@@ -666,9 +661,7 @@ const storeTelegramMessages = async (req, res) => {
         }
       }
     }
-    
-    console.log(`Telegram Controller - Messages stored: ${stored}, errors: ${errors}`);
-    
+    console.log(`Telegram Controller - Messages stored: ${stored}, errors: ${errors} for phone: ${phone}`);
     res.json({
       success: true,
       message: 'Telegram messages stored successfully',
@@ -686,36 +679,32 @@ const storeTelegramMessages = async (req, res) => {
   }
 };
 
-// Get messages with pagination and filtering
+// Get messages with pagination and filtering (optionally by phone)
 const getMessages = async (req, res) => {
   try {
-    console.log('Telegram Controller - Fetching messages');
-    
+    const phone = req.query.phone;
+    console.log('Telegram Controller - Fetching messages for phone:', phone);
     const TelegramMessage = require('../models/TelegramMessage');
-    
     // Query parameters
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const chatId = req.query.chatId;
     const flagged = req.query.flagged === 'true';
     const riskScore = req.query.riskScore;
-    
     // Build query
     let query = {};
+    if (phone) query.phone = phone;
     if (chatId) query.chatId = chatId;
     if (flagged) query.isFlagged = true;
     if (riskScore) query.riskScore = { $gte: parseInt(riskScore) };
-    
     // Execute query with pagination
     const messages = await TelegramMessage.find(query)
       .sort({ timestamp: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .select('-__v');
-    
     // Get total count for pagination
     const totalMessages = await TelegramMessage.countDocuments(query);
-    
     res.json({
       success: true,
       data: {

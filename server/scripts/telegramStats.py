@@ -334,6 +334,9 @@ class TelegramStatsCollector:
                         'isFlagged': content_analysis['risk_score'] >= 5  # Auto-flag high risk messages
                     }
                     
+                    # Add phone number to message
+                    message_data['phone'] = PHONE_NUMBER
+                    
                     self.collected_messages.append(message_data)
                     messages_collected += 1
                     
@@ -404,6 +407,10 @@ class TelegramStatsCollector:
                 
             logger.info(f"Storing {len(self.collected_messages)} messages in MongoDB...")
             
+            # Add phone number to every message
+            for msg in self.collected_messages:
+                msg['phone'] = PHONE_NUMBER
+            
             # Send messages in batches to avoid request size limits
             batch_size = 100
             success_count = 0
@@ -423,6 +430,7 @@ class TelegramStatsCollector:
                     batch_success = result.get('stored', 0)
                     success_count += batch_success
                     logger.info(f"Batch {i//batch_size + 1}: {batch_success} messages stored successfully")
+                    print(f"✅ Inserted {batch_success} messages for phone: {PHONE_NUMBER}")
                 else:
                     logger.error(f"Failed to store message batch {i//batch_size + 1}: {response.status_code} - {response.text}")
                 
@@ -730,6 +738,8 @@ class TelegramStatsCollector:
         try:
             logger.info("Storing statistics in MongoDB...")
             
+            # Add phone number to stats
+            self.stats['phone'] = PHONE_NUMBER
             # Add collection period
             self.stats['collectionPeriod'] = {
                 'start': (datetime.now() - timedelta(days=7)).isoformat(),
@@ -747,6 +757,7 @@ class TelegramStatsCollector:
             if response.status_code == 200:
                 result = response.json()
                 logger.info(f"Statistics stored successfully: {result.get('message', 'OK')}")
+                print(f"✅ Inserted stats for phone: {PHONE_NUMBER}")
                 logging.debug("Script ended successfully")
                 return True
             else:
