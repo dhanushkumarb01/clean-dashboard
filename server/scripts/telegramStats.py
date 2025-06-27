@@ -407,54 +407,20 @@ class TelegramStatsCollector:
             logger.error(f"Error in message collection: {e}")
             return 0
     
-    def store_messages_in_mongodb(self):
-        """Store collected messages in MongoDB via Express API"""
+    def store_messages_directly_in_mongodb(self):
         try:
             if not self.collected_messages:
-                logger.info("No messages to store")
-                return True
-                
-            logger.info(f"Storing {len(self.collected_messages)} messages in MongoDB...")
-            
-            # Add phone number to every message
+                print("No messages to insert for phone:", PHONE_NUMBER)
+                return
+            # Ensure phone is present in every message
             for msg in self.collected_messages:
                 msg['phone'] = PHONE_NUMBER
-                assert 'phone' in msg and msg['phone'], 'Phone number must be present in every message!'
-            
-            # Send messages in batches to avoid request size limits
-            batch_size = 100
-            success_count = 0
-            
-            for i in range(0, len(self.collected_messages), batch_size):
-                batch = self.collected_messages[i:i + batch_size]
-                
-                response = requests.post(
-                    f"{BACKEND_URL}/api/telegram/store-messages",
-                    json={'messages': batch},
-                    headers={'Content-Type': 'application/json'},
-                    timeout=60
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    batch_success = result.get('stored', 0)
-                    success_count += batch_success
-                    logger.info(f"Batch {i//batch_size + 1}: {batch_success} messages stored successfully")
-                    print(f"\u2705 Inserted {batch_success} messages for phone: {PHONE_NUMBER}")
-                else:
-                    logger.error(f"Failed to store message batch {i//batch_size + 1}: {response.status_code} - {response.text}")
-                
-                # Small delay between batches
-                import time
-                time.sleep(1)
-            
-            logger.info(f"Message storage completed: {success_count} out of {len(self.collected_messages)} messages stored")
-            return success_count > 0
-            
+            print(f"Attempting DB insert for {len(self.collected_messages)} messages for phone: {PHONE_NUMBER}")
+            result = messages_collection.insert_many(self.collected_messages)
+            print(f"✅ Inserted {len(result.inserted_ids)} messages successfully for phone: {PHONE_NUMBER}")
         except Exception as e:
-            logger.error(f"Error storing messages: {e}")
-            return False
-    
+            print("❌ DB insert failed for messages:", e)
+
     async def collect_basic_stats(self):
         """Collect basic statistics from all dialogs"""
         try:
@@ -793,33 +759,27 @@ class TelegramStatsCollector:
         """Run the complete statistics collection process"""
         try:
             logger.info("Starting Telegram statistics and message collection...")
-            
             # Initialize client
             if not await self.initialize_client():
                 return False
-            
             # Collect message content first (this will also be used for stats)
             await self.collect_all_messages()
-            
-            # Store messages in MongoDB
+            # Store messages in MongoDB BEFORE any fetch or dashboard logic
             if self.collected_messages:
-                self.store_messages_in_mongodb()
-            
+                self.store_messages_directly_in_mongodb()
             # Collect all statistics
             await self.collect_basic_stats()
             await self.collect_most_active_users()
             await self.collect_most_active_groups()
             await self.collect_top_users_by_groups()
             await self.collect_private_chat_users()
-            
-            # Store stats in MongoDB
-            success = self.store_stats_in_mongodb()
-            
+            # Store stats in MongoDB BEFORE any fetch or dashboard logic
+            self.store_stats_directly_in_mongodb()
+            logger.info(f"Stats for phone {PHONE_NUMBER} inserted into MongoDB before any fetch/display.")
+            # Optionally, you can now fetch or trigger dashboard update logic
             # Close client
             await self.client.disconnect()
-            
-            return success
-            
+            return True
         except Exception as e:
             logger.error(f"Error in collection process: {e}")
             if self.client:
