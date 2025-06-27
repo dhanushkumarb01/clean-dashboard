@@ -207,7 +207,11 @@ const TelegramDashboard = () => {
     setLoginError('');
     try {
       const res = await api.post('/api/telegram/request-login', { phone });
-      if (res.data.success) {
+      if (res.data.status === 'ready') {
+        setShowDashboard(true);
+        localStorage.setItem('telegramPhone', phone);
+        loadData();
+      } else if (res.data.status === 'otp_sent' || res.data.success) {
         setStep(2);
         setPhoneCodeHash(res.data.phone_code_hash);
         localStorage.setItem('telegramPhone', phone);
@@ -227,12 +231,12 @@ const TelegramDashboard = () => {
     setLoginError('');
     try {
       const res = await api.post('/api/telegram/verify-login', { phone, code: otp, phone_code_hash: phoneCodeHash, password });
-      if (res.data.success) {
+      if (res.data.status === 'ready' || res.data.success) {
         setLoginSuccess(true);
         setStep(3);
-        // Wait a bit for data collection, then load dashboard
         setTimeout(() => {
           setLoginSuccess(false);
+          setShowDashboard(true);
           loadData();
         }, 5000);
       } else {
