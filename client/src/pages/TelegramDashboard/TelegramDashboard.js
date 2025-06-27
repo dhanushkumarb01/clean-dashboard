@@ -120,7 +120,7 @@ const TelegramDashboard = () => {
 
   // Telegram login state
   const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(localStorage.getItem('telegramPhone') || '');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
@@ -128,6 +128,14 @@ const TelegramDashboard = () => {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [phoneCodeHash, setPhoneCodeHash] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
+
+  // Ensure phone is always loaded from localStorage on mount
+  useEffect(() => {
+    if (!phone) {
+      const storedPhone = localStorage.getItem('telegramPhone');
+      if (storedPhone) setPhone(storedPhone);
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
