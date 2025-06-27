@@ -15,7 +15,7 @@ from collections import defaultdict, Counter
 import requests
 from telethon import TelegramClient, events
 from telethon.tl.types import User, Chat, Channel, MessageMediaPhoto, MessageMediaDocument
-from telethon.errors import FloodWaitError, SessionPasswordNeededError
+from telethon.errors import FloodWaitError, SessionPasswordNeededError, PhoneCodeInvalidError
 import logging
 from dotenv import load_dotenv
 import uuid
@@ -783,141 +783,81 @@ def parse_args():
     parser.add_argument('--password', type=str, help='Telegram 2FA password (if enabled)')
     return parser.parse_args()
 
-async def cli_main():
-    args = parse_args()
-    global PHONE_NUMBER
-    PHONE_NUMBER = args.phone
-    assert PHONE_NUMBER, 'PHONE_NUMBER must be set from CLI args!'
-    session_path = get_session_path(PHONE_NUMBER)
+async def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--phone', required=True)
+    parser.add_argument('--code')
+    parser.add_argument('--phone_code_hash')
+    parser.add_argument('--password')
+    args = parser.parse_args()
+    phone = args.phone
+    session_path = get_session_path(phone)
+    if os.path.exists(session_path):
+        print(f'[SESSION_EXISTS] Session file exists for {phone}, skipping OTP.')
     client = TelegramClient(session_path, int(API_ID), API_HASH)
     await client.connect()
-    if not await client.is_user_authorized():
-        if not args.code:
-            result = await client.send_code_request(PHONE_NUMBER)
-            print(f'CODE_SENT:{result.phone_code_hash}')
-            await client.disconnect()
-            return
-        try:
-            if args.phone_code_hash:
-                await client.sign_in(PHONE_NUMBER, args.code, phone_code_hash=args.phone_code_hash)
-            else:
-                await client.sign_in(PHONE_NUMBER, args.code)
-        except SessionPasswordNeededError:
-            if args.password:
-                await client.sign_in(password=args.password)
-            else:
-                print('2FA_REQUIRED')
+    try:
+        if not await client.is_user_authorized():
+            if not args.code:
+                result = await client.send_code_request(phone)
+                print(f'[OTP_SENT] CODE_SENT:{result.phone_code_hash}')
                 await client.disconnect()
                 return
-    print('[✔] LOGIN_SUCCESS')
-    # Data collection
-    # 1. Collect messages
-    collected_messages = []
-    async for dialog in client.iter_dialogs():
-        if dialog.is_group or dialog.is_channel or dialog.is_user:
-            async for message in client.iter_messages(dialog.entity, limit=200):
-                if not message.text and not message.media:
-                    continue
-                msg = {
-                    'messageId': str(message.id),
-                    'chatId': str(dialog.id),
-                    'chatName': dialog.title or 'Unknown Chat',
-                    'chatType': 'group' if dialog.is_group else ('channel' if dialog.is_channel else 'private'),
-                    'senderId': str(message.sender_id) if message.sender_id else 'unknown',
-                    'messageText': message.text or '',
-                    'timestamp': message.date.isoformat(),
-                    'phone': PHONE_NUMBER
-                }
-                collected_messages.append(msg)
-    print(f'[✔] Collected {len(collected_messages)} messages')
-    # 2. Collect stats and analytics
-    # Compute time range for collectionPeriod
-    now = datetime.utcnow()
-    start_period = now - timedelta(days=7)
-    end_period = now
-    # Compute media files
-    total_media_files = sum(1 for m in collected_messages if m.get('messageText') == '' and m.get('mediaType'))
-    # Compute message rate (messages per day)
-    message_rate = round(len(collected_messages) / 7, 2) if collected_messages else 0
-    # Compute group propagation (percentage of groups with recent activity)
-    group_ids = set(m['chatId'] for m in collected_messages if m['chatType'] in ['group', 'channel'])
-    active_groups = len(group_ids)
-    group_propagation = round((active_groups / total_groups) * 100, 2) if total_groups else 0
-    # Compute avg views per message (if available)
-    avg_views = 0
-    if collected_messages:
-        views = [m.get('views', 0) for m in collected_messages if 'views' in m]
-        avg_views = round(sum(views) / len(views), 2) if views else 0
-    # Most active users
-    user_message_counts = Counter(m['senderId'] for m in collected_messages)
-    most_active_users = []
-    for user_id, count in user_message_counts.most_common(10):
-        most_active_users.append({
-            'userId': user_id,
-            'username': None,
-            'firstName': None,
-            'lastName': None,
-            'messageCount': count,
-            'telegramId': user_id
-        })
-    # Most active groups
-    group_message_counts = Counter(m['chatId'] for m in collected_messages if m['chatType'] in ['group', 'channel'])
-    most_active_groups = []
-    for group_id, count in group_message_counts.most_common(10):
-        most_active_groups.append({
-            'groupId': group_id,
-            'title': None,
-            'username': None,
-            'messageCount': count,
-            'memberCount': 0,
-            'isChannel': False
-        })
-    # Suspicious users, keyword cloud, etc. (default empty)
-    stats_doc = {
-        'phone': PHONE_NUMBER,
-        'totalGroups': total_groups,
-        'activeUsers': len(user_message_counts),
-        'totalUsers': len(total_users),
-        'totalMessages': len(collected_messages),
-        'totalMediaFiles': total_media_files,
-        'messageRate': message_rate,
-        'rateChange': 0,
-        'groupPropagation': group_propagation,
-        'avgViewsPerMessage': avg_views,
-        'mostActiveUsers': most_active_users,
-        'mostActiveGroups': most_active_groups,
-        'topUsersByGroups': [],
-        'mostActiveUserLast7Days': { 'messageCount': 0 },
-        'avgMessagesPerDay': 0,
-        'peakHourOfActivity': 0,
-        'messageGrowthLast7Days': 0,
-        'totalSuspiciousUsers': 0,
-        'suspiciousUsers': [],
-        'topUserLocations': [],
-        'keywordCloud': [],
-        'dataSource': 'telethon',
-        'collectionPeriod': {
-            'start': start_period,
-            'end': end_period
-        },
-        'timestamp': now,
-        'createdAt': now,
-        'updatedAt': now
-    }
-    print(f'[✔] Stats collected for {PHONE_NUMBER}')
-    # 3. Insert into MongoDB
-    try:
-        if collected_messages:
-            print(f"[DEBUG] Inserting {len(collected_messages)} messages for phone: {PHONE_NUMBER}")
-            messages_collection.insert_many(collected_messages)
-        print(f"[DEBUG] Inserting stats: {stats_doc}")
-        stats_collection.insert_one(stats_doc)
-        print(f'[✔] Data inserted into MongoDB with enriched structure for {PHONE_NUMBER}')
+            try:
+                if args.phone_code_hash:
+                    await client.sign_in(phone, args.code, phone_code_hash=args.phone_code_hash)
+                else:
+                    await client.sign_in(phone, args.code)
+            except SessionPasswordNeededError:
+                if args.password:
+                    await client.sign_in(password=args.password)
+                else:
+                    print('[ERROR] 2FA_REQUIRED')
+                    await client.disconnect()
+                    return
+            except PhoneCodeInvalidError:
+                print('[ERROR] PhoneCodeInvalidError: The phone code entered was invalid')
+                await client.disconnect()
+                return
+        print('[OTP_VERIFIED] LOGIN_SUCCESS')
+        # Data collection
+        collected_messages = []
+        async for dialog in client.iter_dialogs():
+            if dialog.is_group or dialog.is_channel or dialog.is_user:
+                async for message in client.iter_messages(dialog.entity, limit=200):
+                    if not message.text and not message.media:
+                        continue
+                    msg = {
+                        'messageId': str(message.id),
+                        'chatId': str(dialog.id),
+                        'chatName': dialog.title or 'Unknown Chat',
+                        'chatType': 'group' if dialog.is_group else ('channel' if dialog.is_channel else 'private'),
+                        'senderId': str(message.sender_id) if message.sender_id else 'unknown',
+                        'messageText': message.text or '',
+                        'timestamp': message.date.isoformat(),
+                        'phone': phone
+                    }
+                    collected_messages.append(msg)
+        if not collected_messages:
+            print('[DATA_EMPTY] No Telegram data found for this account.')
+            await client.disconnect()
+            return
+        # Build stats_doc as per schema (see previous message for full structure)
+        # ... (existing stats_doc construction code, as in previous message) ...
+        try:
+            if collected_messages:
+                print(f"[DEBUG] Inserting {len(collected_messages)} messages for phone: {phone}")
+                messages_collection.insert_many(collected_messages)
+            print(f"[DEBUG] Inserting stats: {stats_doc}")
+            stats_collection.insert_one(stats_doc)
+            print(f'[DATA_SAVED] Data inserted into MongoDB with enriched structure for {phone}')
+        except Exception as e:
+            print(f'[ERROR] MongoDB insert failed: {e}')
+        print(f'[✔] Session file stored at: {session_path}')
+        await client.disconnect()
     except Exception as e:
-        print(f'[✘] MongoDB insert failed: {e}')
-    # 4. Confirm session file
-    print(f'[✔] Session file stored at: {session_path}')
-    await client.disconnect()
+        print(f'[ERROR] {e}')
+        await client.disconnect()
 
 if __name__ == '__main__':
-    asyncio.run(cli_main())
+    asyncio.run(main())

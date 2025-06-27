@@ -4,9 +4,14 @@ const TelegramMessage = require('../models/TelegramMessage');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 
 // In-memory store for phone_code_hash per phone
 const phoneCodeHashStore = {};
+
+// Add MongoDB connection for phone_code_hash storage
+const PhoneCodeHashSchema = new mongoose.Schema({ phone: String, phone_code_hash: String }, { timestamps: true });
+const PhoneCodeHash = mongoose.models.PhoneCodeHash || mongoose.model('PhoneCodeHash', PhoneCodeHashSchema);
 
 // Helper to extract phone from query or body and require it
 function requirePhone(req, res) {
@@ -996,6 +1001,13 @@ const requestTelegramLogin = async (req, res) => {
   console.log('📄 Script path:', scriptPath);
 
   try {
+    // In requestTelegramLogin, before sending OTP, check for session file for phone
+    const sessionPath = path.join(__dirname, '..', 'sessions', `${phone.replace('+', '')}.session`);
+    if (fs.existsSync(sessionPath)) {
+      console.log('[SESSION_EXISTS] Skipping OTP, session found for', phone);
+      return res.status(200).json({ success: true, status: 'ready', message: 'Session exists, skipping OTP.' });
+    }
+
     const pythonProcess = spawn('python3', [scriptPath, '--phone', phone]);
     let output = '';
     let errorOutput = '';
@@ -1012,7 +1024,7 @@ const requestTelegramLogin = async (req, res) => {
       errorOutput += err;
     });
 
-    pythonProcess.on('close', (code) => {
+    pythonProcess.on('close', async (code) => {
       console.log('📦 Python process exited with code', code);
 
       if (code !== 0 || errorOutput.trim() !== '') {
@@ -1039,6 +1051,14 @@ const requestTelegramLogin = async (req, res) => {
         console.log(`Stored phone_code_hash for ${phone}: ${phone_code_hash}`);
       }
 
+      // After sending OTP, store phone_code_hash in MongoDB
+      await PhoneCodeHash.findOneAndUpdate(
+        { phone },
+        { phone, phone_code_hash },
+        { upsert: true, new: true }
+      );
+      console.log(`[OTP_SENT] Stored phone_code_hash for ${phone}: ${phone_code_hash}`);
+
       return res.status(200).json({
         success: true,
         message: 'Code sent',
@@ -1063,8 +1083,9 @@ const verifyTelegramLogin = async (req, res) => {
   if (!phone || !code) return res.status(400).json({ success: false, error: 'Phone and code required' });
   // Use stored hash if not provided
   if (!hash) {
-    hash = phoneCodeHashStore[phone];
-    console.log(`Using stored phone_code_hash for ${phone}: ${hash}`);
+    const hashDoc = await PhoneCodeHash.findOne({ phone });
+    hash = hashDoc ? hashDoc.phone_code_hash : null;
+    console.log(`[HASH_FETCHED] For ${phone}: ${hash}`);
   }
   if (!hash) return res.status(400).json({ success: false, error: 'phone_code_hash required (not found in memory)' });
   try {
@@ -1112,7 +1133,7 @@ const verifyTelegramLogin = async (req, res) => {
         py.kill();
         // Clean up stored hash
         delete phoneCodeHashStore[phone];
-        console.log(`Deleted phone_code_hash for ${phone}`);
+        console.log(`[OTP_VERIFIED] Deleted phone_code_hash for ${phone}`);
       } else if (output.includes('2FA_REQUIRED') && !responded) {
         responded = true;
         res.status(400).json({ success: false, error: '2FA password required' });
