@@ -51,7 +51,8 @@ SESSIONS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../sessi
 os.makedirs(SESSIONS_DIR, exist_ok=True)
 
 # MongoDB connection
-MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/test')
+MONGO_URI = "mongodb+srv://dhanushkumar:JcEI%403098@internship-dashboard.r6iodbd.mongodb.net/test?retryWrites=true&w=majority&appName=internship-dashboard"
+print(f"[DEBUG] Using MongoDB URI: {MONGO_URI}")
 mongo_client = pymongo.MongoClient(MONGO_URI)
 mongo_db = mongo_client['test']
 stats_collection = mongo_db['telegramstats']
@@ -853,7 +854,9 @@ async def cli_main():
     # 3. Insert into MongoDB
     try:
         if collected_messages:
+            print(f"[DEBUG] Inserting {len(collected_messages)} messages for phone: {PHONE_NUMBER}")
             messages_collection.insert_many(collected_messages)
+        print(f"[DEBUG] Inserting stats: {stats_doc}")
         stats_collection.insert_one(stats_doc)
         print('[✔] Data inserted into MongoDB')
     except Exception as e:
