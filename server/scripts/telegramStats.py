@@ -813,10 +813,42 @@ async def cli_main():
     global PHONE_NUMBER
     PHONE_NUMBER = args.phone
     assert PHONE_NUMBER, 'PHONE_NUMBER must be set from CLI args!'
-    collector = TelegramStatsCollector()
-    await collector.initialize_client_cli(args)
-    # Always run collection after login
-    await collector.run_collection()
+    session_path = get_session_path(PHONE_NUMBER)
+    client = TelegramClient(session_path, int(API_ID), API_HASH)
+    await client.connect()
+    try:
+        if not await client.is_user_authorized():
+            if not args.code:
+                # Step 1: Send code and print phone_code_hash, then exit
+                result = await client.send_code_request(PHONE_NUMBER)
+                phone_code_hash = result.phone_code_hash
+                print(f'CODE_SENT:{phone_code_hash}')
+                await client.disconnect()
+                return
+            # Step 2: Use code and phone_code_hash to sign in
+            try:
+                if args.phone_code_hash:
+                    await client.sign_in(PHONE_NUMBER, args.code, phone_code_hash=args.phone_code_hash)
+                else:
+                    print('ERROR: phone_code_hash required for sign in')
+                    await client.disconnect()
+                    return
+            except SessionPasswordNeededError:
+                if args.password:
+                    await client.sign_in(password=args.password)
+                else:
+                    print('2FA_REQUIRED')
+                    await client.disconnect()
+                    return
+        print('LOGIN_SUCCESS')
+        # After successful login, collect and store stats
+        collector = TelegramStatsCollector()
+        collector.client = client
+        await collector.run_collection()
+    except Exception as e:
+        print(f'ERROR: {e}')
+    finally:
+        await client.disconnect()
 
 if __name__ == '__main__':
     asyncio.run(cli_main())
