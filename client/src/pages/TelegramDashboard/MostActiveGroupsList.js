@@ -33,9 +33,9 @@ const MostActiveGroupsList = ({ groups }) => {
       <div className="space-y-3">
         {groups.slice(0, 10).map((group, index) => (
           <div 
-            key={group.groupId} 
+            key={group.groupId || group._id || index} 
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-            onClick={() => handleGroupClick(group.groupId)}
+            onClick={() => handleGroupClick(group.groupId || group._id)}
           >
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
@@ -49,10 +49,10 @@ const MostActiveGroupsList = ({ groups }) => {
                   </span>
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
+              <div>
                 <div className="flex items-center space-x-2">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {group.title || 'Unknown Group'}
+                    {group.title || group.name || 'Unknown Group'}
                   </p>
                   {group.isChannel && (
                     <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
@@ -72,16 +72,16 @@ const MostActiveGroupsList = ({ groups }) => {
                       <span>•</span>
                     </>
                   )}
-                  <span>{group.memberCount} members</span>
+                  <span>{group.memberCount || 0} members</span>
                   <span>•</span>
-                  <span>{group.messageCount} messages</span>
+                  <span>{group.messageCount || group.messages || 0} messages</span>
                 </div>
               </div>
             </div>
             <div className="flex-shrink-0">
               <div className="flex items-center space-x-1">
                 <span className="text-sm font-semibold text-blue-600">
-                  {group.messageCount}
+                  {group.messageCount || group.messages || 0}
                 </span>
                 <span className="text-xs text-gray-400">msgs</span>
               </div>

@@ -33,9 +33,9 @@ const MostActiveUsersList = ({ users }) => {
       <div className="space-y-3">
         {users.slice(0, 10).map((user, index) => (
           <div 
-            key={user.userId} 
+            key={user.userId || user._id || index} 
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-            onClick={() => handleUserClick(user.userId)}
+            onClick={() => handleUserClick(user.userId || user._id)}
           >
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
@@ -45,14 +45,14 @@ const MostActiveUsersList = ({ users }) => {
                   </span>
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
+              <div>
                 <div className="flex items-center space-x-2">
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {user.firstName && user.lastName 
                       ? `${user.firstName} ${user.lastName}`
                       : user.username 
                       ? `@${user.username}`
-                      : `User ${user.userId.slice(-4)}`
+                      : `User ${String(user.userId || user._id || '').slice(-4)}`
                     }
                   </p>
                   {user.username && (
@@ -60,16 +60,16 @@ const MostActiveUsersList = ({ users }) => {
                   )}
                 </div>
                 <div className="flex items-center space-x-2 text-xs text-gray-500">
-                  <span>ID: {user.telegramId}</span>
+                  <span>ID: {user.telegramId || user.userId || user._id}</span>
                   <span>•</span>
-                  <span>{user.messageCount} messages</span>
+                  <span>{user.messageCount || user.messages || 0} messages</span>
                 </div>
               </div>
             </div>
             <div className="flex-shrink-0">
               <div className="flex items-center space-x-1">
                 <span className="text-sm font-semibold text-blue-600">
-                  {user.messageCount}
+                  {user.messageCount || user.messages || 0}
                 </span>
                 <span className="text-xs text-gray-400">msgs</span>
               </div>
