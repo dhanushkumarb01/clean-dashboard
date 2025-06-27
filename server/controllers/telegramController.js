@@ -1010,9 +1010,11 @@ const requestTelegramLogin = async (req, res) => {
     pythonProcess.on('close', (code) => {
       console.log('📦 Python process exited with code', code);
       if (code !== 0 || errorOutput) {
+        console.error('🐍 Python script failed:', errorOutput || `Exited with code ${code}`);
         return res.status(500).json({
-          error: 'Python script error',
-          details: errorOutput || 'Non-zero exit code',
+          success: false,
+          error: 'Failed to send code',
+          details: errorOutput || `Exited with code ${code}`
         });
       }
       return res.status(200).json({ message: 'Code sent', result: output });
