@@ -113,25 +113,37 @@ const EmptyState = ({ onRetry }) => (
 const TelegramDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mostActiveUsers, setMostActiveUsers] = useState([]);
   const [mostActiveGroups, setMostActiveGroups] = useState([]);
 
-  // New: Telegram login state
+  // Telegram login state
   const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState(() => localStorage.getItem('telegramPhone') || '');
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [phoneCodeHash, setPhoneCodeHash] = useState('');
+  const [showDashboard, setShowDashboard] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("telegramPhone");
     setPhone('');
+    setStats(null);
+    setMostActiveUsers([]);
+    setMostActiveGroups([]);
+    setStep(1);
+    setOtp('');
+    setPassword('');
+    setPhoneCodeHash('');
+    setLoginSuccess(false);
+    setError(null);
+    setLoading(false);
+    setShowDashboard(false);
     navigate("/login");
   };
 
@@ -139,28 +151,32 @@ const TelegramDashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Loading Telegram dashboard data...');
-      
       if (!phone) throw new Error('No phone number found. Please login.');
       const [statsData, usersData, groupsData] = await Promise.all([
         telegram.getStats(phone),
         telegram.getMostActiveUsers(phone),
         telegram.getMostActiveGroups(phone)
       ]);
-      
-      console.log('Telegram Statistics:', {
-        totalGroups: statsData.totalGroups,
-        totalMessages: statsData.totalMessages,
-        activeUsers: statsData.activeUsers
-      });
-      
+      if (!statsData || statsData.isEmpty) {
+        // No data, go back to login form
+        setShowDashboard(false);
+        setStats(null);
+        setMostActiveUsers([]);
+        setMostActiveGroups([]);
+        setStep(1);
+        return;
+      }
       setStats(statsData);
       setMostActiveUsers(usersData);
       setMostActiveGroups(groupsData);
+      setShowDashboard(true);
     } catch (err) {
-      console.error('Error loading Telegram data:', err);
       setError(err.message);
+      setShowDashboard(false);
+      setStats(null);
+      setMostActiveUsers([]);
+      setMostActiveGroups([]);
+      setStep(1);
     } finally {
       setLoading(false);
     }
@@ -185,7 +201,6 @@ const TelegramDashboard = () => {
     }
   };
 
-  // New: Telegram login handlers
   const handleRequestCode = async (e) => {
     e.preventDefault();
     setLoginLoading(true);
@@ -215,13 +230,9 @@ const TelegramDashboard = () => {
       if (res.data.success) {
         setLoginSuccess(true);
         setStep(3);
-        // Wait a bit for data collection, then reload dashboard
+        // Wait a bit for data collection, then load dashboard
         setTimeout(() => {
           setLoginSuccess(false);
-          setStep(1);
-          setOtp('');
-          setPassword('');
-          setPhoneCodeHash('');
           loadData();
         }, 5000);
       } else {
@@ -234,13 +245,69 @@ const TelegramDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    if (phone) loadData();
-  }, [phone]);
+  // Only show login form until data is loaded and dashboard is ready
+  if (!showDashboard) {
+    return (
+      <div className="p-6">
+        <div className="mb-8 max-w-lg mx-auto">
+          {step === 1 && (
+            <form onSubmit={handleRequestCode} className="bg-white rounded-lg shadow p-6 flex flex-col gap-4">
+              <h2 className="text-lg font-semibold text-gray-800">Enter your Telegram number</h2>
+              <input
+                type="text"
+                className="border rounded px-3 py-2"
+                placeholder="e.g. +1234567890"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                required
+              />
+              {loginError && <div className="text-red-600 text-sm">{loginError}</div>}
+              <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2" disabled={loginLoading}>
+                {loginLoading ? 'Sending code...' : 'Send Code'}
+              </button>
+            </form>
+          )}
+          {step === 2 && (
+            <form onSubmit={handleVerifyLogin} className="bg-white rounded-lg shadow p-6 flex flex-col gap-4">
+              <h2 className="text-lg font-semibold text-gray-800">Enter the OTP sent to your Telegram</h2>
+              <input
+                type="text"
+                className="border rounded px-3 py-2"
+                placeholder="Verification code"
+                value={otp}
+                onChange={e => setOtp(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                className="border rounded px-3 py-2"
+                placeholder="2FA password (if enabled)"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+              {loginError && <div className="text-red-600 text-sm">{loginError}</div>}
+              <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2" disabled={loginLoading}>
+                {loginLoading ? 'Verifying...' : 'Verify & Fetch Data'}
+              </button>
+            </form>
+          )}
+          {step === 3 && loginSuccess && (
+            <div className="bg-green-100 border border-green-300 rounded-lg p-6 text-center">
+              <div className="text-2xl mb-2">✅</div>
+              <div className="text-green-800 font-semibold">Login successful! Fetching your Telegram data...</div>
+              <div className="text-green-700 text-sm mt-2">This may take a few seconds. The dashboard will refresh automatically.</div>
+            </div>
+          )}
+        </div>
+        {loading && <LoadingState />}
+        {error && <ErrorState error={error} onRetry={loadData} />}
+      </div>
+    );
+  }
 
+  // After successful login and data fetch, show dashboard
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} onRetry={loadData} />;
-  if (!stats || stats.isEmpty) return <EmptyState onRetry={loadData} />;
 
   const statCards = [
     { 
@@ -301,58 +368,6 @@ const TelegramDashboard = () => {
 
   return (
     <div className="p-6">
-      {/* Telegram Login Flow */}
-      <div className="mb-8 max-w-lg mx-auto">
-        {step === 1 && (
-          <form onSubmit={handleRequestCode} className="bg-white rounded-lg shadow p-6 flex flex-col gap-4">
-            <h2 className="text-lg font-semibold text-gray-800">Enter your Telegram number</h2>
-            <input
-              type="text"
-              className="border rounded px-3 py-2"
-              placeholder="e.g. +1234567890"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              required
-            />
-            {loginError && <div className="text-red-600 text-sm">{loginError}</div>}
-            <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2" disabled={loginLoading}>
-              {loginLoading ? 'Sending code...' : 'Send Code'}
-            </button>
-          </form>
-        )}
-        {step === 2 && (
-          <form onSubmit={handleVerifyLogin} className="bg-white rounded-lg shadow p-6 flex flex-col gap-4">
-            <h2 className="text-lg font-semibold text-gray-800">Enter the OTP sent to your Telegram</h2>
-            <input
-              type="text"
-              className="border rounded px-3 py-2"
-              placeholder="Verification code"
-              value={otp}
-              onChange={e => setOtp(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              className="border rounded px-3 py-2"
-              placeholder="2FA password (if enabled)"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
-            {loginError && <div className="text-red-600 text-sm">{loginError}</div>}
-            <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2" disabled={loginLoading}>
-              {loginLoading ? 'Verifying...' : 'Verify & Fetch Data'}
-            </button>
-          </form>
-        )}
-        {step === 3 && loginSuccess && (
-          <div className="bg-green-100 border border-green-300 rounded-lg p-6 text-center">
-            <div className="text-2xl mb-2">✅</div>
-            <div className="text-green-800 font-semibold">Login successful! Fetching your Telegram data...</div>
-            <div className="text-green-700 text-sm mt-2">This may take a few seconds. The dashboard will refresh automatically.</div>
-          </div>
-        )}
-      </div>
-
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Telegram Analytics Dashboard</h1>
@@ -377,33 +392,17 @@ const TelegramDashboard = () => {
           </button>
         </div>
       </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         {statCards.map((stat) => (
           <TelegramStatCard key={stat.label} {...stat} />
         ))}
       </div>
-
-      {/* Message Content Analysis Section - NEW */}
       <div className="mb-8">
         <TelegramMessagesList />
       </div>
-
-      {/* Law Enforcement Analytics Section */}
       <div className="mb-8">
         <LawEnforcementAnalytics />
       </div>
-
-      {/* Location Intelligence Section */}
-      <div className="mb-8">
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
-          <div className="text-4xl mb-4">🌍</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Location Intelligence</h2>
-          <p className="text-gray-500 text-center">This feature is in building process. Geographic distribution analytics will be available soon.</p>
-        </div>
-      </div>
-
-      {/* Original Active Users and Groups */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">👥 User & Group Activity</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
