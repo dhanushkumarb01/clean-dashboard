@@ -1005,6 +1005,7 @@ const requestTelegramLogin = async (req, res) => {
     const sessionPath = path.join(__dirname, '..', 'sessions', `${phone.replace('+', '')}.session`);
     if (fs.existsSync(sessionPath)) {
       console.log('[SESSION_EXISTS] Skipping OTP, session found for', phone);
+      // Tell frontend to skip OTP UI
       return res.status(200).json({ success: true, status: 'ready', message: 'Session exists, skipping OTP.' });
     }
 
@@ -1085,7 +1086,8 @@ const verifyTelegramLogin = async (req, res) => {
   if (!hash) {
     const hashDoc = await PhoneCodeHash.findOne({ phone });
     hash = hashDoc ? hashDoc.phone_code_hash : null;
-    console.log(`[HASH_FETCHED] For ${phone}: ${hash}`);
+    console.log(`[HASH_FETCHED] For ${phone}: null (not found)`);
+    return res.status(400).json({ success: false, status: 'error', error: 'phone_code_hash required (not found in memory)' });
   }
   if (!hash) return res.status(400).json({ success: false, error: 'phone_code_hash required (not found in memory)' });
   try {
