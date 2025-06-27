@@ -22,7 +22,7 @@ import uuid
 import argparse
 
 # Ensure data directory exists for logging
-os.makedirs('../data', exist_ok=True)
+os.makedirs('data', exist_ok=True)
 
 # Load environment variables from config directory
 load_dotenv('../config/scripts.env')
@@ -32,7 +32,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('../data/telegram_stats.log'),
+        logging.FileHandler('data/telegram_stats.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -44,6 +44,17 @@ API_HASH = os.getenv('TELEGRAM_API_HASH')
 PHONE_NUMBER = os.getenv('TELEGRAM_PHONE_NUMBER')
 BACKEND_URL = os.getenv('BACKEND_URL', 'https://clean-dashboard.onrender.com')
 SESSION_NAME = 'telegram_stats_session'
+
+# Defensive check for missing environment variables
+missing = [k for k, v in {
+    'TELEGRAM_API_ID': API_ID,
+    'TELEGRAM_API_HASH': API_HASH,
+    'TELEGRAM_PHONE_NUMBER': PHONE_NUMBER
+}.items() if not v]
+if missing:
+    raise EnvironmentError(f"Missing required environment variables: {', '.join(missing)}")
+
+API_ID = int(API_ID)
 
 # Suspicious keywords for content analysis
 SUSPICIOUS_KEYWORDS = [
