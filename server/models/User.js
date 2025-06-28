@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String },
   name: String,
   picture: String,
+  role: { type: String, enum: ['USER', 'ADMIN', 'SUPERADMIN'], default: 'USER' },
   youtube: {
     google_email: String,
     access_token: String,

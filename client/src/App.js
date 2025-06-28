@@ -20,6 +20,7 @@ import SignupPage from './pages/SignupPage';
 import InstagramDashboard from './pages/InstagramDashboard';
 import GrandAdminLogin from './pages/GrandAdminLogin';
 import GrandAdminDashboard from './pages/GrandAdminDashboard';
+import UserSuccessPage from './pages/UserSuccessPage';
 
 // Auth callback handler component
 const AuthCallbackHandler = () => {
@@ -80,6 +81,7 @@ const App = () => {
         <Route path="/telegram/user/:userId" element={<ProtectedRoute><DashboardContainer><TelegramUserReportPage /></DashboardContainer></ProtectedRoute>} />
         <Route path="/telegram/group/:groupId" element={<ProtectedRoute><DashboardContainer><TelegramGroupReportPage /></DashboardContainer></ProtectedRoute>} />
         <Route path="/instagram" element={<ProtectedRoute><DashboardContainer><InstagramDashboard /></DashboardContainer></ProtectedRoute>} />
+        <Route path="/user-success" element={<UserSuccessPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

@@ -466,43 +466,55 @@ exports.completeRegistration = async (req, res) => {
   }
 };
 
-// POST /api/login (GrandAdmin)
-exports.grandAdminLogin = async (req, res) => {
+// POST /api/login (Universal login for all user types)
+exports.universalLogin = async (req, res) => {
   try {
     const { email, password, role, verificationCode } = req.body;
-    console.log('GrandAdmin login attempt:', { email, role, hasPassword: !!password });
     
     if (!email || !password || !role) {
-      console.log('Missing required fields:', { hasEmail: !!email, hasPassword: !!password, hasRole: !!role });
       return res.status(400).json({ success: false, message: 'Please provide email, password, and role' });
     }
-    if (role !== 'GRANDADMIN') {
-      console.log('Invalid role:', role);
-      return res.status(403).json({ success: false, message: 'Only GrandAdmin login is allowed here' });
+    
+    // Validate role
+    if (!['USER', 'ADMIN', 'SUPERADMIN', 'GRANDADMIN'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role specified' });
     }
-    const user = await GrandAdmin.findOne({ email });
+    
+    let user = null;
+    
+    // Check in appropriate collection based on role
+    if (role === 'GRANDADMIN') {
+      user = await GrandAdmin.findOne({ email });
+    } else {
+      user = await User.findOne({ email });
+    }
+    
     if (!user) {
-      console.log('User not found for email:', email);
       return res.status(400).json({ success: false, message: 'User not found' });
     }
-    console.log('User found:', { id: user._id, email: user.email, role: user.role });
+    
+    // Check if user role matches the requested role
+    if (user.role !== role) {
+      return res.status(400).json({ success: false, message: 'Invalid credentials for this role' });
+    }
     
     // Check password
     const passwordMatch = await bcrypt.compare(password, user.password);
-    console.log('Password match:', passwordMatch);
     if (!passwordMatch) {
-      console.log('Invalid password for user:', email);
       return res.status(400).json({ success: false, message: 'Invalid password' });
     }
     
-    // If verification code is provided, verify it (not implemented here, but can be added)
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id, email: user.email, phone: user.phone, role },
+      { 
+        userId: user._id, 
+        email: user.email, 
+        phone: user.mobileNumber || user.phone, 
+        role 
+      },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    console.log('JWT token generated successfully for user:', email);
     
     res.json({
       success: true,
@@ -513,13 +525,13 @@ exports.grandAdminLogin = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
-          phone: user.phone,
+          phone: user.mobileNumber || user.phone,
           role
         }
       }
     });
   } catch (error) {
-    console.error('GrandAdmin login error:', error);
+    console.error('Universal login error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

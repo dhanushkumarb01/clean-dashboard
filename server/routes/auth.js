@@ -5,7 +5,8 @@ const auth = require('../middleware/auth');
 const { 
   requestEmailVerification, 
   completeRegistration, 
-  grandAdminLogin 
+  grandAdminLogin,
+  universalLogin
 } = require('../controllers/authController');
 
 // Google OAuth routes (no auth required)
@@ -49,7 +50,7 @@ router.post('/login-phone', authController.loginWithMobileNumber);
 // GrandAdmin registration and login endpoints (no auth required)
 router.post('/request-email-verification', requestEmailVerification);
 router.post('/complete-registration', completeRegistration);
-router.post('/login', grandAdminLogin);
+router.post('/login', universalLogin);
 
 // Protected routes (auth required)
 router.use(auth);

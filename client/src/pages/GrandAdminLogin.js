@@ -58,7 +58,7 @@ const GrandAdminLogin = () => {
         if (loginRole === 'GRANDADMIN') {
           navigate('/admin-dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/user-success');
         }
       } else if (data.requiresVerification) {
         setStep('verify');
@@ -119,7 +119,11 @@ const GrandAdminLogin = () => {
       if (response.ok && data.success) {
         localStorage.setItem('authToken', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/admin-dashboard');
+        if (loginRole === 'GRANDADMIN') {
+          navigate('/admin-dashboard');
+        } else {
+          navigate('/user-success');
+        }
       } else {
         setError(data.message || 'Verification failed');
       }
