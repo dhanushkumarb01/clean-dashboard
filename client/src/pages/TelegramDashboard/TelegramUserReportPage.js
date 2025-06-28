@@ -50,9 +50,104 @@ const TelegramUserReportPage = () => {
       case 0:
         return (
           <div className="p-4">
-            <div className="font-semibold mb-2">AI Analysis (placeholder)</div>
-            <div className="mb-1">Risk: <span className="inline-block px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs font-semibold">{userDetails.risk || 'Unknown'}</span></div>
-            <div>Last Active: {userDetails.lastActive ? new Date(userDetails.lastActive).toLocaleString() : '-'}</div>
+            <div className="font-semibold mb-4 text-lg">AI Analysis</div>
+            
+            {/* AI Summary */}
+            <div className="mb-6">
+              <div className="text-sm font-medium text-gray-600 mb-2">Summary</div>
+              <div className="bg-gray-50 p-4 rounded-lg text-gray-800 leading-relaxed">
+                {userDetails.aiAnalysis?.summary || 'No analysis available.'}
+              </div>
+            </div>
+
+            {/* Risk Assessment */}
+            <div className="mb-6">
+              <div className="text-sm font-medium text-gray-600 mb-2">Risk Assessment</div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">Risk Level:</span>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                  userDetails.risk === 'High Risk' ? 'bg-red-100 text-red-700' :
+                  userDetails.risk === 'Medium Risk' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-green-100 text-green-700'
+                }`}>
+                  {userDetails.risk || 'Unknown'}
+                </span>
+              </div>
+            </div>
+
+            {/* Sentiment Analysis */}
+            <div className="mb-6">
+              <div className="text-sm font-medium text-gray-600 mb-2">Sentiment Analysis</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <div className="text-sm font-medium text-green-700">Positive</div>
+                  <div className="text-lg font-bold text-green-800">
+                    {userDetails.aiAnalysis?.sentimentBreakdown?.positive || 0}
+                  </div>
+                </div>
+                <div className="bg-red-50 p-3 rounded-lg">
+                  <div className="text-sm font-medium text-red-700">Negative</div>
+                  <div className="text-lg font-bold text-red-800">
+                    {userDetails.aiAnalysis?.sentimentBreakdown?.negative || 0}
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-sm font-medium text-gray-700">Neutral</div>
+                  <div className="text-lg font-bold text-gray-800">
+                    {userDetails.aiAnalysis?.sentimentBreakdown?.neutral || 0}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2 text-sm text-gray-600">
+                Overall Sentiment: <span className="font-medium">{userDetails.aiAnalysis?.sentiment || 'Neutral'}</span>
+              </div>
+            </div>
+
+            {/* Scam Detection */}
+            {userDetails.aiAnalysis?.scamKeywords && userDetails.aiAnalysis.scamKeywords.length > 0 && (
+              <div className="mb-6">
+                <div className="text-sm font-medium text-gray-600 mb-2">Detected Keywords</div>
+                <div className="flex flex-wrap gap-2">
+                  {userDetails.aiAnalysis.scamKeywords.slice(0, 8).map((keyword, index) => (
+                    <span key={index} className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs rounded">
+                      {keyword}
+                    </span>
+                  ))}
+                  {userDetails.aiAnalysis.scamKeywords.length > 8 && (
+                    <span className="text-xs text-gray-500">
+                      +{userDetails.aiAnalysis.scamKeywords.length - 8} more
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Analysis Stats */}
+            <div className="mb-6">
+              <div className="text-sm font-medium text-gray-600 mb-2">Analysis Statistics</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <div className="text-sm font-medium text-blue-700">Messages Analyzed</div>
+                  <div className="text-lg font-bold text-blue-800">
+                    {userDetails.aiAnalysis?.totalMessagesAnalyzed || 0}
+                  </div>
+                </div>
+                <div className="bg-orange-50 p-3 rounded-lg">
+                  <div className="text-sm font-medium text-orange-700">Suspicious Messages</div>
+                  <div className="text-lg font-bold text-orange-800">
+                    {userDetails.aiAnalysis?.scamMessageCount || 0}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Last Active */}
+            <div>
+              <div className="text-sm font-medium text-gray-600 mb-2">Last Active</div>
+              <div className="text-sm text-gray-800">
+                {userDetails.lastActive ? new Date(userDetails.lastActive).toLocaleString() : 'Unknown'}
+              </div>
+            </div>
           </div>
         );
       case 1:

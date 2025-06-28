@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
+const sentimentAnalyzer = require('../utils/sentimentAnalysis');
 
 // In-memory store for phone_code_hash per phone
 const phoneCodeHashStore = {};
@@ -979,10 +980,10 @@ const getUserSummary = async (req, res) => {
     const joinedGroups = groupDocs.map(g => g.chatName).filter(Boolean);
     // 5. Get last active time
     const lastActive = latestMsg ? latestMsg.timestamp : null;
-    // 6. Get recent messages
+    // 6. Get recent messages for sentiment analysis
     const recentMessagesRaw = await TelegramMessage.find({ senderId: userId })
       .sort({ timestamp: -1 })
-      .limit(10)
+      .limit(50) // Get more messages for better analysis
       .select('messageText timestamp chatName');
     const recentMessages = recentMessagesRaw.map(msg => ({
       id: msg._id,
@@ -990,7 +991,18 @@ const getUserSummary = async (req, res) => {
       date: msg.timestamp,
       chatName: msg.chatName
     }));
-    // 7. Compose response
+
+    // 7. Perform sentiment analysis
+    const sentimentAnalysis = sentimentAnalyzer.analyzeMessages(recentMessages);
+    const userData = {
+      firstName: latestMsg?.senderFirstName || statsUser?.firstName || '',
+      lastName: latestMsg?.senderLastName || statsUser?.lastName || '',
+      messageCount: statsUser?.messageCount || await TelegramMessage.countDocuments({ senderId: userId }),
+      joinedGroups
+    };
+    const aiSummary = sentimentAnalyzer.generateSummary(userData, sentimentAnalysis);
+
+    // 8. Compose response
     res.json({
       success: true,
       data: {
@@ -1002,10 +1014,22 @@ const getUserSummary = async (req, res) => {
         messageCount: statsUser?.messageCount || await TelegramMessage.countDocuments({ senderId: userId }),
         groupCount: groupIds.length,
         lastActive,
-        risk: statsUser?.risk || 'Low Risk',
-        riskColor: statsUser?.riskColor || 'success',
-        recentMessages,
-        joinedGroups
+        risk: sentimentAnalysis.scamRisk === 'High' ? 'High Risk' : 
+              sentimentAnalysis.scamRisk === 'Medium' ? 'Medium Risk' : 'Low Risk',
+        riskColor: sentimentAnalysis.scamRisk === 'High' ? 'danger' : 
+                  sentimentAnalysis.scamRisk === 'Medium' ? 'warning' : 'success',
+        recentMessages: recentMessages.slice(0, 10), // Return only 10 for display
+        joinedGroups,
+        // AI Analysis data
+        aiAnalysis: {
+          summary: aiSummary,
+          sentiment: sentimentAnalysis.overallSentiment,
+          sentimentBreakdown: sentimentAnalysis.sentimentBreakdown,
+          scamRisk: sentimentAnalysis.scamRisk,
+          scamKeywords: sentimentAnalysis.scamKeywords,
+          totalMessagesAnalyzed: sentimentAnalysis.totalMessages,
+          scamMessageCount: sentimentAnalysis.scamMessageCount
+        }
       }
     });
   } catch (error) {
