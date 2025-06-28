@@ -420,8 +420,8 @@ exports.completeRegistration = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
     }
     // Check if email or phone exists
-    const exists = await GrandAdmin.findOne({ $or: [{ email }, { phone }] });
-    if (exists) return res.status(400).json({ success: false, message: 'Email or phone already registered' });
+    const existing = await User.findOne({ $or: [{ email }, { mobileNumber: phone }] });
+    if (existing) return res.status(400).json({ success: false, message: 'A user with this email or phone already exists.' });
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     // Create new GrandAdmin
@@ -470,6 +470,7 @@ exports.completeRegistration = async (req, res) => {
 exports.universalLogin = async (req, res) => {
   try {
     const { email, password, role, verificationCode } = req.body;
+    console.log('🔍 Universal login attempt:', { email, role });
     
     if (!email || !password || !role) {
       return res.status(400).json({ success: false, message: 'Please provide email, password, and role' });
@@ -490,19 +491,27 @@ exports.universalLogin = async (req, res) => {
     }
     
     if (!user) {
+      console.log('🔍 User not found for email:', email);
       return res.status(400).json({ success: false, message: 'User not found' });
     }
     
+    console.log('🔍 User found:', { id: user._id, email: user.email, role: user.role, hasPassword: !!user.password });
+    
     // Check if user role matches the requested role
     if (user.role !== role) {
+      console.log('🔍 Role mismatch:', { requested: role, actual: user.role });
       return res.status(400).json({ success: false, message: 'Invalid credentials for this role' });
     }
     
     // Check password
     const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log('🔍 Password match result:', passwordMatch);
     if (!passwordMatch) {
+      console.log('🔍 Invalid password for user:', email);
       return res.status(400).json({ success: false, message: 'Invalid password' });
     }
+    
+    console.log('🔍 Login successful for user:', email);
     
     // Generate JWT token
     const token = jwt.sign(
@@ -551,22 +560,22 @@ exports.assignRole = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid role. Only USER, ADMIN, or SUPERADMIN allowed.' });
     }
     // Check if user already exists
-    const existing = await User.findOne({ $or: [{ email }, { phone }] });
+    const existing = await User.findOne({ $or: [{ email }, { mobileNumber: phone }] });
     if (existing) {
       return res.status(400).json({ success: false, message: 'A user with this email or phone already exists.' });
     }
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    // Create user
+    // Create user (password will be hashed by pre-save hook)
     const newUser = new User({
       name,
       email,
       mobileNumber: phone,
-      password: hashedPassword,
+      password: password, // Will be hashed by pre-save hook
       role,
       createdAt: new Date(),
     });
+    console.log('🔍 Creating new user:', { name, email, phone, role, hasPassword: !!password });
     await newUser.save();
+    console.log('🔍 User created successfully:', { id: newUser._id, email: newUser.email, role: newUser.role });
     // Send credentials to user's email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
