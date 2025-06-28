@@ -289,15 +289,29 @@ const getStatsHistory = async (req, res) => {
 };
 
 const getUserReport = async (req, res) => {
+  let phone = requirePhone(req, res);
+  phone = normalizePhone(phone);
+  if (!phone) return;
+  
   try {
     const { userId } = req.params;
-    console.log(`Telegram Controller - Fetching user report for userId: ${userId}`);
+    console.log(`Telegram Controller - Fetching user report for userId: ${userId} and phone: ${phone}`);
 
-    const latestStats = await TelegramStats.findOne()
+    // Flexible query: match with or without plus (same as getMostActiveUsers)
+    const query = {
+      $or: [
+        { phone },
+        { phone: phone.replace(/^\+/, '') },
+        { phone: '+' + phone.replace(/^\+/, '') }
+      ]
+    };
+
+    const latestStats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('mostActiveUsers');
 
     if (!latestStats || !latestStats.mostActiveUsers) {
+      console.log('No stats found for phone:', phone);
       return res.status(404).json({
         success: false,
         error: 'No active user data available or user not found.'
@@ -307,12 +321,14 @@ const getUserReport = async (req, res) => {
     const user = latestStats.mostActiveUsers.find(u => String(u.userId) === String(userId));
 
     if (!user) {
+      console.log(`User ${userId} not found in mostActiveUsers for phone: ${phone}`);
       return res.status(404).json({
         success: false,
         error: 'Telegram user not found.'
       });
     }
 
+    console.log('Found user:', user.username || user.firstName || user.userId, 'for phone:', phone);
     res.json({
       success: true,
       data: user
@@ -328,15 +344,29 @@ const getUserReport = async (req, res) => {
 };
 
 const getGroupReport = async (req, res) => {
+  let phone = requirePhone(req, res);
+  phone = normalizePhone(phone);
+  if (!phone) return;
+  
   try {
     const { groupId } = req.params;
-    console.log(`Telegram Controller - Fetching group report for groupId: ${groupId}`);
+    console.log(`Telegram Controller - Fetching group report for groupId: ${groupId} and phone: ${phone}`);
 
-    const latestStats = await TelegramStats.findOne()
+    // Flexible query: match with or without plus (same as getMostActiveGroups)
+    const query = {
+      $or: [
+        { phone },
+        { phone: phone.replace(/^\+/, '') },
+        { phone: '+' + phone.replace(/^\+/, '') }
+      ]
+    };
+
+    const latestStats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('mostActiveGroups');
 
     if (!latestStats || !latestStats.mostActiveGroups) {
+      console.log('No stats found for phone:', phone);
       return res.status(404).json({
         success: false,
         error: 'No active group data available or group not found.'
@@ -346,12 +376,14 @@ const getGroupReport = async (req, res) => {
     const group = latestStats.mostActiveGroups.find(g => String(g.groupId) === String(groupId));
 
     if (!group) {
+      console.log(`Group ${groupId} not found in mostActiveGroups for phone: ${phone}`);
       return res.status(404).json({
         success: false,
         error: 'Telegram group not found.'
       });
     }
 
+    console.log('Found group:', group.title || group.groupId, 'for phone:', phone);
     res.json({
       success: true,
       data: group
@@ -641,15 +673,29 @@ const getLocationIntelligence = async (req, res) => {
 
 // Get detailed suspicious user report
 const getSuspiciousUserReport = async (req, res) => {
+  let phone = requirePhone(req, res);
+  phone = normalizePhone(phone);
+  if (!phone) return;
+  
   try {
     const { userId } = req.params;
-    console.log(`Telegram Controller - Fetching suspicious user report for userId: ${userId}`);
+    console.log(`Telegram Controller - Fetching suspicious user report for userId: ${userId} and phone: ${phone}`);
 
-    const latestStats = await TelegramStats.findOne()
+    // Flexible query: match with or without plus
+    const query = {
+      $or: [
+        { phone },
+        { phone: phone.replace(/^\+/, '') },
+        { phone: '+' + phone.replace(/^\+/, '') }
+      ]
+    };
+
+    const latestStats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('suspiciousUsers');
 
     if (!latestStats || !latestStats.suspiciousUsers) {
+      console.log('No stats found for phone:', phone);
       return res.status(404).json({
         success: false,
         error: 'No suspicious user data available or user not found.'
@@ -659,12 +705,14 @@ const getSuspiciousUserReport = async (req, res) => {
     const suspiciousUser = latestStats.suspiciousUsers.find(u => u.userId === userId);
 
     if (!suspiciousUser) {
+      console.log(`Suspicious user ${userId} not found for phone: ${phone}`);
       return res.status(404).json({
         success: false,
         error: 'Suspicious user not found.'
       });
     }
 
+    console.log('Found suspicious user:', suspiciousUser.username || suspiciousUser.userId, 'for phone:', phone);
     res.json({
       success: true,
       data: suspiciousUser
