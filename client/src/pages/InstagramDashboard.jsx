@@ -90,17 +90,47 @@ const demoData = {
     { date: '2024-05-14', engagement_rate: 8.9, total_posts: 2, total_engagement: 350 },
   ],
   activeUsers: [
-    { username: 'topfan1', commentCount: 12, recentComments: [
-      { text: 'Love your content!', post: 'Our best-selling product! #demo', date: '2024-06-01' },
-      { text: 'Amazing reel!', post: 'Check out our latest reel!', date: '2024-06-03' },
-    ] },
-    { username: 'superuser2', commentCount: 9, recentComments: [
-      { text: 'Great carousel!', post: 'Swipe to see more! #carousel', date: '2024-06-05' },
-      { text: 'Keep it up!', post: 'Our best-selling product! #demo', date: '2024-06-01' },
-    ] },
-    { username: 'engaged_follower', commentCount: 7, recentComments: [
-      { text: 'Very informative.', post: 'Check out our latest reel!', date: '2024-06-03' },
-    ] },
+    { 
+      username: 'topfan1', 
+      fullName: 'Alex Johnson',
+      isVerified: true,
+      followers: 2450,
+      following: 1234,
+      posts: 567,
+      bio: 'Digital creator | Photography enthusiast | Travel lover',
+      commentCount: 12, 
+      recentComments: [
+        { text: 'Love your content!', post: 'Our best-selling product! #demo', date: '2024-06-01' },
+        { text: 'Amazing reel!', post: 'Check out our latest reel!', date: '2024-06-03' },
+      ] 
+    },
+    { 
+      username: 'superuser2', 
+      fullName: 'Sam Wilson',
+      isVerified: false,
+      followers: 1890,
+      following: 876,
+      posts: 234,
+      bio: 'Fitness coach | Nutrition expert',
+      commentCount: 9, 
+      recentComments: [
+        { text: 'Great carousel!', post: 'Swipe to see more! #carousel', date: '2024-06-05' },
+        { text: 'Keep it up!', post: 'Our best-selling product! #demo', date: '2024-06-01' },
+      ] 
+    },
+    { 
+      username: 'engaged_follower', 
+      fullName: 'Taylor Swift',
+      isVerified: true,
+      followers: 5000000,
+      following: 42,
+      posts: 1234,
+      bio: 'Official account | Music | Lifestyle',
+      commentCount: 7, 
+      recentComments: [
+        { text: 'Very informative.', post: 'Check out our latest reel!', date: '2024-06-03' },
+      ] 
+    },
   ],
 };
 
@@ -203,7 +233,7 @@ function InstagramDashboard() {
         {/* User Details Side Panel (Demo Mode) */}
         {selectedActiveUser && (
           <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
-            <div className="w-full max-w-md bg-white shadow-2xl h-full p-8 relative flex flex-col">
+            <div className="w-full max-w-md bg-white shadow-2xl h-full p-8 relative flex flex-col overflow-y-auto">
               <button
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
                 onClick={() => setSelectedActiveUser(null)}
@@ -211,13 +241,46 @@ function InstagramDashboard() {
               >
                 <X className="w-6 h-6" />
               </button>
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="bg-gradient-to-br from-pink-500 to-purple-600 p-3 rounded-full">
-                  <User className="w-8 h-8 text-white" />
+              <div className="flex flex-col space-y-4 mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-gradient-to-br from-pink-500 to-purple-600 p-3 rounded-full">
+                    <User className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h2 className="text-2xl font-bold text-gray-800">{selectedActiveUser.username}</h2>
+                      {selectedActiveUser.isVerified && (
+                        <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.332-.115 0-.23-.029-.332-.088l-3-2c-.298-.198-.39-.6-.21-.906.182-.31.6-.39.9-.21l2.663 1.775 3.825-5.738c.16-.24.472-.3.71-.14.238.16.3.47.14.71z" />
+                        </svg>
+                      )}
+                    </div>
+                    <p className="text-gray-600">{selectedActiveUser.fullName || selectedActiveUser.username}</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800">{selectedActiveUser.username}</h2>
-                  <p className="text-gray-600">Total Comments: {selectedActiveUser.commentCount}</p>
+                <div className="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl">
+                  <div className="text-center">
+                    <div className="font-bold text-gray-800">{selectedActiveUser.posts?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">Posts</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-gray-800">{selectedActiveUser.followers?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">Followers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-gray-800">{selectedActiveUser.following?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">Following</div>
+                  </div>
+                </div>
+                {selectedActiveUser.bio && (
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-xl">
+                    {selectedActiveUser.bio}
+                  </p>
+                )}
+                <div className="pt-2">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-semibold">Total Comments:</span> {selectedActiveUser.commentCount}
+                  </p>
                 </div>
               </div>
               <div>
