@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { telegram } from '../utils/api';
 
-const TelegramMessagesList = () => {
+const TelegramMessagesList = ({ messages: initialMessages }) => {
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     flagged: '',
@@ -17,6 +17,19 @@ const TelegramMessagesList = () => {
     pages: 0
   });
   const phone = localStorage.getItem('telegramPhone') || '';
+
+  // Use initial messages if provided, otherwise load from API
+  useEffect(() => {
+    if (initialMessages && initialMessages.messages) {
+      console.log('TelegramMessagesList: Using provided messages data:', initialMessages);
+      setMessages(initialMessages.messages || []);
+      setPagination(initialMessages.pagination || { page: 1, limit: 50, total: 0, pages: 0 });
+      setLoading(false);
+    } else {
+      // Fallback to API call if no messages provided
+      loadMessages();
+    }
+  }, [initialMessages]);
 
   const loadMessages = async () => {
     try {
@@ -107,8 +120,11 @@ const TelegramMessagesList = () => {
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
+  // Only reload from API if filters change and we don't have initial messages
   useEffect(() => {
-    loadMessages();
+    if (!initialMessages || !initialMessages.messages) {
+      loadMessages();
+    }
   }, [filters]);
 
   if (loading) {

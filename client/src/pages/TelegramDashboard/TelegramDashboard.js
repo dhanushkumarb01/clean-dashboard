@@ -117,6 +117,7 @@ const TelegramDashboard = () => {
   const [error, setError] = useState(null);
   const [mostActiveUsers, setMostActiveUsers] = useState([]);
   const [mostActiveGroups, setMostActiveGroups] = useState([]);
+  const [messagesData, setMessagesData] = useState(null);
 
   // Telegram login state
   const [step, setStep] = useState(1);
@@ -144,6 +145,7 @@ const TelegramDashboard = () => {
     setStats(null);
     setMostActiveUsers([]);
     setMostActiveGroups([]);
+    setMessagesData(null);
     setStep(1);
     setOtp('');
     setPassword('');
@@ -163,16 +165,18 @@ const TelegramDashboard = () => {
       
       console.log('TelegramDashboard: Loading data for phone:', phone);
       
-      const [statsData, usersData, groupsData] = await Promise.all([
+      const [statsData, usersData, groupsData, messagesData] = await Promise.all([
         telegram.getStats(phone),
         telegram.getMostActiveUsers(phone),
-        telegram.getMostActiveGroups(phone)
+        telegram.getMostActiveGroups(phone),
+        telegram.getMessages({ phone, page: 1, limit: 50 })
       ]);
       
       console.log('TelegramDashboard: Received data:', {
         statsData,
         usersData,
-        groupsData
+        groupsData,
+        messagesData
       });
       
       if (!statsData || statsData.isEmpty) {
@@ -189,12 +193,14 @@ const TelegramDashboard = () => {
       console.log('TelegramDashboard: Setting data to state:', {
         statsData,
         usersDataLength: usersData ? usersData.length : 'null',
-        groupsDataLength: groupsData ? groupsData.length : 'null'
+        groupsDataLength: groupsData ? groupsData.length : 'null',
+        messagesDataLength: messagesData ? messagesData.messages?.length : 'null'
       });
       
       setStats(statsData);
-      setMostActiveUsers(usersData);
-      setMostActiveGroups(groupsData);
+      setMostActiveUsers(usersData || []);
+      setMostActiveGroups(groupsData || []);
+      setMessagesData(messagesData);
       setShowDashboard(true);
     } catch (err) {
       console.error('TelegramDashboard: Error loading data:', err);
@@ -239,7 +245,15 @@ const TelegramDashboard = () => {
         const statsData = await telegram.getStats(phone);
         if (statsData && !statsData.isEmpty) {
           found = true;
-          onReady(statsData);
+          // Also fetch messages data when stats are ready
+          try {
+            const messagesData = await telegram.getMessages({ phone, page: 1, limit: 50 });
+            onReady(statsData, messagesData);
+          } catch (messagesErr) {
+            console.error('Error fetching messages:', messagesErr);
+            // Still call onReady with just stats if messages fail
+            onReady(statsData, null);
+          }
           break;
         }
       } catch (err) {
@@ -269,6 +283,14 @@ const TelegramDashboard = () => {
       }
       if (statsData && !statsData.isEmpty) {
         setStats(statsData);
+        // Also fetch messages data
+        try {
+          const messagesData = await telegram.getMessages({ phone, page: 1, limit: 50 });
+          setMessagesData(messagesData);
+        } catch (messagesErr) {
+          console.error('Error fetching messages:', messagesErr);
+          setMessagesData(null);
+        }
         setShowDashboard(true);
         setStep(3);
         setLoading(false);
@@ -284,10 +306,11 @@ const TelegramDashboard = () => {
         // Start polling for stats
         pollForStats(
           phone,
-          (statsData) => {
+          (statsData, messagesData) => {
             setStats(statsData);
             setShowDashboard(true);
             setStep(3);
+            setMessagesData(messagesData);
           },
           (errMsg) => {
             setError(errMsg);
@@ -321,10 +344,11 @@ const TelegramDashboard = () => {
         // Start polling for stats
         pollForStats(
           phone,
-          (statsData) => {
+          (statsData, messagesData) => {
             setLoginSuccess(false);
             setStats(statsData);
             setShowDashboard(true);
+            setMessagesData(messagesData);
           },
           (errMsg) => {
             setError(errMsg);
@@ -495,7 +519,7 @@ const TelegramDashboard = () => {
         ))}
       </div>
       <div className="mb-8">
-        <TelegramMessagesList />
+        <TelegramMessagesList messages={messagesData} />
       </div>
       <div className="mb-8">
         <LawEnforcementAnalytics />
