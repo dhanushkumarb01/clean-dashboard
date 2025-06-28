@@ -5,6 +5,9 @@ const youtubeApi = require('../utils/youtubeApi');
 const PDFDocument = require('pdfkit');
 const Comment = require('../models/Comment');
 const classifyMessagesByType = require('../utils/classifyMessagesByType');
+const Video = require('../models/Video');
+const { google } = require('googleapis');
+const sentimentAnalyzer = require('../utils/sentimentAnalysis');
 
 // Log environment variables at startup
 console.log('YouTube Controller - Environment check:', {

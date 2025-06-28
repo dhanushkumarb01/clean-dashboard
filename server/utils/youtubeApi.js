@@ -2,6 +2,8 @@ const { google } = require('googleapis');
 const User = require('../models/User');
 const NodeCache = require('node-cache');
 const Comment = require('../models/Comment');
+const Video = require('../models/Video');
+const sentimentAnalyzer = require('./sentimentAnalysis');
 const mongoose = require('mongoose');
 
 // Cache YouTube responses - shorter TTL for live data
@@ -720,7 +722,7 @@ const getAuthorReport = async (userId, authorChannelId) => {
       comments: item.commentCount
     }));
 
-    // Fetch all comments by this author
+    // Fetch all comments by this author for sentiment analysis
     const userCommentsRaw = await Comment.find({ authorChannelId: authorChannelId })
       .sort({ publishedAt: -1 })
       .select('textDisplay publishedAt videoId commentId userId channelId');
@@ -735,6 +737,16 @@ const getAuthorReport = async (userId, authorChannelId) => {
       channelId: comment.channelId
     }));
 
+    // Perform sentiment analysis on comments
+    const sentimentAnalysis = sentimentAnalyzer.analyzeMessages(userComments);
+    const userData = {
+      firstName: authorDisplayName,
+      lastName: '',
+      messageCount: totalComments,
+      joinedGroups: []
+    };
+    const aiSummary = sentimentAnalyzer.generateSummary(userData, sentimentAnalysis);
+
     // Fetch the 10 most recent comments by this author
     const recentComments = userComments.slice(0, 10);
 
@@ -748,7 +760,17 @@ const getAuthorReport = async (userId, authorChannelId) => {
       userComments,
       totalLikes: 0,
       averageLikes: 0,
-      maxLikes: 0
+      maxLikes: 0,
+      // AI Analysis data
+      aiAnalysis: {
+        summary: aiSummary,
+        sentiment: sentimentAnalysis.overallSentiment,
+        sentimentBreakdown: sentimentAnalysis.sentimentBreakdown,
+        scamRisk: sentimentAnalysis.scamRisk,
+        scamKeywords: sentimentAnalysis.scamKeywords,
+        totalMessagesAnalyzed: sentimentAnalysis.totalMessages,
+        scamMessageCount: sentimentAnalysis.scamMessageCount
+      }
     };
 
   } catch (error) {

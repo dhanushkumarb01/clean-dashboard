@@ -15,9 +15,10 @@ const TelegramGroupReportPage = () => {
         setLoading(true);
         setError(null);
         console.log(`Fetching Telegram group report for groupId: ${groupId}`);
-        // TODO: Implement a backend API call to fetch specific group data
-        // For now, simulating data or fetching from a mock source
-        const data = await telegram.getGroupReport(groupId); // This API call needs to be implemented
+        
+        // Get the phone from localStorage or use a default
+        const phone = localStorage.getItem('telegramPhone') || '';
+        const data = await telegram.getGroupReport(groupId, phone);
 
         if (data) {
           setGroupData(data);
@@ -26,7 +27,7 @@ const TelegramGroupReportPage = () => {
         }
       } catch (err) {
         console.error('Error fetching Telegram group data:', err);
-        setError(err.message || 'Failed to fetch group report.');
+        setError(err.response?.data?.error || err.message || 'Failed to fetch group report.');
       } finally {
         setLoading(false);
       }
