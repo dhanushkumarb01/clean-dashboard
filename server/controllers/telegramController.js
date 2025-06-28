@@ -35,7 +35,6 @@ function normalizePhone(phone) {
 const getTelegramStats = async (req, res) => {
   let phone = requirePhone(req, res);
   phone = normalizePhone(phone);
-  console.log('DEBUG: GET /stats called with phone:', phone);
   if (!phone) return;
   try {
     console.log('Telegram Controller - Fetching latest stats for phone:', phone);
@@ -49,14 +48,12 @@ const getTelegramStats = async (req, res) => {
       ]
     };
     
-    console.log('Looking for phone in DB with query:', query);
-    
     const stats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('-__v');
       
     if (!stats) {
-      console.log('Telegram Controller - No stats found, returning empty data for phone:', phone);
+      console.log('Telegram Controller - No stats found for phone:', phone);
       return res.json({
         success: true,
         data: {
@@ -108,7 +105,6 @@ const getTelegramStats = async (req, res) => {
 const getMostActiveUsers = async (req, res) => {
   let phone = requirePhone(req, res);
   phone = normalizePhone(phone);
-  console.log('DEBUG: GET /most-active-users called with phone:', phone);
   if (!phone) return;
   try {
     // Flexible query: match with or without plus
@@ -119,7 +115,7 @@ const getMostActiveUsers = async (req, res) => {
         { phone: '+' + phone.replace(/^\+/, '') }
       ]
     };
-    console.log('Looking for phone in DB with query:', query);
+    
     const stats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('mostActiveUsers');
@@ -149,7 +145,6 @@ const getMostActiveUsers = async (req, res) => {
 const getMostActiveGroups = async (req, res) => {
   let phone = requirePhone(req, res);
   phone = normalizePhone(phone);
-  console.log('DEBUG: GET /most-active-groups called with phone:', phone);
   if (!phone) return;
   try {
     // Flexible query: match with or without plus
@@ -160,7 +155,7 @@ const getMostActiveGroups = async (req, res) => {
         { phone: '+' + phone.replace(/^\+/, '') }
       ]
     };
-    console.log('Looking for phone in DB with query:', query);
+    
     const stats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('mostActiveGroups');
