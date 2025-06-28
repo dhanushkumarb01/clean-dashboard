@@ -48,9 +48,12 @@ const GrandAdminLogin = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: loginEmail, password: loginPassword, role: loginRole })
       });
+      
       const data = await response.json();
-      if (data.success) {
-        localStorage.setItem('token', data.data.token);
+      console.log('Login response:', { status: response.status, data });
+      
+      if (response.ok && data.success) {
+        localStorage.setItem('authToken', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         if (loginRole === 'GRANDADMIN') {
           navigate('/admin-dashboard');
@@ -64,6 +67,7 @@ const GrandAdminLogin = () => {
         setError(data.message || 'Login failed');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -83,12 +87,15 @@ const GrandAdminLogin = () => {
         body: JSON.stringify({ email: regEmail })
       });
       const data = await response.json();
-      if (data.success) {
+      console.log('Email verification request response:', { status: response.status, data });
+      
+      if (response.ok && data.success) {
         setRegMessage('Verification email sent! Check your inbox.');
       } else {
         setRegMessage(data.message || 'Registration failed');
       }
     } catch (err) {
+      console.error('Email verification request error:', err);
       setRegMessage('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -107,14 +114,17 @@ const GrandAdminLogin = () => {
         body: JSON.stringify({ email: loginEmail, password: loginPassword, role: loginRole, verificationCode })
       });
       const data = await response.json();
-      if (data.success) {
-        localStorage.setItem('token', data.data.token);
+      console.log('Verification response:', { status: response.status, data });
+      
+      if (response.ok && data.success) {
+        localStorage.setItem('authToken', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         navigate('/admin-dashboard');
       } else {
         setError(data.message || 'Verification failed');
       }
     } catch (err) {
+      console.error('Verification error:', err);
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -157,14 +167,17 @@ const GrandAdminLogin = () => {
         })
       });
       const data = await response.json();
-      if (data.success) {
-        localStorage.setItem('token', data.data.token);
+      console.log('Complete registration response:', { status: response.status, data });
+      
+      if (response.ok && data.success) {
+        localStorage.setItem('authToken', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         navigate('/admin-dashboard');
       } else {
         setError(data.message || 'Registration failed');
       }
     } catch (err) {
+      console.error('Complete registration error:', err);
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);

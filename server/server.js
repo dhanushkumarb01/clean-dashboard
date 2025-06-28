@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '../config/server.env' });
+require('dotenv').config({ path: './config/server.env' });
 
 // Log environment variables (development only)
 if (process.env.NODE_ENV === 'development') {

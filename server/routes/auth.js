@@ -46,6 +46,11 @@ router.get('/google', (req, res) => {
 // New: Mobile number login route
 router.post('/login-phone', authController.loginWithMobileNumber);
 
+// GrandAdmin registration and login endpoints (no auth required)
+router.post('/request-email-verification', requestEmailVerification);
+router.post('/complete-registration', completeRegistration);
+router.post('/login', grandAdminLogin);
+
 // Protected routes (auth required)
 router.use(auth);
 
@@ -54,11 +59,6 @@ router.get('/me', authController.getCurrentUser);
 router.get('/youtube/channel', authController.getYouTubeChannel);
 router.get('/youtube/stats', authController.getYouTubeStats);
 router.post('/youtube/refresh', authController.refreshYouTubeStats);
-
-// GrandAdmin registration and login endpoints
-router.post('/request-email-verification', requestEmailVerification);
-router.post('/complete-registration', completeRegistration);
-router.post('/login', grandAdminLogin);
 
 // GrandAdmin: Assign role (create user)
 router.post('/grandadmin/assign-role', auth, authController.assignRole);

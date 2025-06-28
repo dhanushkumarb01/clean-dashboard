@@ -29,8 +29,9 @@ const oauth2Client = new google.auth.OAuth2(
 const createYoutubeClient = (auth) => {
   if (!auth) {
     if (!process.env.GOOGLE_API_KEY) {
-      console.error('ERROR: Missing GOOGLE_API_KEY in environment variables and no auth provided');
-      throw new Error('Authentication or API key required for YouTube API client');
+      console.warn('WARNING: Missing GOOGLE_API_KEY in environment variables and no auth provided');
+      // Return null instead of throwing error - client will be created when needed
+      return null;
     }
     auth = process.env.GOOGLE_API_KEY?.trim();
   }
@@ -606,8 +607,14 @@ const revokeToken = async (token) => {
   }
 };
 
-// Create a default YouTube client with API key for public data
-const youtubeClient = createYoutubeClient(process.env.GOOGLE_API_KEY?.trim());
+// Create a default YouTube client with API key for public data (lazy loading)
+let youtubeClient = null;
+const getYoutubeClient = () => {
+  if (!youtubeClient) {
+    youtubeClient = createYoutubeClient(process.env.GOOGLE_API_KEY?.trim());
+  }
+  return youtubeClient;
+};
 
 // Add new functions for active users and channels
 const getMostActiveUsers = async (userId = null, limit = 5) => {
@@ -752,7 +759,7 @@ const getAuthorReport = async (userId, authorChannelId) => {
 
 module.exports = {
   oauth2Client,
-  youtube: youtubeClient,
+  youtube: getYoutubeClient,
   getAuthUrl,
   getTokensAndProfile,
   refreshAccessToken,

@@ -28,7 +28,7 @@ const GrandAdminDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const res = await fetch(`${API_URL}/grandadmin/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -48,7 +48,7 @@ const GrandAdminDashboard = () => {
   // Fetch grandadmins count
   const fetchGrandAdmins = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const res = await fetch(`${API_URL}/grandadmin/list`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });

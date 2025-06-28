@@ -470,21 +470,31 @@ exports.completeRegistration = async (req, res) => {
 exports.grandAdminLogin = async (req, res) => {
   try {
     const { email, password, role, verificationCode } = req.body;
+    console.log('GrandAdmin login attempt:', { email, role, hasPassword: !!password });
+    
     if (!email || !password || !role) {
+      console.log('Missing required fields:', { hasEmail: !!email, hasPassword: !!password, hasRole: !!role });
       return res.status(400).json({ success: false, message: 'Please provide email, password, and role' });
     }
     if (role !== 'GRANDADMIN') {
+      console.log('Invalid role:', role);
       return res.status(403).json({ success: false, message: 'Only GrandAdmin login is allowed here' });
     }
     const user = await GrandAdmin.findOne({ email });
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(400).json({ success: false, message: 'User not found' });
     }
+    console.log('User found:', { id: user._id, email: user.email, role: user.role });
+    
     // Check password
     const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match:', passwordMatch);
     if (!passwordMatch) {
+      console.log('Invalid password for user:', email);
       return res.status(400).json({ success: false, message: 'Invalid password' });
     }
+    
     // If verification code is provided, verify it (not implemented here, but can be added)
     // Generate JWT token
     const token = jwt.sign(
@@ -492,6 +502,8 @@ exports.grandAdminLogin = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+    console.log('JWT token generated successfully for user:', email);
+    
     res.json({
       success: true,
       message: 'Login successful',
