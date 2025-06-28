@@ -12,6 +12,7 @@ const AuthCallback = () => {
         const token = params.get('token');
         const error = params.get('error');
         const message = params.get('message');
+        const state = params.get('state');
 
         if (error || message) {
           console.error('Auth error:', { error, message });
@@ -21,11 +22,18 @@ const AuthCallback = () => {
 
         if (!token) {
           throw new Error('No token received');
-        }        // Store the token
+        }
+
+        // Store the token
         localStorage.setItem('token', token);
 
-        // Redirect to YouTube dashboard after sign-in
-        navigate('/dashboard');
+        // Check if user was trying to access YouTube dashboard
+        if (state === 'youtube-dashboard') {
+          navigate('/youtube-dashboard');
+        } else {
+          // Default redirect to main dashboard
+          navigate('/dashboard');
+        }
       } catch (err) {
         console.error('Callback error:', err);
         navigate('/login', { state: { error: err.message } });

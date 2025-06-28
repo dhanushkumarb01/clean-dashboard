@@ -63,6 +63,8 @@ const App = () => {
         <Route path="/complete-registration" element={<GrandAdminLogin />} />
         {/* Existing dashboard route (unchanged) */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardContainer><YouTubeDashboardContent /></DashboardContainer></ProtectedRoute>} />
+        {/* YouTube dashboard route */}
+        <Route path="/youtube-dashboard" element={<ProtectedRoute><DashboardContainer><YouTubeDashboardContent /></DashboardContainer></ProtectedRoute>} />
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
