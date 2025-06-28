@@ -14,7 +14,13 @@ function getNumber(val) {
 const MostActiveGroupsList = ({ groups }) => {
   const navigate = useNavigate();
 
+  // Debug logging
+  console.log('MostActiveGroupsList received groups:', groups);
+  console.log('Groups type:', typeof groups);
+  console.log('Groups length:', groups ? groups.length : 'null/undefined');
+
   if (!groups || groups.length === 0) {
+    console.log('MostActiveGroupsList: No groups data, showing empty state');
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
@@ -28,6 +34,8 @@ const MostActiveGroupsList = ({ groups }) => {
       </div>
     );
   }
+
+  console.log('MostActiveGroupsList: Rendering groups list with', groups.length, 'groups');
 
   const handleGroupClick = (groupId) => {
     navigate(`/telegram/group/${groupId}`);

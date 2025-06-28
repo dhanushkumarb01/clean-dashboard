@@ -14,7 +14,13 @@ function getNumber(val) {
 const MostActiveUsersList = ({ users }) => {
   const navigate = useNavigate();
 
+  // Debug logging
+  console.log('MostActiveUsersList received users:', users);
+  console.log('Users type:', typeof users);
+  console.log('Users length:', users ? users.length : 'null/undefined');
+
   if (!users || users.length === 0) {
+    console.log('MostActiveUsersList: No users data, showing empty state');
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
@@ -28,6 +34,8 @@ const MostActiveUsersList = ({ users }) => {
       </div>
     );
   }
+
+  console.log('MostActiveUsersList: Rendering users list with', users.length, 'users');
 
   const handleUserClick = (userId) => {
     navigate(`/telegram/user/${userId}`);

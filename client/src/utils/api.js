@@ -214,13 +214,17 @@ export const telegram = {
 
   // Get most active users
   getMostActiveUsers: async (phone) => {
+    console.log('API: Fetching most active users for phone:', phone);
     const response = await api.get('/api/telegram/most-active-users', { params: { phone } });
+    console.log('API: Most active users response:', response.data);
     return response.data.data;
   },
 
   // Get most active groups
   getMostActiveGroups: async (phone) => {
+    console.log('API: Fetching most active groups for phone:', phone);
     const response = await api.get('/api/telegram/most-active-groups', { params: { phone } });
+    console.log('API: Most active groups response:', response.data);
     return response.data.data;
   },
 

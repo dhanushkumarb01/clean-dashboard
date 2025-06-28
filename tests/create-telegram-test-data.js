@@ -5,7 +5,7 @@
  */
 
 const mongoose = require('mongoose');
-require('dotenv').config({ path: '../server/.env' });
+require('dotenv').config({ path: './server/config/server.env' });
 
 async function main() {
   try {
@@ -162,6 +162,7 @@ async function main() {
     console.log('📊 Creating sample Telegram statistics...');
     
     const sampleStats = {
+      phone: '+1234567890', // Add phone field for API queries
       totalGroups: 3,
       activeUsers: 25,
       totalUsers: 156,
@@ -224,7 +225,12 @@ async function main() {
     };
     
     // Clear existing demo stats
-    await statsCollection.deleteMany({ 'mostActiveUsers.0.messageCount': { $exists: true } });
+    await statsCollection.deleteMany({ 
+      $or: [
+        { 'mostActiveUsers.0.messageCount': { $exists: true } },
+        { phone: '+1234567890' }
+      ]
+    });
     
     // Insert sample stats
     const statsResult = await statsCollection.insertOne(sampleStats);

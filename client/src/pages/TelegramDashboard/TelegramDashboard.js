@@ -160,12 +160,23 @@ const TelegramDashboard = () => {
       setLoading(true);
       setError(null);
       if (!phone) throw new Error('No phone number found. Please login.');
+      
+      console.log('TelegramDashboard: Loading data for phone:', phone);
+      
       const [statsData, usersData, groupsData] = await Promise.all([
         telegram.getStats(phone),
         telegram.getMostActiveUsers(phone),
         telegram.getMostActiveGroups(phone)
       ]);
+      
+      console.log('TelegramDashboard: Received data:', {
+        statsData,
+        usersData,
+        groupsData
+      });
+      
       if (!statsData || statsData.isEmpty) {
+        console.log('TelegramDashboard: No stats data found, going back to login');
         // No data, go back to login form
         setShowDashboard(false);
         setStats(null);
@@ -174,11 +185,19 @@ const TelegramDashboard = () => {
         setStep(1);
         return;
       }
+      
+      console.log('TelegramDashboard: Setting data to state:', {
+        statsData,
+        usersDataLength: usersData ? usersData.length : 'null',
+        groupsDataLength: groupsData ? groupsData.length : 'null'
+      });
+      
       setStats(statsData);
       setMostActiveUsers(usersData);
       setMostActiveGroups(groupsData);
       setShowDashboard(true);
     } catch (err) {
+      console.error('TelegramDashboard: Error loading data:', err);
       setError(err.message);
       setShowDashboard(false);
       setStats(null);
