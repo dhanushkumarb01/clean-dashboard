@@ -33,14 +33,28 @@ function normalizePhone(phone) {
 
 // Get latest Telegram statistics (by phone)
 const getTelegramStats = async (req, res) => {
-  const phone = requirePhone(req, res);
+  let phone = requirePhone(req, res);
+  phone = normalizePhone(phone);
   console.log('DEBUG: GET /stats called with phone:', phone);
   if (!phone) return;
   try {
     console.log('Telegram Controller - Fetching latest stats for phone:', phone);
-    const stats = await TelegramStats.findOne({ phone })
+    
+    // Use the same flexible query as other endpoints
+    const query = {
+      $or: [
+        { phone },
+        { phone: phone.replace(/^\+/, '') },
+        { phone: '+' + phone.replace(/^\+/, '') }
+      ]
+    };
+    
+    console.log('Looking for phone in DB with query:', query);
+    
+    const stats = await TelegramStats.findOne(query)
       .sort({ timestamp: -1 })
       .select('-__v');
+      
     if (!stats) {
       console.log('Telegram Controller - No stats found, returning empty data for phone:', phone);
       return res.json({
@@ -63,11 +77,15 @@ const getTelegramStats = async (req, res) => {
         }
       });
     }
+    
     console.log('Telegram Controller - Stats found for phone:', phone, {
       totalGroups: stats.totalGroups,
       totalMessages: stats.totalMessages,
+      mostActiveUsers: stats.mostActiveUsers?.length || 0,
+      mostActiveGroups: stats.mostActiveGroups?.length || 0,
       lastUpdated: stats.timestamp
     });
+    
     res.json({
       success: true,
       data: {

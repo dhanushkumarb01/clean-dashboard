@@ -134,9 +134,18 @@ const TelegramDashboard = () => {
   useEffect(() => {
     if (!phone) {
       const storedPhone = localStorage.getItem('telegramPhone');
+      console.log('🔍 TelegramDashboard: Stored phone from localStorage:', storedPhone);
       if (storedPhone) setPhone(storedPhone);
     }
   }, []);
+
+  // Temporary debug function to set correct phone number
+  const setCorrectPhone = () => {
+    const correctPhone = '+917989213019';
+    console.log('🔍 Setting correct phone number:', correctPhone);
+    setPhone(correctPhone);
+    localStorage.setItem('telegramPhone', correctPhone);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -163,7 +172,9 @@ const TelegramDashboard = () => {
       setError(null);
       if (!phone) throw new Error('No phone number found. Please login.');
       
-      console.log('TelegramDashboard: Loading data for phone:', phone);
+      console.log('🔍 TelegramDashboard: Loading data for phone:', phone);
+      console.log('🔍 TelegramDashboard: Phone type:', typeof phone);
+      console.log('🔍 TelegramDashboard: Phone length:', phone.length);
       
       const [statsData, usersData, groupsData, messagesData] = await Promise.all([
         telegram.getStats(phone),
@@ -172,7 +183,7 @@ const TelegramDashboard = () => {
         telegram.getMessages({ phone, page: 1, limit: 50 })
       ]);
       
-      console.log('TelegramDashboard: Received data:', {
+      console.log('🔍 TelegramDashboard: Received data:', {
         statsData,
         usersData,
         groupsData,
@@ -180,7 +191,7 @@ const TelegramDashboard = () => {
       });
       
       if (!statsData || statsData.isEmpty) {
-        console.log('TelegramDashboard: No stats data found, going back to login');
+        console.log('🔍 TelegramDashboard: No stats data found, going back to login');
         // No data, go back to login form
         setShowDashboard(false);
         setStats(null);
@@ -190,7 +201,7 @@ const TelegramDashboard = () => {
         return;
       }
       
-      console.log('TelegramDashboard: Setting data to state:', {
+      console.log('🔍 TelegramDashboard: Setting data to state:', {
         statsData,
         usersDataLength: usersData ? usersData.length : 'null',
         groupsDataLength: groupsData ? groupsData.length : 'null',
@@ -203,7 +214,7 @@ const TelegramDashboard = () => {
       setMessagesData(messagesData);
       setShowDashboard(true);
     } catch (err) {
-      console.error('TelegramDashboard: Error loading data:', err);
+      console.error('🔍 TelegramDashboard: Error loading data:', err);
       setError(err.message);
       setShowDashboard(false);
       setStats(null);
@@ -495,6 +506,22 @@ const TelegramDashboard = () => {
           <p className="text-sm text-gray-500 mt-1">Real-time analytics from your Telegram groups and channels</p>
         </div>
         <div className="flex space-x-3">
+          {/* Temporary debug button */}
+          <button
+            onClick={setCorrectPhone}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm px-4 py-2 rounded-md shadow-sm"
+          >
+            🔧 Debug: Set Phone
+          </button>
+          <button
+            onClick={() => {
+              console.log('🔍 Debug: Current phone:', phone);
+              loadData();
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-md shadow-sm"
+          >
+            🔍 Debug: Load Data
+          </button>
           <button
             onClick={handleDownloadReport}
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-md shadow-sm"

@@ -208,23 +208,25 @@ export const youtube = {
 export const telegram = {
   // Get Telegram statistics
   getStats: async (phone) => {
+    console.log('🔍 API: getStats called with phone:', phone);
     const response = await api.get('/api/telegram/stats', { params: { phone } });
+    console.log('🔍 API: getStats response data:', response.data);
     return response.data.data;
   },
 
   // Get most active users
   getMostActiveUsers: async (phone) => {
-    console.log('API: Fetching most active users for phone:', phone);
+    console.log('🔍 API: getMostActiveUsers called with phone:', phone);
     const response = await api.get('/api/telegram/most-active-users', { params: { phone } });
-    console.log('API: Most active users response:', response.data);
+    console.log('🔍 API: getMostActiveUsers response:', response.data);
     return response.data.data;
   },
 
   // Get most active groups
   getMostActiveGroups: async (phone) => {
-    console.log('API: Fetching most active groups for phone:', phone);
+    console.log('🔍 API: getMostActiveGroups called with phone:', phone);
     const response = await api.get('/api/telegram/most-active-groups', { params: { phone } });
-    console.log('API: Most active groups response:', response.data);
+    console.log('🔍 API: getMostActiveGroups response:', response.data);
     return response.data.data;
   },
 
