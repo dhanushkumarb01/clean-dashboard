@@ -68,11 +68,13 @@ const YouTubeDashboardContent = () => {
           // If user has YouTube data, they are authenticated
           setIsYouTubeAuthenticated(!!data.channel);
         } else {
-          setIsYouTubeAuthenticated(false);
+          // Even if YouTube auth fails, we'll show the dashboard with data
+          setIsYouTubeAuthenticated(true);
         }
       } catch (error) {
         console.error('Error checking YouTube authentication:', error);
-        setIsYouTubeAuthenticated(false);
+        // Even if there's an error, show the dashboard with data
+        setIsYouTubeAuthenticated(true);
       } finally {
         setLoading(false);
       }
@@ -98,9 +100,14 @@ const YouTubeDashboardContent = () => {
             if (response.ok) {
               const data = await response.json();
               setIsYouTubeAuthenticated(!!data.channel);
+            } else {
+              // Even if YouTube auth fails, show the dashboard
+              setIsYouTubeAuthenticated(true);
             }
           } catch (error) {
             console.error('Error re-checking YouTube authentication:', error);
+            // Even if there's an error, show the dashboard
+            setIsYouTubeAuthenticated(true);
           }
         };
         checkAuth();
@@ -251,91 +258,96 @@ const YouTubeDashboardContent = () => {
   };
 
   useEffect(() => {
-    if (isYouTubeAuthenticated) {
+    const token = localStorage.getItem('token');
+    if (token) {
       loadData();
     }
   }, [isYouTubeAuthenticated]);
 
   if (!isYouTubeAuthenticated) {
-    // Show Google Sign-In button if not authenticated
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] bg-gradient-to-br from-red-50 to-white">
-        <div className="text-center max-w-md mx-auto p-8">
-          {/* YouTube Icon */}
-          <div className="mb-6">
-            <svg className="w-16 h-16 mx-auto text-red-600" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-            </svg>
+    // Only show sign-in if there's no token at all
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Show Google Sign-In button if not authenticated
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[80vh] bg-gradient-to-br from-red-50 to-white">
+          <div className="text-center max-w-md mx-auto p-8">
+            {/* YouTube Icon */}
+            <div className="mb-6">
+              <svg className="w-16 h-16 mx-auto text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </div>
+            
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">YouTube Analytics Dashboard</h1>
+            <p className="text-lg text-gray-600 mb-8">
+              Connect your YouTube account to view detailed analytics, track engagement, and monitor your channel performance.
+            </p>
+            
+            {/* Features List */}
+            <div className="mb-8 text-left">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">What you'll get:</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Real-time comment analytics
+                </li>
+                <li className="flex items-center">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Most active users and channels
+                </li>
+                <li className="flex items-center">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Engagement insights and reports
+                </li>
+                <li className="flex items-center">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Law enforcement analytics
+                </li>
+              </ul>
+            </div>
+            
+            <button
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="group relative w-full flex justify-center py-3 px-6 border border-transparent text-lg font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Connecting...
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
+                    />
+                  </svg>
+                  Sign in with Google
+                </div>
+              )}
+            </button>
+            
+            <p className="text-xs text-gray-500 mt-4">
+              We only access your YouTube data for analytics. Your privacy is protected.
+            </p>
           </div>
-          
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">YouTube Analytics Dashboard</h1>
-          <p className="text-lg text-gray-600 mb-8">
-            Connect your YouTube account to view detailed analytics, track engagement, and monitor your channel performance.
-          </p>
-          
-          {/* Features List */}
-          <div className="mb-8 text-left">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">What you'll get:</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Real-time comment analytics
-              </li>
-              <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Most active users and channels
-              </li>
-              <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Engagement insights and reports
-              </li>
-              <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Law enforcement analytics
-              </li>
-            </ul>
-          </div>
-          
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="group relative w-full flex justify-center py-3 px-6 border border-transparent text-lg font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            {loading ? (
-              <div className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Connecting...
-              </div>
-            ) : (
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
-                  />
-                </svg>
-                Sign in with Google
-              </div>
-            )}
-          </button>
-          
-          <p className="text-xs text-gray-500 mt-4">
-            We only access your YouTube data for analytics. Your privacy is protected.
-          </p>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   if (loading) return <LoadingState />;
@@ -355,6 +367,12 @@ const YouTubeDashboardContent = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">YouTube Analytics Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">Real-time analytics from your YouTube channel</p>
+          {/* Show notice if user has token but YouTube auth might not be working */}
+          {localStorage.getItem('token') && (
+            <p className="text-xs text-blue-600 mt-1">
+              📊 Showing latest available data from our database
+            </p>
+          )}
         </div>
         <div className="flex space-x-2">
           <button
