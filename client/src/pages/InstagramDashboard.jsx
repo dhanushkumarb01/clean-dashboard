@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, User, Users, MessageSquare, BarChart2, Heart, Eye, ArrowLeft, Target, Crown, Camera, Video, X, Globe, RefreshCw, Instagram } from 'lucide-react';
+import { Zap, User, Users, MessageSquare, BarChart2, Heart, Eye, ArrowLeft, Target, Crown, Camera, Video, X, Globe, RefreshCw, Instagram, Activity, Smile, Meh, Frown } from 'lucide-react';
 import StatCard from '../components/Instagram/StatCard';
 import MediaCard from '../components/Instagram/MediaCard';
 import ListCard from '../components/Instagram/ListCard';
@@ -137,10 +137,96 @@ const demoData = {
 function InstagramDashboard() {
   const navigate = useNavigate();
   const [selectedActiveUser, setSelectedActiveUser] = useState(null);
+  const [analysisText, setAnalysisText] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [sentimentResults, setSentimentResults] = useState(null);
+  
+  // Demo sentiment data
+  const demoPosts = [
+    {
+      text: 'Loving the new features in this app! The interface is so intuitive and user-friendly. Great job team! 😊',
+      sentiment: 'positive',
+      score: 0.85,
+      date: '2024-07-01T10:30:00Z'
+    },
+    {
+      text: 'The latest update is okay, but I expected more customization options. It gets the job done though.',
+      sentiment: 'neutral',
+      score: 0.12,
+      date: '2024-06-30T15:45:00Z'
+    },
+    {
+      text: 'Very disappointed with the customer service. Waited for hours and still no response to my ticket.',
+      sentiment: 'negative',
+      score: -0.75,
+      date: '2024-06-29T09:15:00Z'
+    },
+    {
+      text: 'This product changed my workflow completely! So much more efficient now. Highly recommend!',
+      sentiment: 'positive',
+      score: 0.92,
+      date: '2024-06-28T14:20:00Z'
+    },
+    {
+      text: 'The app keeps crashing after the latest update. Please fix this asap!',
+      sentiment: 'negative',
+      score: -0.65,
+      date: '2024-06-27T16:30:00Z'
+    }
+  ];
+  
+  // Calculate sentiment distribution
+  const sentimentDistribution = demoPosts.reduce((acc, post) => {
+    acc[post.sentiment] = (acc[post.sentiment] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const totalPosts = demoPosts.length;
+  const positivePct = Math.round((sentimentDistribution.positive || 0) / totalPosts * 100);
+  const neutralPct = Math.round((sentimentDistribution.neutral || 0) / totalPosts * 100);
+  const negativePct = Math.round((sentimentDistribution.negative || 0) / totalPosts * 100);
+  
+  const handleAnalyze = () => {
+    if (!analysisText.trim()) return;
+    
+    setIsAnalyzing(true);
+    
+    // Simulate API call with timeout
+    setTimeout(() => {
+      // Simple sentiment analysis based on keywords (for demo purposes)
+      const text = analysisText.toLowerCase();
+      let sentiment, score;
+      
+      if (text.includes('love') || text.includes('great') || text.includes('awesome') || text.includes('amazing')) {
+        sentiment = 'positive';
+        score = 0.8 + Math.random() * 0.2; // Random score between 0.8 and 1.0
+      } else if (text.includes('hate') || text.includes('terrible') || text.includes('awful') || text.includes('disappointed')) {
+        sentiment = 'negative';
+        score = -0.8 - Math.random() * 0.2; // Random score between -1.0 and -0.8
+      } else {
+        sentiment = 'neutral';
+        score = -0.2 + Math.random() * 0.4; // Random score between -0.2 and 0.2
+      }
+      
+      const result = {
+        text: analysisText,
+        sentiment,
+        score: parseFloat(score.toFixed(2)),
+        date: new Date().toISOString()
+      };
+      
+      // Add to demo posts
+      demoPosts.unshift(result);
+      
+      setSentimentResults(result);
+      setIsAnalyzing(false);
+    }, 1000);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 p-6">
       <div className="max-w-7xl mx-auto">
+
         {/* Demo Mode Banner */}
         <div className="mb-6">
           <div className="bg-yellow-100 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-xl flex items-center space-x-3">
@@ -327,6 +413,118 @@ function InstagramDashboard() {
             </div>
           </div>
         </div>
+        {/* Sentiment Analysis Section */}
+        <div className="mt-8">
+          <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-gray-100">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="bg-gradient-to-br from-pink-500 to-purple-600 p-2 rounded-lg">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-bold text-xl text-gray-800">Sentiment Analysis</h3>
+            </div>
+            
+            {/* Quick Analysis Card */}
+            <div className="bg-gray-50 p-6 rounded-xl mb-6">
+              <h4 className="font-semibold text-gray-800 mb-4">Analyze Post Sentiment</h4>
+              <div className="flex flex-col space-y-3">
+                <div className="flex space-x-3">
+                  <input
+                    type="text"
+                    value={analysisText}
+                    onChange={(e) => setAnalysisText(e.target.value)}
+                    placeholder="Enter post text to analyze..."
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
+                  />
+                  <button 
+                    onClick={handleAnalyze}
+                    disabled={isAnalyzing || !analysisText.trim()}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      isAnalyzing 
+                        ? 'bg-indigo-400 cursor-not-allowed' 
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
+                  >
+                    {isAnalyzing ? 'Analyzing...' : 'Analyze'}
+                  </button>
+                </div>
+                
+                {sentimentResults && (
+                  <div className={`mt-4 p-4 rounded-lg ${
+                    sentimentResults.sentiment === 'positive' ? 'bg-green-50 border border-green-200' :
+                    sentimentResults.sentiment === 'negative' ? 'bg-red-50 border border-red-200' :
+                    'bg-yellow-50 border border-yellow-200'
+                  }`}>
+                    <div className="flex items-center">
+                      <span className="font-medium">Sentiment:</span>
+                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                        sentimentResults.sentiment === 'positive' ? 'bg-green-100 text-green-800' :
+                        sentimentResults.sentiment === 'negative' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {sentimentResults.sentiment.charAt(0).toUpperCase() + sentimentResults.sentiment.slice(1)}
+                      </span>
+                      <span className="ml-auto text-sm text-gray-600">
+                        Score: {sentimentResults.score > 0 ? '+' : ''}{sentimentResults.score.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Sentiment Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-green-50 p-4 rounded-xl text-center">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <Smile className="w-5 h-5 text-green-600" />
+                  <span className="text-2xl font-bold text-green-600">{positivePct}%</span>
+                </div>
+                <div className="text-sm text-gray-600">Positive</div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-xl text-center">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <Meh className="w-5 h-5 text-yellow-600" />
+                  <span className="text-2xl font-bold text-yellow-600">{neutralPct}%</span>
+                </div>
+                <div className="text-sm text-gray-600">Neutral</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-xl text-center">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <Frown className="w-5 h-5 text-red-600" />
+                  <span className="text-2xl font-bold text-red-600">{negativePct}%</span>
+                </div>
+                <div className="text-sm text-gray-600">Negative</div>
+              </div>
+            </div>
+            
+            {/* Recent Analyses */}
+            <div className="mt-6">
+              <h4 className="font-semibold text-gray-800 mb-3">Recent Analyses</h4>
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                {demoPosts.map((post, index) => (
+                  <div 
+                    key={index} 
+                    className="p-3 bg-white rounded-lg border border-gray-100 shadow-xs hover:shadow-sm transition-shadow"
+                  >
+                    <p className="text-sm text-gray-700 mb-2 line-clamp-2">{post.text}</p>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span className={`px-2 py-0.5 rounded-full ${
+                        post.sentiment === 'positive' ? 'bg-green-100 text-green-800' :
+                        post.sentiment === 'negative' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {post.sentiment.charAt(0).toUpperCase() + post.sentiment.slice(1)}
+                      </span>
+                      <span>{new Date(post.date).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        
         {/* Connect Button */}
         <div className="mt-10 flex justify-center">
           <button

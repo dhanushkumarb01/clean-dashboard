@@ -18,6 +18,7 @@ import TelegramUserReportPage from './pages/TelegramDashboard/TelegramUserReport
 import TelegramGroupReportPage from './pages/TelegramDashboard/TelegramGroupReportPage';
 import SignupPage from './pages/SignupPage';
 import InstagramDashboard from './pages/InstagramDashboard';
+import InstagramSentiment from './pages/InstagramSentiment';
 import GrandAdminLogin from './pages/GrandAdminLogin';
 import GrandAdminDashboard from './pages/GrandAdminDashboard';
 import UserSuccessPage from './pages/UserSuccessPage';
@@ -81,6 +82,7 @@ const App = () => {
         <Route path="/telegram/user/:userId" element={<ProtectedRoute><DashboardContainer><TelegramUserReportPage /></DashboardContainer></ProtectedRoute>} />
         <Route path="/telegram/group/:groupId" element={<ProtectedRoute><DashboardContainer><TelegramGroupReportPage /></DashboardContainer></ProtectedRoute>} />
         <Route path="/instagram" element={<ProtectedRoute><DashboardContainer><InstagramDashboard /></DashboardContainer></ProtectedRoute>} />
+        <Route path="/instagram/sentiment" element={<ProtectedRoute><DashboardContainer><InstagramSentiment /></DashboardContainer></ProtectedRoute>} />
         <Route path="/user-success" element={<UserSuccessPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
