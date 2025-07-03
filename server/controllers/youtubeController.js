@@ -1114,3 +1114,64 @@ exports.getYouTubeThreatStats = async (req, res) => {
     res.status(500).json({ error: 'Failed to get YouTube threat stats' });
   }
 };
+
+/**
+ * Get all comments (with video names) and sentiment analysis for a channel
+ * GET /api/youtube/channel/:channelId/comments
+ */
+exports.getChannelCommentsAndAnalysis = async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const Comment = require('../models/Comment');
+    const Video = require('../models/Video');
+    const sentimentAnalyzer = require('../utils/sentimentAnalysis');
+
+    // Fetch all comments for this channel
+    const commentsRaw = await Comment.find({ channelId }).sort({ publishedAt: -1 });
+
+    // Get all unique videoIds from comments
+    const videoIds = [...new Set(commentsRaw.map(c => c.videoId))];
+    // Fetch video titles in one go
+    const videos = await Video.find({ videoId: { $in: videoIds } });
+    const videoMap = {};
+    videos.forEach(v => { videoMap[v.videoId] = v.title || v.videoId; });
+
+    // Prepare comments with video titles
+    const comments = commentsRaw.map(comment => ({
+      commentId: comment.commentId,
+      text: comment.textDisplay,
+      authorDisplayName: comment.authorDisplayName,
+      authorChannelId: comment.authorChannelId,
+      videoId: comment.videoId,
+      videoTitle: videoMap[comment.videoId] || comment.videoId,
+      publishedAt: comment.publishedAt,
+    }));
+
+    // Sentiment analysis (AI analysis) on all comments
+    const sentimentInput = comments.map(c => ({
+      id: c.commentId,
+      text: c.text,
+      date: c.publishedAt,
+      videoId: c.videoId,
+      authorChannelId: c.authorChannelId
+    }));
+    const sentimentAnalysis = sentimentAnalyzer.analyzeMessages(sentimentInput);
+    const aiSummary = sentimentAnalyzer.generateSummary({ firstName: '', lastName: '', messageCount: comments.length }, sentimentAnalysis);
+
+    res.json({
+      comments,
+      aiAnalysis: {
+        summary: aiSummary,
+        sentiment: sentimentAnalysis.overallSentiment,
+        sentimentBreakdown: sentimentAnalysis.sentimentBreakdown,
+        scamRisk: sentimentAnalysis.scamRisk,
+        scamKeywords: sentimentAnalysis.scamKeywords,
+        totalMessagesAnalyzed: sentimentAnalysis.totalMessages,
+        scamMessageCount: sentimentAnalysis.scamMessageCount
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching channel comments and analysis:', err);
+    res.status(500).json({ error: 'Failed to fetch channel comments and analysis' });
+  }
+};

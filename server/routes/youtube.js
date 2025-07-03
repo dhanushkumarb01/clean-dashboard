@@ -27,6 +27,7 @@ router.get('/overview', youtubeController.getOverview);
 router.get('/most-active-users', youtubeController.getMostActiveUsers);
 router.get('/most-active-channels', youtubeController.getMostActiveChannels);
 router.get('/channel/:channelId', youtubeController.getChannelStatistics);
+router.get('/channel/:channelId/comments', youtubeController.getChannelCommentsAndAnalysis);
 router.get('/report', youtubeController.generateReport);
 router.post('/disconnect', youtubeController.disconnectYouTube);
 router.get('/messages/analysis', youtubeController.getYouTubeMessageAnalysis);

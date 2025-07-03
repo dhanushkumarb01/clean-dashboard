@@ -202,6 +202,12 @@ export const youtube = {
     const response = await api.get('/api/youtube/threats/stats');
     return response.data;
   },
+
+  // Get comments and sentiment analysis for a channel
+  getChannelCommentsAndAnalysis: async (channelId) => {
+    const response = await api.get(`/api/youtube/channel/${channelId}/comments`);
+    return response.data;
+  },
 };
 
 // Telegram endpoints

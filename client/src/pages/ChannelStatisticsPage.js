@@ -28,6 +28,9 @@ const ChannelStatisticsPage = () => {
   const [channelData, setChannelData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [commentsData, setCommentsData] = useState({ comments: [], aiAnalysis: null });
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState(null);
 
   useEffect(() => {
     const fetchChannelData = async () => {
@@ -57,6 +60,16 @@ const ChannelStatisticsPage = () => {
       setError('No channel ID provided');
       setLoading(false);
     }
+  }, [channelId]);
+
+  useEffect(() => {
+    if (!channelId) return;
+    setCommentsLoading(true);
+    setCommentsError(null);
+    youtube.getChannelCommentsAndAnalysis(channelId)
+      .then(data => setCommentsData(data))
+      .catch(err => setCommentsError('Failed to load comments and analysis'))
+      .finally(() => setCommentsLoading(false));
   }, [channelId]);
 
   const handleBackClick = () => {
@@ -206,6 +219,83 @@ const ChannelStatisticsPage = () => {
         {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
+      </div>
+
+      {/* Sentiment Analysis Section */}
+      <div className="mt-10 mb-8">
+        <h2 className="text-xl font-bold text-pink-700 mb-4 flex items-center">
+          <svg className="w-6 h-6 mr-2 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764A2.236 2.236 0 0021 7.764V6a2 2 0 00-2-2h-1.764A2.236 2.236 0 0014 2.236V2a2 2 0 00-2-2H6a2 2 0 00-2 2v1.764A2.236 2.236 0 002.236 6H2a2 2 0 00-2 2v1.764A2.236 2.236 0 002 10h1.764A2.236 2.236 0 006 14v1.764A2.236 2.236 0 007.764 18H10a2 2 0 002 2h1.764A2.236 2.236 0 0014 21.764V22a2 2 0 002 2h1.764A2.236 2.236 0 0021 22h.236A2.236 2.236 0 0024 19.764V18a2 2 0 00-2-2h-1.764A2.236 2.236 0 0018 14v-1.764A2.236 2.236 0 0014 10z" /></svg>
+          AI Sentiment Analysis
+        </h2>
+        {commentsLoading ? (
+          <div className="bg-white rounded-lg shadow p-6 animate-pulse">Loading sentiment analysis...</div>
+        ) : commentsError ? (
+          <div className="bg-red-50 text-red-700 rounded-lg p-4">{commentsError}</div>
+        ) : commentsData.aiAnalysis ? (
+          <div className="bg-gradient-to-br from-pink-50 to-white rounded-xl shadow-lg p-6 mb-6 border border-pink-100">
+            <div className="mb-4 text-lg font-semibold text-pink-800">{commentsData.aiAnalysis.summary}</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <div className="text-sm font-medium text-green-700">Positive</div>
+                <div className="text-2xl font-bold text-green-800">{commentsData.aiAnalysis.sentimentBreakdown.positive || 0}</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg text-center">
+                <div className="text-sm font-medium text-red-700">Negative</div>
+                <div className="text-2xl font-bold text-red-800">{commentsData.aiAnalysis.sentimentBreakdown.negative || 0}</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg text-center">
+                <div className="text-sm font-medium text-gray-700">Neutral</div>
+                <div className="text-2xl font-bold text-gray-800">{commentsData.aiAnalysis.sentimentBreakdown.neutral || 0}</div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                <div className="text-sm font-medium text-yellow-700">Scam Risk</div>
+                <div className="text-lg font-bold text-yellow-800">{commentsData.aiAnalysis.scamRisk}</div>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 mb-2">Total Comments Analyzed: <span className="font-semibold">{commentsData.aiAnalysis.totalMessagesAnalyzed}</span></div>
+            {commentsData.aiAnalysis.scamKeywords && commentsData.aiAnalysis.scamKeywords.length > 0 && (
+              <div className="mt-2 text-xs text-pink-700">Detected Keywords: {commentsData.aiAnalysis.scamKeywords.slice(0, 8).map((k, i) => <span key={i} className="inline-block bg-pink-100 text-pink-700 px-2 py-1 rounded mr-1 mb-1">{k}</span>)}{commentsData.aiAnalysis.scamKeywords.length > 8 && <span>+{commentsData.aiAnalysis.scamKeywords.length - 8} more</span>}</div>
+            )}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Comments Section */}
+      <div className="mb-10">
+        <h2 className="text-xl font-bold text-blue-700 mb-4 flex items-center">
+          <svg className="w-6 h-6 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2M15 3h-6a2 2 0 00-2 2v2a2 2 0 002 2h6a2 2 0 002-2V5a2 2 0 00-2-2z" /></svg>
+          Channel Comments
+        </h2>
+        {commentsLoading ? (
+          <div className="bg-white rounded-lg shadow p-6 animate-pulse">Loading comments...</div>
+        ) : commentsError ? (
+          <div className="bg-red-50 text-red-700 rounded-lg p-4">{commentsError}</div>
+        ) : commentsData.comments && commentsData.comments.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white rounded-xl shadow-lg border border-blue-100">
+              <thead className="bg-blue-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-blue-700">Comment</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-blue-700">User</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-blue-700">Video</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-blue-700">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {commentsData.comments.map((c, i) => (
+                  <tr key={c.commentId} className={i % 2 === 0 ? 'bg-white' : 'bg-blue-50'}>
+                    <td className="px-4 py-2 max-w-xs truncate" title={c.text}>{c.text}</td>
+                    <td className="px-4 py-2">{c.authorDisplayName}</td>
+                    <td className="px-4 py-2 font-medium text-blue-700">{c.videoTitle}</td>
+                    <td className="px-4 py-2 text-xs text-gray-500">{new Date(c.publishedAt).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6 text-gray-500">No comments found for this channel.</div>
+        )}
       </div>
 
       {/* Additional Information */}
