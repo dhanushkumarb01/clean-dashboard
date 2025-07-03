@@ -1156,7 +1156,7 @@ exports.getChannelCommentsAndAnalysis = async (req, res) => {
       authorChannelId: c.authorChannelId
     }));
     const sentimentAnalysis = sentimentAnalyzer.analyzeMessages(sentimentInput);
-    const aiSummary = sentimentAnalyzer.generateSummary({ firstName: '', lastName: '', messageCount: comments.length }, sentimentAnalysis);
+    const aiSummary = sentimentAnalyzer.generateSummary({ firstName: '', lastName: '', messageCount: comments.length, joinedGroups: [] }, sentimentAnalysis);
 
     res.json({
       comments,
