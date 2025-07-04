@@ -152,9 +152,8 @@ const TelegramGroupReportPage = () => {
         </div>
       </div>
 
-      {/* Placeholder for group stats cards or charts */}
+      {/* Group Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Group Statistics Cards */}
         <div className="bg-blue-50 rounded-lg shadow-sm p-6">
           <h3 className="text-lg font-semibold text-blue-800 mb-2">Total Messages</h3>
           <p className="text-3xl font-bold text-blue-600">{groupData.messageCount?.toLocaleString() || '0'}</p>
@@ -168,6 +167,51 @@ const TelegramGroupReportPage = () => {
           <p className="text-lg font-bold text-purple-600">{groupData.isChannel ? 'Channel' : 'Group'}</p>
         </div>
       </div>
+
+      {/* Sentiment Analysis Section */}
+      {groupData.aiAnalysis && (
+        <div className="mt-10 mb-8">
+          <h2 className="text-2xl font-bold text-pink-700 mb-4 flex items-center">
+            <svg className="w-7 h-7 mr-2 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764A2.236 2.236 0 0021 7.764V6a2 2 0 00-2-2h-1.764A2.236 2.236 0 0014 2.236V2a2 2 0 00-2-2H6a2 2 0 00-2 2v1.764A2.236 2.236 0 002.236 6H2a2 2 0 00-2 2v1.764A2.236 2.236 0 002 10h1.764A2.236 2.236 0 006 14v1.764A2.236 2.236 0 007.764 18H10a2 2 0 002 2h1.764A2.236 2.236 0 0014 21.764V22a2 2 0 002 2h1.764A2.236 2.236 0 0021 22h.236A2.236 2.236 0 0024 19.764V18a2 2 0 00-2-2h-1.764A2.236 2.236 0 0018 14v-1.764A2.236 2.236 0 0014 10z" /></svg>
+            AI Sentiment Analysis
+          </h2>
+          <div className="bg-gradient-to-br from-pink-50 to-white rounded-xl shadow-lg p-6 mb-6 border border-pink-100">
+            <div className="mb-4 text-lg font-semibold text-pink-800">{groupData.aiAnalysis.summary}</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <div className="text-sm font-medium text-green-700">Positive</div>
+                <div className="text-2xl font-bold text-green-800">{groupData.aiAnalysis.sentimentBreakdown.positive || 0}</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg text-center">
+                <div className="text-sm font-medium text-red-700">Negative</div>
+                <div className="text-2xl font-bold text-red-800">{groupData.aiAnalysis.sentimentBreakdown.negative || 0}</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg text-center">
+                <div className="text-sm font-medium text-gray-700">Neutral</div>
+                <div className="text-2xl font-bold text-gray-800">{groupData.aiAnalysis.sentimentBreakdown.neutral || 0}</div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                <div className="text-sm font-medium text-yellow-700">Scam Risk</div>
+                <div className={`text-lg font-bold ${groupData.aiAnalysis.scamRisk === 'High' ? 'text-red-700' : groupData.aiAnalysis.scamRisk === 'Medium' ? 'text-yellow-700' : 'text-yellow-800'}`}>{groupData.aiAnalysis.scamRisk}</div>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 mb-2">Total Messages Analyzed: <span className="font-semibold">{groupData.aiAnalysis.totalMessagesAnalyzed}</span></div>
+            {groupData.aiAnalysis.scamKeywords && groupData.aiAnalysis.scamKeywords.length > 0 && (
+              <div className="mt-2 text-xs text-pink-700">Detected Keywords: {groupData.aiAnalysis.scamKeywords.slice(0, 8).map((k, i) => <span key={i} className="inline-block bg-pink-100 text-pink-700 px-2 py-1 rounded mr-1 mb-1">{k}</span>)}{groupData.aiAnalysis.scamKeywords.length > 8 && <span>+{groupData.aiAnalysis.scamKeywords.length - 8} more</span>}</div>
+            )}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-3 rounded-lg text-center">
+                <div className="text-sm font-medium text-blue-700">Messages Analyzed</div>
+                <div className="text-lg font-bold text-blue-800">{groupData.aiAnalysis.totalMessagesAnalyzed || 0}</div>
+              </div>
+              <div className="bg-orange-50 p-3 rounded-lg text-center">
+                <div className="text-sm font-medium text-orange-700">Suspicious Messages</div>
+                <div className="text-lg font-bold text-orange-800">{groupData.aiAnalysis.scamMessageCount || 0}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Group Details Section */}
       <div className="mt-8 bg-white rounded-lg shadow-sm p-6">

@@ -383,10 +383,49 @@ const getGroupReport = async (req, res) => {
       });
     }
 
-    console.log('Found group:', group.title || group.groupId, 'for phone:', phone);
+    // --- AI/Sentiment Analysis for Group ---
+    // Get recent messages for this group
+    const recentMessagesRaw = await TelegramMessage.find({ chatId: groupId })
+      .sort({ timestamp: -1 })
+      .limit(100) // Use last 100 messages for analysis
+      .select('messageText timestamp senderUsername senderFirstName senderLastName');
+    const recentMessages = recentMessagesRaw.map(msg => ({
+      id: msg._id,
+      text: msg.messageText,
+      date: msg.timestamp,
+      senderUsername: msg.senderUsername,
+      senderFirstName: msg.senderFirstName,
+      senderLastName: msg.senderLastName
+    }));
+    let aiAnalysis = null;
+    if (recentMessages.length > 0) {
+      const sentimentAnalysis = sentimentAnalyzer.analyzeMessages(recentMessages);
+      // For group, use group title as 'userData' for summary
+      const userData = {
+        firstName: group.title || '',
+        lastName: '',
+        messageCount: group.messageCount || recentMessages.length,
+        joinedGroups: [] // Not relevant for group
+      };
+      const aiSummary = sentimentAnalyzer.generateSummary(userData, sentimentAnalysis);
+      aiAnalysis = {
+        summary: aiSummary,
+        sentiment: sentimentAnalysis.overallSentiment,
+        sentimentBreakdown: sentimentAnalysis.sentimentBreakdown,
+        scamRisk: sentimentAnalysis.scamRisk,
+        scamKeywords: sentimentAnalysis.scamKeywords,
+        totalMessagesAnalyzed: sentimentAnalysis.totalMessages,
+        scamMessageCount: sentimentAnalysis.scamMessageCount
+      };
+    }
+    // --- End AI/Sentiment Analysis ---
+
     res.json({
       success: true,
-      data: group
+      data: {
+        ...group,
+        aiAnalysis // Add this field if available
+      }
     });
   } catch (error) {
     console.error(`Telegram Controller - Error fetching group report for ${req.params.groupId}:`, error);
